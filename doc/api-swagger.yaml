@@ -1,0 +1,299 @@
+############################################
+# RESTful API for RequestBasket
+#
+swagger: '2.0'
+
+info:
+  version: 0.1
+  title: RequestBasket API
+  description: Prototype of RESTful API for RequestBasket
+  contact:
+    name: darklynx
+    url: https://github.com/darklynx
+
+host: localhost:55555
+basePath: /
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+
+# Groups and their descriptions
+tags:
+  - name: baskets
+    description: Manage baskets
+  - name: requests
+    description: Manage collected requests
+
+# Security (maybe use custom header, e.g. basket_key, basket_token)
+securityDefinitions:
+  basket_token:
+    description: Basket assigned secure token
+    type: apiKey
+    name: Authorization
+    in: header
+
+# URL patterns
+paths:
+  /baskets:
+    get:
+      tags:
+        - baskets
+      summary: Get registered baskets
+      description: Returns list of registered baskets
+      parameters:
+        - name: max
+          in: query
+          type: integer
+          description: Maximum number of basket names to return, default 100
+          required: false
+        - name: skip
+          in: query
+          type: integer
+          description: Number of basket names to skip, default 0
+          required: false
+      responses:
+        200:
+          description: OK. Returns list of available baskets.
+          schema:
+            $ref: '#/definitions/Baskets'
+        204:
+          description: No Content. No baskets available for specified limits
+
+  /baskets/{basket-name}:
+    post:
+      tags:
+        - baskets
+      summary: Create a new basket
+      description: Allows to create a new basket with specified name
+      parameters:
+        - name: basket-name
+          in: path
+          type: string
+          description: The name of basket to create
+          required: true
+        - name: config
+          in: body
+          description: Basket configuration
+          required: false
+          schema:
+            $ref: '#/definitions/Config'
+      responses:
+        201:
+          description: Created. Indicates that basket is successfully created
+          schema:
+            $ref: '#/definitions/Token'
+        409:
+          description: Conflict. Indicates that basket with such name already exists
+        403:
+          description: Forbidden. Indicates that basket name conflicts with reserved paths; e.g. `baskets`, `show`, etc.
+    get:
+      tags:
+        - baskets
+      summary: Get basket configuration
+      description: Get current configuration of basket
+      parameters:
+        - name: basket-name
+          in: path
+          type: string
+          description: The basket name
+          required: true
+      responses:
+        200:
+          description: OK. Returns basket configuration
+          schema:
+            $ref: '#/definitions/Config'
+        401:
+          description: Unauthorized. Invalid or missing basket token
+        404:
+          description: Not Found. No basket with such name
+      security:
+        - basket_token: []
+    put:
+      tags:
+        - baskets
+      summary: Update basket configuration
+      description: Update current configuration of basket
+      parameters:
+        - name: basket-name
+          in: path
+          type: string
+          description: The basket name
+          required: true
+        - name: config
+          in: body
+          description: New configuration to apply
+          required: true
+          schema:
+            $ref: '#/definitions/Config'
+      responses:
+        204:
+          description: No Content. Basket configuration is updated
+        401:
+          description: Unauthorized. Invalid or missing basket token
+        404:
+          description: Not Found. No basket with such name
+      security:
+        - basket_token: []
+    delete:
+      tags:
+        - baskets
+      summary: Delete basket
+      description: Delete basket and all collected requests
+      parameters:
+        - name: basket-name
+          in: path
+          type: string
+          description: The basket name
+          required: true
+      responses:
+        204:
+          description: No Content. Basket is deleted
+        401:
+          description: Unauthorized. Invalid or missing basket token
+        404:
+          description: Not Found. No basket with such name
+      security:
+        - basket_token: []
+
+  /baskets/{basket-name}/requests:
+    get:
+      tags:
+        - requests
+      summary: Get requests collected by basket
+      description: Returns list of collected requests
+      parameters:
+        - name: max
+          in: query
+          type: integer
+          description: Maximum number of requests to return, default 100
+          required: false
+        - name: skip
+          in: query
+          type: integer
+          description: Number of requests to skip, default 0
+          required: false
+      responses:
+        200:
+          description: OK. Returns list of basket requests.
+          schema:
+            $ref: '#/definitions/Requests'
+        204:
+          description: No Content. No requests found for specified limits
+        401:
+          description: Unauthorized. Invalid or missing basket token
+        404:
+          description: Not Found. No basket with such name
+      security:
+        - basket_token: []
+    delete:
+      tags:
+        - requests
+      summary: Delete all requests
+      description: Clear all requests collected by this basket so far
+      parameters:
+        - name: basket-name
+          in: path
+          type: string
+          description: The basket name
+          required: true
+      responses:
+        204:
+          description: No Content. Basket requests are cleared
+        401:
+          description: Unauthorized. Invalid or missing basket token
+        404:
+          description: Not Found. No basket with such name
+      security:
+        - basket_token: []
+
+# Model
+definitions:
+  Baskets:
+    required:
+      - names
+      - count
+      - has_more
+    properties:
+      names:
+        type: array
+        description: Collection of basket names
+        items:
+          type: string
+      count:
+        type: integer
+        description: Total number of baskets in the system
+      has_more:
+        type: boolean
+        description: Indicates if there are more baskets in the system
+
+  Config:
+    properties:
+      forward_url:
+        type: string
+        description: URL to forward all incoming requests of the basket
+      capacity:
+        type: integer
+        description: Maximum number of requests to store
+
+  Token:
+    required:
+      - token
+    properties:
+      token:
+        type: string
+        description: Secure token to manage the basket, generated by system
+
+  Requests:
+    required:
+      - requests
+      - count
+      - has_more
+    properties:
+      requests:
+        type: array
+        description: Collection of collected requests
+        items:
+          $ref: '#/definitions/Request'
+      count:
+        type: integer
+        description: Total number of requests collected by basket
+      has_more:
+        type: boolean
+        description: Indicates if there are more requests collected by basket
+
+  Request:
+    properties:
+      headers:
+        type: array
+        description: Collection of request headers
+        items:
+          $ref: '#/definitions/Header'
+      content_length:
+        type: integer
+        description: Content lenght of request
+      body:
+        type: string
+        description: Content of request body
+      method:
+        type: string
+        description: HTTP methof of request
+      path:
+        type: string
+        description: URL path of request
+      query:
+        type: string
+        description: Query parameters of request
+
+  Header:
+    properties:
+      name:
+        type: string
+        description: Name of request header
+      values:
+        type: array
+        description: Collection of header values
+        items:
+          type: string
