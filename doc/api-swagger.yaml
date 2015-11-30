@@ -267,10 +267,8 @@ definitions:
   Request:
     properties:
       headers:
-        type: array
-        description: Collection of request headers
-        items:
-          $ref: '#/definitions/Header'
+        $ref: '#/definitions/Headers'
+        description: Map of request headers, key represents name, value is array of values
       content_length:
         type: integer
         description: Content lenght of request
@@ -287,13 +285,9 @@ definitions:
         type: string
         description: Query parameters of request
 
-  Header:
-    properties:
-      name:
+  Headers:
+    additionalProperties:
+      type: array
+      description: Collection of header values
+      items:
         type: string
-        description: Name of request header
-      values:
-        type: array
-        description: Collection of header values
-        items:
-          type: string

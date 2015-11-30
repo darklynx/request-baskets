@@ -317,11 +317,8 @@
     "Request" : {
       "properties" : {
         "headers" : {
-          "type" : "array",
-          "description" : "Collection of request headers",
-          "items" : {
-            "$ref" : "#/definitions/Header"
-          }
+          "description" : "Map of request headers, key represents name, value is array of values",
+          "$ref" : "#/definitions/Headers"
         },
         "content_length" : {
           "type" : "integer",
@@ -345,18 +342,13 @@
         }
       }
     },
-    "Header" : {
-      "properties" : {
-        "name" : {
-          "type" : "string",
-          "description" : "Name of request header"
-        },
-        "values" : {
-          "type" : "array",
-          "description" : "Collection of header values",
-          "items" : {
-            "type" : "string"
-          }
+    "Headers" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "array",
+        "description" : "Collection of header values",
+        "items" : {
+          "type" : "string"
         }
       }
     }
