@@ -295,7 +295,7 @@
       }
     },
     "Requests" : {
-      "required" : [ "count", "has_more", "requests" ],
+      "required" : [ "count", "has_more", "requests", "size" ],
       "properties" : {
         "requests" : {
           "type" : "array",
@@ -306,7 +306,11 @@
         },
         "count" : {
           "type" : "integer",
-          "description" : "Total number of requests collected by basket"
+          "description" : "Total number of requests passed through this basket"
+        },
+        "size" : {
+          "type" : "integer",
+          "description" : "Current number of requests collected by basket"
         },
         "has_more" : {
           "type" : "boolean",

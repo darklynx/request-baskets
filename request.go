@@ -19,6 +19,7 @@ type Request struct {
 type Requests struct {
 	Requests []*Request `json:"requests"`
 	Count    int        `json:"count"`
+	Size     int        `json:"size"`
 	HasMore  bool       `json:"has_more"`
 }
 
@@ -29,7 +30,7 @@ type RequestDb struct {
 	Count    int
 }
 
-func MakeRequest(r *http.Request) *Request {
+func makeRequest(r *http.Request) *Request {
 	req := new(Request)
 
 	req.Header = make(http.Header)
@@ -48,19 +49,23 @@ func MakeRequest(r *http.Request) *Request {
 	return req
 }
 
-func (db *RequestDb) Add(r *http.Request) *Request {
-	db.Lock()
-	defer db.Unlock()
-
-	req := MakeRequest(r)
-	db.requests = append([]*Request{req}, db.requests...)
-	// Keep number of all collected requests
-	db.Count++
-
+func (db *RequestDb) applyLimit() {
 	// Keep requests up to specified capacity
 	if len(db.requests) > db.capacity {
 		db.requests = db.requests[:db.capacity]
 	}
+}
+
+func (db *RequestDb) Add(r *http.Request) *Request {
+	db.Lock()
+	defer db.Unlock()
+
+	req := makeRequest(r)
+	db.requests = append([]*Request{req}, db.requests...)
+	// Keep number of all collected requests
+	db.Count++
+
+	db.applyLimit()
 
 	return req
 }
@@ -74,6 +79,16 @@ func (db *RequestDb) Clear() {
 	db.Count = 0
 }
 
+func (db *RequestDb) UpdateCapacity(capacity int) {
+	if capacity != db.capacity {
+		db.Lock()
+		defer db.Unlock()
+
+		db.capacity = capacity
+		db.applyLimit()
+	}
+}
+
 func (db *RequestDb) ToJson(max int, skip int) ([]byte, error) {
 	db.RLock()
 	defer db.RUnlock()
@@ -83,6 +98,7 @@ func (db *RequestDb) ToJson(max int, skip int) ([]byte, error) {
 
 	reqs := Requests{
 		Count:   db.Count,
+		Size:    size,
 		HasMore: last < size}
 
 	if skip < size {

@@ -250,6 +250,7 @@ definitions:
     required:
       - requests
       - count
+      - size
       - has_more
     properties:
       requests:
@@ -259,7 +260,10 @@ definitions:
           $ref: '#/definitions/Request'
       count:
         type: integer
-        description: Total number of requests collected by basket
+        description: Total number of requests passed through this basket
+      size:
+        type: integer
+        description: Current number of requests collected by basket
       has_more:
         type: boolean
         description: Indicates if there are more requests collected by basket

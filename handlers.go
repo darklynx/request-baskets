@@ -53,6 +53,22 @@ func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	return "", nil
 }
 
+func parseConfig(body []byte, config *Config) error {
+	// parse request
+	if err := json.Unmarshal(body, config); err != nil {
+		return err
+	}
+
+	// validate URL
+	if len(config.ForwardUrl) > 0 {
+		if _, err := url.ParseRequestURI(config.ForwardUrl); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	log.Print("Get basket names")
 
@@ -82,18 +98,9 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		// default config
 		config := Config{ForwardUrl: "", Capacity: DEFAULT_BASKET_CAPACITY}
 		if len(body) > 0 {
-			// parse request
-			if err := json.Unmarshal(body, &config); err != nil {
+			if err := parseConfig(body, &config); err != nil {
 				http.Error(w, err.Error(), 422)
 				return
-			}
-
-			// validate URL
-			if len(config.ForwardUrl) > 0 {
-				if _, err := url.ParseRequestURI(config.ForwardUrl); err != nil {
-					http.Error(w, err.Error(), 422)
-					return
-				}
 			}
 		}
 
@@ -109,8 +116,25 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
-		// TODO: update basket configuration
-		w.WriteHeader(http.StatusNoContent)
+		// read config (max 2 kB)
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2048))
+		r.Body.Close()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else if len(body) > 0 {
+			config := basket.Config
+			if err := parseConfig(body, &config); err != nil {
+				http.Error(w, err.Error(), 422)
+				return
+			}
+
+			basket.Config = config
+			basket.Requests.UpdateCapacity(config.Capacity)
+
+			w.WriteHeader(http.StatusNoContent)
+		} else {
+			w.WriteHeader(http.StatusNotModified)
+		}
 	}
 }
 
