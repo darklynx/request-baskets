@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <title>Request Basket</title>
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
+  <!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/flatly/bootstrap.min.css"-->
+
+  <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+  <style>
+    body { padding-top: 70px; }
+    h1 { margin-top: 2px; }
+    #more { margin-left: 40px; }
+  </style>
+
+  <script >
+  (function($) {
+    var basketsCount = 0;
+
+    function onAjaxError(jqXHR) {
+      $("#error_message_label").html("HTTP " + jqXHR.status + " - " + jqXHR.statusText);
+      $("#error_message_text").html(jqXHR.responseText);
+      $("#error_message").modal();
+    }
+
+    function clearBaskets() {
+      $("#baskets").html("");
+      basketsCount = 0;
+    }
+
+    function addBaskets(data) {
+      if (data && data.names) {
+        var baskets = $("#baskets");
+        var index, name;
+        for (index = 0; index < data.names.length; ++index) {
+          name = data.names[index];
+          baskets.append("<li><a href='/web/basket.html?name=" + name + "'>" + name + "</a></li>");
+          basketsCount++;
+        }
+
+        if (data.has_more) {
+          $("#more").removeClass("hide");
+        } else {
+          $("#more").addClass("hide");
+        }
+      }
+    }
+
+    function fetchBaskets() {
+      $.get("/baskets", function(data) {
+        clearBaskets();
+        addBaskets(data);
+      }).fail(onAjaxError);
+    }
+
+    function fetchMoreBaskets() {
+      $.get("/baskets?skip=" + basketsCount, function(data) {
+        addBaskets(data);
+      }).fail(onAjaxError);
+    }
+
+    function createBasket() {
+      var basket = $("#basket_name").val();
+      $.post("/baskets/" + basket, function(data) {
+        $("#created_message_text").html("Basket '" + basket + "' is created with token: " + data.token);
+        $("#basket_link").attr("href", "/web/basket.html?name=" + basket);
+        $("#created_message").modal();
+      }).fail(onAjaxError).always(function() {
+        $("#basket_name").val("");
+      });
+    }
+
+    // Initialization
+    $(document).ready(function() {
+      $("#create_basket").on("submit", function(event) {
+        createBasket();
+        event.preventDefault();
+      });
+      $("#refresh").on("click", function(event) {
+        fetchBaskets();
+      });
+      $("#fetch_more").on("click", function(event) {
+        fetchMoreBaskets();
+      });
+
+      fetchBaskets();
+    });
+  })(jQuery);
+  </script>
+</head>
+<body>
+  <!-- Fixed navbar -->
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <a id="refresh" class="navbar-brand" href="#">Request Basket</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Error message -->
+  <div class="modal fade" id="error_message" tabindex="-1" role="dialog" aria-labelledby="error_message_label">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content panel-danger">
+        <div class="modal-header panel-heading">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="error_message_label">HTTP error</h4>
+        </div>
+        <div class="modal-body">
+          <p id="error_message_text"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Created message -->
+  <div class="modal fade" id="created_message" tabindex="-1" role="dialog" aria-labelledby="created_message_label">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="created_message_label">Created</h4>
+        </div>
+        <div class="modal-body">
+          <p id="created_message_text"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <a id="basket_link" class="btn btn-primary">Open Basket</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <h1>Baskets</h1>
+      </div>
+      <div class="col-md-8">
+        <form id="create_basket" class="navbar-form navbar-right">
+          <div class="form-group">
+            <input id="basket_name" type="text" placeholder="Basket Name" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+      </div>
+    </div>
+    <hr/>
+    <div class="row">
+      <ul id="baskets">
+      </ul>
+      <div id="more" class="hide">
+        <a id="fetch_more" href="#" class="btn btn-default btn-xs">more...</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

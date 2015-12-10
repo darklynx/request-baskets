@@ -21,6 +21,7 @@ func StartServer() {
 
 	router.GET("/baskets/:basket/requests", GetBasketRequests)
 	router.DELETE("/baskets/:basket/requests", ClearBasket)
+	router.ServeFiles("/web/*filepath", http.Dir("./src/github.com/darklynx/request-basket/web"))
 	router.NotFound = http.HandlerFunc(AcceptBasketRequests)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", DEFAULT_PORT), router))
