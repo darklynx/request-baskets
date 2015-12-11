@@ -46,9 +46,25 @@
         headers.push(header + ": " + request.headers[header].join(','));
       });
 
-      var html = '<div class="row"><div class="col-md-1"><h3>[' + request.method + ']</h3></div><div class="col-md-11">' +
-        '<div class="panel-group" id="' + id + '" role="tablist" aria-multiselectable="true">' +
-        '<div class="panel panel-default"><div class="panel-heading" role="tab" id="' + id + '_path"><h4 class="panel-title">' +
+      var headerClass = "panel-default";
+      switch(request.method) {
+        case "GET":
+          headerClass = "panel-success";
+          break;
+        case "PUT":
+          headerClass = "panel-info";
+          break;
+        case "POST":
+          headerClass = "panel-primary";
+          break;
+        case "DELETE":
+          headerClass = "panel-danger";
+          break;
+      }
+
+      var html = '<div class="row"><div class="col-md-1"><h4>[' + request.method + ']</h4></div><div class="col-md-11">' +
+        '<div class="panel-group" id="' + id + '">' +
+        '<div class="panel ' + headerClass + '"><div class="panel-heading" role="tab" id="' + id + '_path"><h4 class="panel-title">' +
         reqPath + '</h4></div></div><div class="panel panel-default">' +
         '<div class="panel-heading" role="tab" id="' + id + '_headers"><h4 class="panel-title">' +
         '<a class="collapsed" role="button" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_headers_cont"' +
