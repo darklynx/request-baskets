@@ -13,7 +13,7 @@
   <style>
     body { padding-top: 70px; }
     h1 { margin-top: 2px; }
-    #more { margin-left: 40px; }
+    #more { margin-left: 100px; }
   </style>
 
   <script >
@@ -35,10 +35,19 @@
       }
     }
 
+    function escapeHTML(value) {
+      return value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
     function renderRequest(id, request) {
-      var reqPath = request.path;
+      var path = request.path;
       if (request.query) {
-        reqPath += "?" + request.query;
+        path += "?";
+        if (request.query.length > 70) {
+          path += request.query.substring(0, 67) + "...";
+        } else {
+          path += request.query;
+        }
       }
 
       var headers = [];
@@ -62,20 +71,29 @@
           break;
       }
 
-      var html = '<div class="row"><div class="col-md-1"><h4 class="text-' + headerClass + '">[' + request.method + 
+      var html = '<div class="row"><div class="col-md-1"><h4 class="text-' + headerClass + '">[' + request.method +
         ']</h4></div><div class="col-md-11"><div class="panel-group" id="' + id + '">' +
-        '<div class="panel panel-' + headerClass + '"><div class="panel-heading" role="tab" id="' + id + '_path"><h4 class="panel-title">' +
-        reqPath + '</h4></div></div><div class="panel panel-default">' +
-        '<div class="panel-heading" role="tab" id="' + id + '_headers"><h4 class="panel-title">' +
-        '<a class="collapsed" role="button" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_headers_cont"' +
-        'aria-expanded="false" aria-controls="' + id + '_headers_cont">Headers</a></h4></div>' +
-        '<div id="' + id + '_headers_cont" class="panel-collapse collapse" role="tabpanel" aria-labelledby="' + id + '_headers">' +
-        '<div class="panel-body"><pre>' + headers.join('\n') + '</pre></div></div></div><div class="panel panel-default">' +
-        '<div class="panel-heading" role="tab" id="' + id + '_body"><h4 class="panel-title">' +
-        '<a class="collapsed" role="button" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_body_cont"' +
-        'aria-expanded="false" aria-controls="' + id + '_body_cont">Body</a></h4></div>' +
-        '<div id="' + id + '_body_cont" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="' + id + '_body">' +
-        '<div class="panel-body"><pre>' + request.body + '</pre></div></div></div></div></div></div><hr/>';
+        '<div class="panel panel-' + headerClass + '"><div class="panel-heading"><h4 class="panel-title">' + path + '</h4></div></div>' +
+        '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
+        '<a class="collapsed" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_headers">Headers</a></h4></div>' +
+        '<div id="' + id + '_headers" class="panel-collapse collapse">' +
+        '<div class="panel-body"><pre>' + headers.join('\n') + '</pre></div></div></div>';
+
+      if (request.query) {
+        html += '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
+          '<a class="collapsed" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_query">Query Params</a></h4></div>' +
+          '<div id="' + id + '_query" class="panel-collapse collapse">' +
+          '<div class="panel-body"><pre>' + request.query.split('&').join('\n') + '</pre></div></div></div>';
+      }
+
+      if (request.body) {
+        html += '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
+          '<a class="collapsed" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_body">Body</a></h4></div>' +
+          '<div id="' + id + '_body" class="panel-collapse collapse in">' +
+          '<div class="panel-body"><pre>' + escapeHTML(request.body) + '</pre></div></div></div>';
+      }
+
+      html += '</div></div></div><hr/>';
 
       return html;
     }
@@ -134,8 +152,8 @@
   </nav>
 
   <!-- Error message -->
-  <div class="modal fade" id="error_message" tabindex="-1" role="dialog" aria-labelledby="error_message_label">
-    <div class="modal-dialog" role="document">
+  <div class="modal fade" id="error_message" tabindex="-1">
+    <div class="modal-dialog">
       <div class="modal-content panel-danger">
         <div class="modal-header panel-heading">
           <h4 class="modal-title" id="error_message_label">HTTP error</h4>
@@ -152,8 +170,8 @@
 
   <!-- Login dialog -->
   <form>
-  <div class="modal fade" id="token_message" tabindex="-1" role="dialog" aria-labelledby="token_message_label">
-    <div class="modal-dialog" role="document">
+  <div class="modal fade" id="token_message" tabindex="-1">
+    <div class="modal-dialog">
       <div class="modal-content panel-success">
         <div class="modal-header panel-heading">
           <h4 class="modal-title" id="token_message_label">Token requred</h4>
@@ -184,8 +202,10 @@
     <div id="requests">
     </div>
     <div id="more" class="hide">
-      <a id="fetch_more" href="#" class="btn btn-default btn-xs">more...</a>
+      <a id="fetch_more" href="#" class="btn btn-default">more...</a>
     </div>
   </div>
+
+  <p>&nbsp;</p>
 </body>
 </html>
