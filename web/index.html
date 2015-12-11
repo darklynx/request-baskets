@@ -50,13 +50,6 @@
     }
 
     function fetchBaskets() {
-      $.get("/baskets", function(data) {
-        clearBaskets();
-        addBaskets(data);
-      }).fail(onAjaxError);
-    }
-
-    function fetchMoreBaskets() {
       $.get("/baskets?skip=" + basketsCount, function(data) {
         addBaskets(data);
       }).fail(onAjaxError);
@@ -65,7 +58,8 @@
     function createBasket() {
       var basket = $("#basket_name").val();
       $.post("/baskets/" + basket, function(data) {
-        $("#created_message_text").html("Basket '" + basket + "' is created with token: " + data.token);
+        sessionStorage.setItem("token_" + basket, data.token);
+        $("#created_message_text").html("Basket '" + basket + "' is created with token: <mark>" + data.token + "</mark>");
         $("#basket_link").attr("href", "/web/basket.html?name=" + basket);
         $("#created_message").modal();
       }).fail(onAjaxError).always(function() {
@@ -80,10 +74,11 @@
         event.preventDefault();
       });
       $("#refresh").on("click", function(event) {
+        clearBaskets();
         fetchBaskets();
       });
       $("#fetch_more").on("click", function(event) {
-        fetchMoreBaskets();
+        fetchBaskets();
       });
 
       fetchBaskets();
@@ -122,8 +117,8 @@
   <!-- Created message -->
   <div class="modal fade" id="created_message" tabindex="-1" role="dialog" aria-labelledby="created_message_label">
     <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
+      <div class="modal-content panel-success">
+        <div class="modal-header panel-heading">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title" id="created_message_label">Created</h4>
         </div>
