@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>Request Basket</title>
+  <title>Request Basket: </title>
   <!-- Bootstrap -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
@@ -12,7 +12,7 @@
 
   <style>
     body { padding-top: 70px; }
-    h1 { margin-top: 2px; }
+    h2 { margin-top: 2px; }
     #more { margin-left: 100px; }
   </style>
 
@@ -23,11 +23,21 @@
     }
 
     var name = getBasketName();
-    var requestsCount = 0;
+    var fetchedCount = 0;
+    var totalCount = 0;
+    var currentConfig;
+
+    var autoRefresh = false;
+    var autoRefreshId;
+
+    function getToken() {
+      return sessionStorage.getItem("token_" + name);
+    }
 
     function onAjaxError(jqXHR) {
       if (jqXHR.status == 401) {
-        $("#token_message").modal({ keyboard : false });
+        enableAutoRefresh(false);
+        $("#token_dialog").modal({ keyboard : false });
       } else {
         $("#error_message_label").html("HTTP " + jqXHR.status + " - " + jqXHR.statusText);
         $("#error_message_text").html(jqXHR.responseText);
@@ -36,7 +46,7 @@
     }
 
     function escapeHTML(value) {
-      return value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     }
 
     function renderRequest(id, request) {
@@ -52,7 +62,7 @@
 
       var headers = [];
       Object.keys(request.headers).map(function(header) {
-        headers.push(header + ": " + request.headers[header].join(','));
+        headers.push(header + ": " + request.headers[header].join(","));
       });
 
       var headerClass = "default";
@@ -100,17 +110,22 @@
 
     function addRequests(data) {
       if (data && data.requests) {
+        totalCount = data.count;
+        $("#requests_count").html(data.size + " (" + totalCount + ")");
+
         var requests = $("#requests");
         var index;
         for (index = 0; index < data.requests.length; ++index) {
-          requests.append(renderRequest("req" + requestsCount, data.requests[index]));
-          requestsCount++;
+          requests.append(renderRequest("req" + fetchedCount, data.requests[index]));
+          fetchedCount++;
         }
 
         if (data.has_more) {
           $("#more").removeClass("hide");
+          $("#more_count").html(data.size - fetchedCount);
         } else {
           $("#more").addClass("hide");
+          $("#more_count").html("");
         }
       }
     }
@@ -118,24 +133,120 @@
     function fetchRequests() {
       $.ajax({
         method: "GET",
-        url: "/baskets/" + name + "/requests?skip=" + requestsCount,
+        url: "/baskets/" + name + "/requests?skip=" + fetchedCount,
         headers: {
-          "Authorization" : sessionStorage.getItem("token_" + name)
+          "Authorization" : getToken()
         }
       }).done(addRequests).fail(onAjaxError);
     }
 
+    function fetchTotalCount() {
+      $.ajax({
+        method: "GET",
+        url: "/baskets/" + name + "/requests?max=0",
+        headers: {
+          "Authorization" : getToken()
+        }
+      }).done(function(data) {
+        if (data && data.count && data.count > totalCount) {
+          refresh();
+        }
+      }).fail(onAjaxError);
+    }
+
+    function updateConfig() {
+      if (currentConfig && (
+        currentConfig.forward_url != $("#basket_forward_url").val() ||
+        currentConfig.capacity != $("#basket_capacity").val()
+      )) {
+        currentConfig.forward_url = $("#basket_forward_url").val();
+        currentConfig.capacity = parseInt($("#basket_capacity").val());
+
+        $.ajax({
+          method: "PUT",
+          url: "/baskets/" + name,
+          dataType: "json",
+          data: JSON.stringify(currentConfig),
+          headers: {
+            "Authorization" : getToken()
+          }
+        }).done(function(data) {
+          alert("Basket is reconfigured");
+        }).fail(onAjaxError);
+      }
+    }
+
+    function refresh() {
+      // reset
+      $("#requests").html("");
+      fetchedCount = 0;
+      // fetch
+      fetchRequests();
+    }
+
+    function enableAutoRefresh(enable) {
+      var btn = $("#auto_refresh");
+      if (enable) {
+        autoRefreshId = setInterval(fetchTotalCount, 3000);
+        btn.removeClass("btn-default");
+        btn.addClass("btn-success");
+      } else {
+        clearInterval(autoRefreshId);
+        btn.removeClass("btn-success");
+        btn.addClass("btn-default");
+      }
+      autoRefresh = enable;
+    }
+
+    function config() {
+      $.ajax({
+        method: "GET",
+        url: "/baskets/" + name,
+        headers: {
+          "Authorization" : getToken()
+        }
+      }).done(function(data) {
+        if (data) {
+          currentConfig = data;
+          $("#basket_forward_url").val(currentConfig.forward_url);
+          $("#basket_capacity").val(currentConfig.capacity);
+          $("#config_dialog").modal();
+        }
+      }).fail(onAjaxError);
+    }
+
     // Initialization
     $(document).ready(function() {
-      $("#name").html("Basket: " + name);
-      $("#token_message").on("hidden.bs.modal", function (event) {
+      $("#name").html(name);
+
+      // dialogs
+      $("#token_dialog").on("hidden.bs.modal", function (event) {
         sessionStorage.setItem("token_" + name, $("#basket_token").val());
         fetchRequests();
+      });
+      $("#config_form").on("submit", function(event) {
+        $("#config_dialog").modal("hide");
+        updateConfig();
+        event.preventDefault();
+      });
+
+      // buttons
+      $("#refresh").on("click", function(event) {
+        refresh();
+      });
+      $("#auto_refresh").on("click", function(event) {
+        enableAutoRefresh(!autoRefresh);
+      });
+      $("#config").on("click", function(event) {
+        config();
       });
       $("#fetch_more").on("click", function(event) {
         fetchRequests();
       });
 
+      if (getToken()) {
+        enableAutoRefresh(true);
+      }
       fetchRequests();
     });
   })(jQuery);
@@ -146,7 +257,23 @@
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a class="navbar-brand" href="/web">Request Basket</a>
+        <a class="navbar-brand" href="/web">Request Baskets</a>
+      </div>
+      <div class="collapse navbar-collapse">
+        <form class="navbar-form navbar-right">
+          <button id="refresh" type="button" title="Refresh" class="btn btn-default">
+            <span class="glyphicon glyphicon-refresh"></span>
+          </button>
+          <button id="auto_refresh" type="button" title="Auto Refresh" class="btn btn-success">
+            <span class="glyphicon glyphicon-repeat"></span>
+          </button>
+          <button id="config" type="button" title="Configuration" class="btn btn-default">
+            <span class="glyphicon glyphicon-cog"></span>
+          </button>
+          <button id="delete" type="button" title="Delete" class="btn btn-danger">
+            <span class="glyphicon glyphicon-trash"></span>
+          </button>
+        </form>
       </div>
     </div>
   </nav>
@@ -162,7 +289,7 @@
           <p id="error_message_text"></p>
         </div>
         <div class="modal-footer">
-          <a href="/web" class="btn btn-default">Show Baskets</a>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -170,11 +297,11 @@
 
   <!-- Login dialog -->
   <form>
-  <div class="modal fade" id="token_message" tabindex="-1">
+  <div class="modal fade" id="token_dialog" tabindex="-1">
     <div class="modal-dialog">
-      <div class="modal-content panel-success">
+      <div class="modal-content panel-warning">
         <div class="modal-header panel-heading">
-          <h4 class="modal-title" id="token_message_label">Token requred</h4>
+          <h4 class="modal-title">Token requred</h4>
         </div>
         <div class="modal-body">
           <p>You are not authorized to access this basket. Please enter this basket token, or choose another basket.</p>
@@ -184,8 +311,34 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success" data-dismiss="modal">Authorize</button>
           <a href="/web" class="btn btn-default">Show Baskets</a>
+          <button type="submit" class="btn btn-success" data-dismiss="modal">Authorize</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </form>
+
+  <!-- Config dialog -->
+  <form id="config_form">
+  <div class="modal fade" id="config_dialog" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content panel-success">
+        <div class="modal-header panel-heading">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title" id="config_dialog_label">Configuration</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="basket_forward_url" class="control-label">Forward URL:</label>
+            <input type="input" class="form-control" id="basket_forward_url">
+            <label for="basket_capacity" class="control-label">Basket Capacity:</label>
+            <input type="input" class="form-control" id="basket_capacity">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Apply</button>
         </div>
       </div>
     </div>
@@ -195,14 +348,19 @@
   <div class="container">
     <div class="row">
       <div class="col-md-4">
-        <h1 id="name">Basket: </h1>
+        <h2>Basket: <span id="name"></span></h2>
+      </div>
+      <div class="col-md-3 col-md-offset-5">
+        <h4><abbr title="Current basket size (Total number)">Requests</abbr>: <span id="requests_count"></span></h4>
       </div>
     </div>
     <hr/>
     <div id="requests">
     </div>
     <div id="more" class="hide">
-      <a id="fetch_more" class="btn btn-default">more...</a>
+      <button id="fetch_more" type="button" class="btn btn-default">
+        More <span id="more_count" class="badge"></span>
+      </button>
     </div>
   </div>
 
