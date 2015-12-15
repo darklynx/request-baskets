@@ -151,6 +151,8 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if name, basket := getAndAuthBasket(w, r, ps); basket != nil {
+		log.Printf("Deleting basket: %s", name)
+
 		basketDb.Delete(name)
 		w.WriteHeader(http.StatusNoContent)
 	}

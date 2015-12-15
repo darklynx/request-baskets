@@ -31,7 +31,12 @@
     var autoRefreshId;
 
     function getToken() {
-      return sessionStorage.getItem("token_" + name);
+      var token = sessionStorage.getItem("token_" + name);
+      if (!token) {
+        // fall back to master token if provided
+        token = sessionStorage.getItem("master_token");
+      }
+      return token;
     }
 
     function onAjaxError(jqXHR) {
