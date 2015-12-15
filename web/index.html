@@ -59,9 +59,14 @@
       var basket = $("#basket_name").val();
       $.post("/baskets/" + basket, function(data) {
         sessionStorage.setItem("token_" + basket, data.token);
-        $("#created_message_text").html("Basket '" + basket + "' is created with token: <mark>" + data.token + "</mark>");
+        $("#created_message_text").html("<p>Basket '" + basket +
+          "' is successfully created!</p><p>Your token is: <mark>" + data.token + "</mark></p>");
         $("#basket_link").attr("href", "/web/basket.html?name=" + basket);
         $("#created_message").modal();
+
+        // refresh
+        clearBaskets();
+        fetchBaskets();
       }).fail(onAjaxError).always(function() {
         $("#basket_name").val("");
       });
@@ -122,8 +127,7 @@
           <button type="button" class="close" data-dismiss="modal">&times;</button>
           <h4 class="modal-title" id="created_message_label">Created</h4>
         </div>
-        <div class="modal-body">
-          <p id="created_message_text"></p>
+        <div class="modal-body" id="created_message_text">
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

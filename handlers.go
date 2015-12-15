@@ -7,12 +7,14 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
 
+var validBasketName = regexp.MustCompile(BASKET_NAME)
 var basketDb = MakeBasketDb()
 
 func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
@@ -71,8 +73,6 @@ func parseConfig(body []byte, config *Config) error {
 }
 
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	log.Print("Get basket names")
-
 	json, err := basketDb.ToJson(
 		getIntParam(r, "max", DEFAULT_PAGE_SIZE),
 		getIntParam(r, "skip", 0))
@@ -88,30 +88,40 @@ func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
-	log.Printf("Create basket: %s", name)
+	if name == BASKETS_ROOT || name == WEB_ROOT {
+		http.Error(w, "You may not use system path as basket name: "+name, http.StatusForbidden)
+		return
+	}
+	if !validBasketName.MatchString(name) {
+		http.Error(w, "Invalid basket name: "+name+", acceppted pattern: "+validBasketName.String(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Creating basket: %s", name)
 
 	// read config (max 2 kB)
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2048))
 	r.Body.Close()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else {
-		// default config
-		config := Config{ForwardUrl: "", Capacity: DEFAULT_BASKET_CAPACITY}
-		if len(body) > 0 {
-			if err := parseConfig(body, &config); err != nil {
-				http.Error(w, err.Error(), 422)
-				return
-			}
-		}
+		return
+	}
 
-		basket, err := basketDb.Create(name, config)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusConflict)
-		} else {
-			json, err := basket.ToAuthJson()
-			writeJson(w, http.StatusCreated, json, err)
+	// default config
+	config := Config{ForwardUrl: "", Capacity: DEFAULT_BASKET_CAPACITY}
+	if len(body) > 0 {
+		if err := parseConfig(body, &config); err != nil {
+			http.Error(w, err.Error(), 422)
+			return
 		}
+	}
+
+	basket, err := basketDb.Create(name, config)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+	} else {
+		json, err := basket.ToAuthJson()
+		writeJson(w, http.StatusCreated, json, err)
 	}
 }
 
@@ -165,8 +175,6 @@ func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	name := parts[1]
-	log.Printf("Basket: %s request: %s", name, r.Method)
-
 	basket := basketDb.Get(name)
 	if basket != nil {
 		basket.Requests.Add(r)

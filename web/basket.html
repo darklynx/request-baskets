@@ -185,17 +185,19 @@
     }
 
     function enableAutoRefresh(enable) {
-      var btn = $("#auto_refresh");
-      if (enable) {
-        autoRefreshId = setInterval(fetchTotalCount, 3000);
-        btn.removeClass("btn-default");
-        btn.addClass("btn-success");
-      } else {
-        clearInterval(autoRefreshId);
-        btn.removeClass("btn-success");
-        btn.addClass("btn-default");
+      if (autoRefresh != enable) {
+        var btn = $("#auto_refresh");
+        if (enable) {
+          autoRefreshId = setInterval(fetchTotalCount, 3000);
+          btn.removeClass("btn-default");
+          btn.addClass("btn-success");
+        } else {
+          clearInterval(autoRefreshId);
+          btn.removeClass("btn-success");
+          btn.addClass("btn-default");
+        }
+        autoRefresh = enable;
       }
-      autoRefresh = enable;
     }
 
     function config() {
@@ -212,6 +214,34 @@
           $("#basket_capacity").val(currentConfig.capacity);
           $("#config_dialog").modal();
         }
+      }).fail(onAjaxError);
+    }
+
+    function deleteRequests() {
+      $.ajax({
+        method: "DELETE",
+        url: "/baskets/" + name + "/requests",
+        headers: {
+          "Authorization" : getToken()
+        }
+      }).done(function(data) {
+        refresh();
+      }).fail(onAjaxError);
+    }
+
+    function destroyBasket() {
+      $("#destroy_dialog").modal("hide");
+      enableAutoRefresh(false);
+
+      $.ajax({
+        method: "DELETE",
+        url: "/baskets/" + name,
+        headers: {
+          "Authorization" : getToken()
+        }
+      }).done(function(data) {
+        sessionStorage.removeItem("token_" + name);
+        window.location.href = "/web";
       }).fail(onAjaxError);
     }
 
@@ -240,6 +270,15 @@
       $("#config").on("click", function(event) {
         config();
       });
+      $("#delete").on("click", function(event) {
+        deleteRequests();
+      });
+      $("#destroy").on("click", function(event) {
+        $("#destroy_dialog").modal();
+      });
+      $("#destroy_confirmed").on("click", function(event) {
+        destroyBasket();
+      });
       $("#fetch_more").on("click", function(event) {
         fetchRequests();
       });
@@ -267,10 +306,13 @@
           <button id="auto_refresh" type="button" title="Auto Refresh" class="btn btn-success">
             <span class="glyphicon glyphicon-repeat"></span>
           </button>
-          <button id="config" type="button" title="Configuration" class="btn btn-default">
+          <button id="config" type="button" title="Configure" class="btn btn-default">
             <span class="glyphicon glyphicon-cog"></span>
           </button>
-          <button id="delete" type="button" title="Delete" class="btn btn-danger">
+          <button id="delete" type="button" title="Delete Requests" class="btn btn-warning">
+            <span class="glyphicon glyphicon-fire"></span>
+          </button>
+          <button id="destroy" type="button" title="Destroy Basket" class="btn btn-danger">
             <span class="glyphicon glyphicon-trash"></span>
           </button>
         </form>
@@ -344,6 +386,25 @@
     </div>
   </div>
   </form>
+
+  <!-- Destroy dialog -->
+  <div class="modal fade" id="destroy_dialog" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content panel-danger">
+        <div class="modal-header panel-heading">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Destroy This Basket</h4>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to <strong>permanently destroy</strong> this basket and delete all collected requests?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="destroy_confirmed">Destroy</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="container">
     <div class="row">

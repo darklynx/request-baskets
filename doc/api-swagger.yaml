@@ -88,7 +88,7 @@ paths:
         409:
           description: Conflict. Indicates that basket with such name already exists
         403:
-          description: Forbidden. Indicates that basket name conflicts with reserved paths; e.g. `baskets`, `show`, etc.
+          description: Forbidden. Indicates that basket name conflicts with reserved paths; e.g. `baskets`, `web`, etc.
     get:
       tags:
         - baskets
