@@ -31,6 +31,7 @@ func StartServer() {
 	router.DELETE("/"+BASKETS_ROOT+"/:basket/requests", ClearBasket)
 
 	// web pages
+	router.GET("/", ForwardToWeb)
 	router.ServeFiles("/"+WEB_ROOT+"/*filepath", http.Dir("./src/github.com/darklynx/request-baskets/web"))
 
 	// basket requests

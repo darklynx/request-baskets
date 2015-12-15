@@ -175,6 +175,10 @@ func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	http.Redirect(w, r, "/web", 302)
+}
+
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	name := parts[1]
