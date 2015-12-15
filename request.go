@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -47,6 +49,33 @@ func makeRequest(r *http.Request) *Request {
 	req.Body = string(body)
 
 	return req
+}
+
+func (req *Request) Forward(client *http.Client, forwardUrl string) {
+	body := strings.NewReader(req.Body)
+
+	// append query
+	if len(req.Query) > 0 {
+		if strings.Index(forwardUrl, "?") < 0 {
+			forwardUrl += "?"
+		} else {
+			forwardUrl += "&"
+		}
+		forwardUrl += req.Query
+	}
+
+	forwardReq, _ := http.NewRequest(req.Method, forwardUrl, body)
+
+	// copy headers
+	for header, vals := range req.Header {
+		for _, val := range vals {
+			forwardReq.Header.Add(header, val)
+		}
+	}
+
+	response, _ := client.Do(forwardReq)
+	io.Copy(ioutil.Discard, response.Body)
+	response.Body.Close()
 }
 
 func (db *RequestDb) applyLimit() {

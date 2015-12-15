@@ -16,6 +16,7 @@ import (
 
 var validBasketName = regexp.MustCompile(BASKET_NAME)
 var basketDb = MakeBasketDb()
+var httpClient = new(http.Client)
 
 func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
 	if err != nil {
@@ -179,8 +180,12 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	name := parts[1]
 	basket := basketDb.Get(name)
 	if basket != nil {
-		basket.Requests.Add(r)
+		request := basket.Requests.Add(r)
 		w.WriteHeader(http.StatusOK)
+
+		if len(basket.Config.ForwardUrl) > 0 {
+			go request.Forward(httpClient, basket.Config.ForwardUrl)
+		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
