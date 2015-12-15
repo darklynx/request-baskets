@@ -41,7 +41,8 @@ func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	basket := basketDb.Get(name)
 	if basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
-		if r.Header.Get("Authorization") == basket.Token {
+		token := r.Header.Get("Authorization")
+		if token == basket.Token || token == GetMasterToken() {
 			return name, basket
 		} else {
 			w.WriteHeader(http.StatusUnauthorized)

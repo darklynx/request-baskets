@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"sync"
 )
 
@@ -34,16 +33,6 @@ type BasketDb struct {
 	names   []string
 }
 
-var tokenLetters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-func GenerateToken(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = tokenLetters[rand.Intn(len(tokenLetters))]
-	}
-	return string(b)
-}
-
 func (b *Basket) ToJson() ([]byte, error) {
 	return json.Marshal(b.Config)
 }
@@ -62,8 +51,13 @@ func (db *BasketDb) Create(name string, config Config) (*Basket, error) {
 		return nil, fmt.Errorf("Basket with name '%s' already exists", name)
 	}
 
+	token, err := GenerateToken()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to generate token: %s", err.Error())
+	}
+
 	basket := new(Basket)
-	basket.Token = GenerateToken(20)
+	basket.Token = token
 	basket.Config = config
 	basket.Requests = MakeRequestDb(config.Capacity)
 
