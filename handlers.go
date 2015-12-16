@@ -23,6 +23,7 @@ var basketPage = template.Must(template.New("basket").Parse(BASKET_HTML))
 var basketDb = MakeBasketDb()
 var httpClient = new(http.Client)
 
+// writeJson writes JSON content to HTTP response
 func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -33,6 +34,7 @@ func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
 	}
 }
 
+// getIntParam retrieves integer parameter from HTTP request query
 func getIntParam(r *http.Request, name string, defaultValue int) int {
 	value := r.URL.Query().Get(name)
 	if len(value) > 0 {
@@ -44,6 +46,7 @@ func getIntParam(r *http.Request, name string, defaultValue int) int {
 	return defaultValue
 }
 
+// getAndAuthBasket retrieves basket by name from HTTP request path and authorize access to the basket object
 func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, *Basket) {
 	name := ps.ByName("basket")
 	basket := basketDb.Get(name)
@@ -62,7 +65,8 @@ func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	return "", nil
 }
 
-func parseConfig(body []byte, config *Config) error {
+// parseBasketConfig parses basket configuration and validate its content
+func parseBasketConfig(body []byte, config *Config) error {
 	// parse request
 	if err := json.Unmarshal(body, config); err != nil {
 		return err
@@ -87,6 +91,7 @@ func parseConfig(body []byte, config *Config) error {
 	return nil
 }
 
+// GetBaskets handles HTTP request to get registered baskets
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	json, err := basketDb.ToJson(
 		getIntParam(r, "max", serverConfig.PageSize),
@@ -94,6 +99,7 @@ func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	writeJson(w, http.StatusOK, json, err)
 }
 
+// GetBasket handles HTTP request to get basket configuration
 func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		json, err := basket.ToJson()
@@ -101,6 +107,7 @@ func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+// CreateBasket handles HTTP request to create a new basket
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
 	if name == BASKETS_ROOT || name == WEB_ROOT {
@@ -125,7 +132,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	// default config
 	config := Config{ForwardUrl: "", Capacity: serverConfig.InitCapacity}
 	if len(body) > 0 {
-		if err := parseConfig(body, &config); err != nil {
+		if err := parseBasketConfig(body, &config); err != nil {
 			http.Error(w, err.Error(), 422)
 			return
 		}
@@ -140,6 +147,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 }
 
+// UpdateBasket handles HTTP request to update basket configuration
 func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		// read config (max 2 kB)
@@ -149,7 +157,7 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else if len(body) > 0 {
 			config := basket.Config
-			if err := parseConfig(body, &config); err != nil {
+			if err := parseBasketConfig(body, &config); err != nil {
 				http.Error(w, err.Error(), 422)
 				return
 			}
@@ -164,6 +172,7 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 }
 
+// DeleteBasket handles HTTP request to delete basket
 func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if name, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		log.Printf("Deleting basket: %s", name)
@@ -173,6 +182,7 @@ func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 }
 
+// GetBasketRequests handles HTTP request to get requests collected by basket
 func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		json, err := basket.Requests.ToJson(
@@ -182,6 +192,7 @@ func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 }
 
+// ClearBasket handles HTTP request to delete all requests collected by basket
 func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		basket.Requests.Clear()
@@ -189,18 +200,23 @@ func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+// ForwardToWeb handels HTTP forwarding to /web
 func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	http.Redirect(w, r, "/web", 302)
 }
 
+// WebIndexPage handles HTTP request to render index page
 func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	indexPage.Execute(w, "")
 }
+
+// WebBasketPage handles HTTP request to render basket details page
 func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
 	basketPage.Execute(w, name)
 }
 
+// AcceptBasketRequests accepts and handles HTTP requests passed to different baskets
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	name := parts[1]

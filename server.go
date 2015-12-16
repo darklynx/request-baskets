@@ -8,7 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// StartServer starts RequestBasket server
+// StartServer starts Request Baskets server
 func StartServer() {
 	router := httprouter.New()
 

@@ -25,6 +25,7 @@ type ServerConfig struct {
 
 var serverConfig = CreateConfig()
 
+// CreateConfig creates server configuration base on application command line arguments
 func CreateConfig() *ServerConfig {
 	var port = flag.Int("p", DEFAULT_PORT, "HTTP service port")
 	var initCapacity = flag.Int("size", INIT_BASKET_CAPACITY, "Initial basket size (capacity)")
