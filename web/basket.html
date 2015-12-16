@@ -200,11 +200,11 @@
         if (enable) {
           autoRefreshId = setInterval(fetchTotalCount, 3000);
           btn.removeClass("btn-default");
-          btn.addClass("btn-primary");
+          btn.addClass("btn-success");
           btn.attr("title", "Auto-Refresh is Enabled");
         } else {
           clearInterval(autoRefreshId);
-          btn.removeClass("btn-primary");
+          btn.removeClass("btn-success");
           btn.addClass("btn-default");
           btn.attr("title", "Auto-Refresh is Disabled");
         }
@@ -316,7 +316,7 @@
           <button id="refresh" type="button" title="Refresh" class="btn btn-default">
             <span class="glyphicon glyphicon-refresh"></span>
           </button>
-          <button id="auto_refresh" type="button" title="Auto Refresh" class="btn">
+          <button id="auto_refresh" type="button" title="Auto Refresh" class="btn btn-default">
             <span class="glyphicon glyphicon-repeat"></span>
           </button>
           &nbsp;
