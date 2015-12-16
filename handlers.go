@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -49,7 +50,7 @@ func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	if basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
 		token := r.Header.Get("Authorization")
-		if token == basket.Token || token == GetMasterToken() {
+		if token == basket.Token || token == serverConfig.MasterToken {
 			return name, basket
 		} else {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -67,6 +68,15 @@ func parseConfig(body []byte, config *Config) error {
 		return err
 	}
 
+	// validate Capacity
+	if config.Capacity < 1 {
+		return fmt.Errorf("Capacity should be a positive number, but was %d", config.Capacity)
+	}
+
+	if config.Capacity > serverConfig.MaxCapacity {
+		return fmt.Errorf("Capacity may not be greater than %d", serverConfig.MaxCapacity)
+	}
+
 	// validate URL
 	if len(config.ForwardUrl) > 0 {
 		if _, err := url.ParseRequestURI(config.ForwardUrl); err != nil {
@@ -79,7 +89,7 @@ func parseConfig(body []byte, config *Config) error {
 
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	json, err := basketDb.ToJson(
-		getIntParam(r, "max", DEFAULT_PAGE_SIZE),
+		getIntParam(r, "max", serverConfig.PageSize),
 		getIntParam(r, "skip", 0))
 	writeJson(w, http.StatusOK, json, err)
 }
@@ -113,7 +123,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 
 	// default config
-	config := Config{ForwardUrl: "", Capacity: DEFAULT_BASKET_CAPACITY}
+	config := Config{ForwardUrl: "", Capacity: serverConfig.InitCapacity}
 	if len(body) > 0 {
 		if err := parseConfig(body, &config); err != nil {
 			http.Error(w, err.Error(), 422)
@@ -166,7 +176,7 @@ func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		json, err := basket.Requests.ToJson(
-			getIntParam(r, "max", DEFAULT_PAGE_SIZE),
+			getIntParam(r, "max", serverConfig.PageSize),
 			getIntParam(r, "skip", 0))
 		writeJson(w, http.StatusOK, json, err)
 	}

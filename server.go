@@ -8,13 +8,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var masterToken, _ = GenerateToken()
-
 // StartServer starts RequestBasket server
 func StartServer() {
-	// TODO: implement support for server config
-	log.Printf("Master token: %s", GetMasterToken())
-
 	router := httprouter.New()
 
 	// basket names
@@ -39,9 +34,6 @@ func StartServer() {
 	// basket requests
 	router.NotFound = http.HandlerFunc(AcceptBasketRequests)
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", DEFAULT_PORT), router))
-}
-
-func GetMasterToken() string {
-	return masterToken
+	log.Printf("Starting HTTP server on port: %d", serverConfig.ServerPort)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverConfig.ServerPort), router))
 }
