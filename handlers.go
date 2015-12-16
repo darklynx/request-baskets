@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
@@ -15,6 +16,9 @@ import (
 )
 
 var validBasketName = regexp.MustCompile(BASKET_NAME)
+var indexPage = template.Must(template.New("index").Parse(INDEX_HTML))
+var basketPage = template.Must(template.New("basket").Parse(BASKET_HTML))
+
 var basketDb = MakeBasketDb()
 var httpClient = new(http.Client)
 
@@ -90,11 +94,11 @@ func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
 	if name == BASKETS_ROOT || name == WEB_ROOT {
-		http.Error(w, "You may not use system path as basket name: "+name, http.StatusForbidden)
+		http.Error(w, "You cannot use system path as basket name: "+name, http.StatusForbidden)
 		return
 	}
 	if !validBasketName.MatchString(name) {
-		http.Error(w, "Invalid basket name: "+name+", acceppted pattern: "+validBasketName.String(), http.StatusBadRequest)
+		http.Error(w, "Invalid basket name: "+name+", valid name pattern: "+validBasketName.String(), http.StatusBadRequest)
 		return
 	}
 
@@ -177,6 +181,14 @@ func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	http.Redirect(w, r, "/web", 302)
+}
+
+func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	indexPage.Execute(w, "")
+}
+func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	name := ps.ByName("basket")
+	basketPage.Execute(w, name)
 }
 
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
