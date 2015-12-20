@@ -320,6 +320,11 @@
     },
     "Request" : {
       "properties" : {
+        "date" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "Date and time of request in Unix time ms. format (number of miliseconds elapsed since January 1, 1970 UTC)"
+        },
         "headers" : {
           "description" : "Map of request headers, key represents name, value is array of values",
           "$ref" : "#/definitions/Headers"

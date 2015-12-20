@@ -7,9 +7,13 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
+const TO_MS = int64(time.Millisecond) / int64(time.Nanosecond)
+
 type Request struct {
+	Date          int64       `json:"date"`
 	Header        http.Header `json:"headers"`
 	ContentLength int64       `json:"content_length"`
 	Body          string      `json:"body"`
@@ -35,6 +39,7 @@ type RequestDb struct {
 func makeRequest(r *http.Request) *Request {
 	req := new(Request)
 
+	req.Date = time.Now().UnixNano() / TO_MS
 	req.Header = make(http.Header)
 	for k, v := range r.Header {
 		req.Header[k] = v

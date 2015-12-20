@@ -81,7 +81,8 @@ const (
           break;
       }
 
-      var html = '<div class="row"><div class="col-md-1"><h4 class="text-' + headerClass + '">[' + request.method +
+			var html = '<div class="row"><div class="col-md-1"><h4 class="text-' + headerClass +
+				'" title="' + new Date(request.date).toString() + '">[' + request.method +
         ']</h4></div><div class="col-md-11"><div class="panel-group" id="' + id + '">' +
         '<div class="panel panel-' + headerClass + '"><div class="panel-heading"><h4 class="panel-title">' + path + '</h4></div></div>' +
         '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
