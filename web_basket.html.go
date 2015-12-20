@@ -415,10 +415,10 @@ const (
 
   <div class="container">
     <div class="row">
-      <div class="col-md-4">
+      <div class="col-md-8">
         <h1>Basket: {{.}}</h1>
       </div>
-      <div class="col-md-3 col-md-offset-5">
+      <div class="col-md-3 col-md-offset-1">
         <h4><abbr title="Current size (Total count)">Requests</abbr>: <span id="requests_count"></span></h4>
       </div>
     </div>
