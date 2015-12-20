@@ -1,9 +1,9 @@
 {
   "swagger" : "2.0",
   "info" : {
-    "description" : "Prototype of RESTful API for RequestBasket",
-    "version" : "0.1",
-    "title" : "RequestBasket API",
+    "description" : "RESTful API of Request Baskets service",
+    "version" : "0.2",
+    "title" : "Request Baskets API",
     "contact" : {
       "name" : "darklynx",
       "url" : "https://github.com/darklynx"

@@ -1,12 +1,12 @@
 ############################################
-# RESTful API for RequestBasket
+# RESTful API for Request Baskets service
 #
 swagger: '2.0'
 
 info:
-  version: 0.1
-  title: RequestBasket API
-  description: Prototype of RESTful API for RequestBasket
+  version: 0.2
+  title: Request Baskets API
+  description: RESTful API of Request Baskets service
   contact:
     name: darklynx
     url: https://github.com/darklynx
