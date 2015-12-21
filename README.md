@@ -49,9 +49,9 @@ Usage of request-baskets:
 ### Parameters
 
  * `-p` *port* - HTTP service listener port, default value is `55555`
- * `-page` *size* - default page size for retrieving collections
- * `-size` *size* - default basket capacity for new baskets
- * `-maxsize` *size* - maximum allowed basket capacity, capacity greater than this number will be rejected by service
+ * `-page` *size* - default page size to retrieve collections
+ * `-size` *size* - default basket capacity of new baskets if not specified
+ * `-maxsize` *size* - maximum allowed basket capacity, basket capacity greater than this number will be rejected by service
  * `-token` *token* - master token to gain control over all baskets, if not specified a random token will be generated when service is launched and printed to *stdout*
 
 ## Usage
