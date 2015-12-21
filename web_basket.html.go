@@ -27,8 +27,7 @@ const (
 
     function getToken() {
       var token = sessionStorage.getItem("token_{{.}}");
-      if (!token) {
-        // fall back to master token if provided
+      if (!token) { // fall back to master token if provided
         token = sessionStorage.getItem("master_token");
       }
       return token;
@@ -46,7 +45,7 @@ const (
     }
 
     function escapeHTML(value) {
-      return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
     function renderRequest(id, request) {
@@ -125,14 +124,14 @@ const (
           requests.append(renderRequest("req" + fetchedCount, data.requests[index]));
           fetchedCount++;
         }
+      }
 
-        if (data.has_more) {
-          $("#more").removeClass("hide");
-          $("#more_count").html(data.size - fetchedCount);
-        } else {
-          $("#more").addClass("hide");
-          $("#more_count").html("");
-        }
+      if (data.has_more) {
+        $("#more").removeClass("hide");
+        $("#more_count").html(data.size - fetchedCount);
+      } else {
+        $("#more").addClass("hide");
+        $("#more_count").html("");
       }
     }
 
@@ -154,7 +153,7 @@ const (
           "Authorization" : getToken()
         }
       }).done(function(data) {
-        if (data && data.count && data.count > totalCount) {
+        if (data && (data.count != totalCount)) {
           refresh();
         }
       }).fail(onAjaxError);
@@ -183,11 +182,9 @@ const (
     }
 
     function refresh() {
-      // reset
-      $("#requests").html("");
+      $("#requests").html(""); // reset
       fetchedCount = 0;
-      // fetch
-      fetchRequests();
+      fetchRequests(); // fetch latest
     }
 
     function enableAutoRefresh(enable) {
@@ -265,7 +262,6 @@ const (
         updateConfig();
         event.preventDefault();
       });
-
       // buttons
       $("#refresh").on("click", function(event) {
         refresh();
@@ -288,7 +284,7 @@ const (
       $("#fetch_more").on("click", function(event) {
         fetchRequests();
       });
-
+      // autorefresh and initial fetch
       if (getToken()) {
         enableAutoRefresh(true);
       }

@@ -32,8 +32,7 @@
 
     function getToken() {
       var token = sessionStorage.getItem("token_" + name);
-      if (!token) {
-        // fall back to master token if provided
+      if (!token) { // fall back to master token if provided
         token = sessionStorage.getItem("master_token");
       }
       return token;
@@ -51,7 +50,7 @@
     }
 
     function escapeHTML(value) {
-      return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
     function renderRequest(id, request) {
@@ -130,14 +129,14 @@
           requests.append(renderRequest("req" + fetchedCount, data.requests[index]));
           fetchedCount++;
         }
+      }
 
-        if (data.has_more) {
-          $("#more").removeClass("hide");
-          $("#more_count").html(data.size - fetchedCount);
-        } else {
-          $("#more").addClass("hide");
-          $("#more_count").html("");
-        }
+      if (data.has_more) {
+        $("#more").removeClass("hide");
+        $("#more_count").html(data.size - fetchedCount);
+      } else {
+        $("#more").addClass("hide");
+        $("#more_count").html("");
       }
     }
 
@@ -159,7 +158,7 @@
           "Authorization" : getToken()
         }
       }).done(function(data) {
-        if (data && data.count && data.count > totalCount) {
+        if (data && (data.count != totalCount)) {
           refresh();
         }
       }).fail(onAjaxError);
@@ -188,11 +187,9 @@
     }
 
     function refresh() {
-      // reset
-      $("#requests").html("");
+      $("#requests").html(""); // reset
       fetchedCount = 0;
-      // fetch
-      fetchRequests();
+      fetchRequests(); // fetch latest
     }
 
     function enableAutoRefresh(enable) {
@@ -262,8 +259,7 @@
     $(document).ready(function() {
       $("#name").html(name);
       $("#basket_uri").html("/" + name);
-
-      // dialogs
+      // dialog handlers
       $("#token_dialog").on("hidden.bs.modal", function (event) {
         sessionStorage.setItem("token_" + name, $("#basket_token").val());
         fetchRequests();
@@ -273,8 +269,7 @@
         updateConfig();
         event.preventDefault();
       });
-
-      // buttons
+      // button handlers
       $("#refresh").on("click", function(event) {
         refresh();
       });
@@ -296,7 +291,7 @@
       $("#fetch_more").on("click", function(event) {
         fetchRequests();
       });
-
+      // autorefresh and initial fetch
       if (getToken()) {
         enableAutoRefresh(true);
       }
