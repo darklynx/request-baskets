@@ -8,8 +8,17 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+var serverConfig *ServerConfig
+var basketsDb BasketsDatabase
+
 // StartServer starts Request Baskets server
 func StartServer() {
+	// read config
+	serverConfig = CreateConfig()
+	// create database
+	basketsDb = NewMemoryDatabase()
+
+	// configure service HTTP router
 	router := httprouter.New()
 
 	// basket names

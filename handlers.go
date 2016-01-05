@@ -20,7 +20,6 @@ var validBasketName = regexp.MustCompile(BASKET_NAME)
 var indexPage = template.Must(template.New("index").Parse(INDEX_HTML))
 var basketPage = template.Must(template.New("basket").Parse(BASKET_HTML))
 
-var baskets = NewMemoryDatabase()
 var httpClient = new(http.Client)
 
 // writeJson writes JSON content to HTTP response
@@ -54,7 +53,7 @@ func getPage(r *http.Request) (int, int) {
 // getAndAuthBasket retrieves basket by name from HTTP request path and authorize access to the basket object
 func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, Basket) {
 	name := ps.ByName("basket")
-	basket := baskets.Get(name)
+	basket := basketsDb.Get(name)
 	if basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
 		token := r.Header.Get("Authorization")
@@ -98,7 +97,7 @@ func parseBasketConfig(body []byte, config *BasketConfig) error {
 
 // GetBaskets handles HTTP request to get registered baskets
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	json, err := json.Marshal(baskets.GetNames(getPage(r)))
+	json, err := json.Marshal(basketsDb.GetNames(getPage(r)))
 	writeJson(w, http.StatusOK, json, err)
 }
 
@@ -141,7 +140,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		}
 	}
 
-	auth, err := baskets.Create(name, config)
+	auth, err := basketsDb.Create(name, config)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
 	} else {
@@ -179,7 +178,7 @@ func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	if name, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		log.Printf("Deleting basket: %s", name)
 
-		baskets.Delete(name)
+		basketsDb.Delete(name)
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -220,7 +219,7 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	name := parts[1]
-	basket := baskets.Get(name)
+	basket := basketsDb.Get(name)
 	if basket != nil {
 		request := basket.Add(r)
 		w.WriteHeader(http.StatusOK)

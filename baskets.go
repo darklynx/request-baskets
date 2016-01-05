@@ -63,6 +63,8 @@ type BasketsDatabase interface {
 
 	Size() int
 	GetNames(max int, skip int) BasketNamesPage
+
+	Release()
 }
 
 // ToRequestData converts HTTP Request object into RequestData holder

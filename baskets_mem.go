@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 )
@@ -176,6 +177,10 @@ func (db *memoryDatabase) GetNames(max int, skip int) BasketNamesPage {
 	}
 
 	return namesPage
+}
+
+func (db *memoryDatabase) Release() {
+	log.Printf("Releasing in-memory database resources")
 }
 
 // NewMemoryDatabase creates an instance of in-memory Baskets Database

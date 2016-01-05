@@ -23,8 +23,6 @@ type ServerConfig struct {
 	MasterToken  string
 }
 
-var serverConfig = CreateConfig()
-
 // CreateConfig creates server configuration base on application command line arguments
 func CreateConfig() *ServerConfig {
 	var port = flag.Int("p", DEFAULT_PORT, "HTTP service port")
