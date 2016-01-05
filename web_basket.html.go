@@ -109,9 +109,9 @@ const (
     }
 
     function addRequests(data) {
-      totalCount = data.count;
-      $("#requests_count").html(data.size + " (" + totalCount + ")");
-      if (data.size > 0) {
+      totalCount = data.total_count;
+      $("#requests_count").html(data.count + " (" + totalCount + ")");
+      if (data.count > 0) {
         $("#empty_basket").addClass("hide");
       } else {
         $("#empty_basket").removeClass("hide");
@@ -128,7 +128,7 @@ const (
 
       if (data.has_more) {
         $("#more").removeClass("hide");
-        $("#more_count").html(data.size - fetchedCount);
+        $("#more_count").html(data.count - fetchedCount);
       } else {
         $("#more").addClass("hide");
         $("#more_count").html("");
@@ -153,7 +153,7 @@ const (
           "Authorization" : getToken()
         }
       }).done(function(data) {
-        if (data && (data.count != totalCount)) {
+        if (data && (data.total_count != totalCount)) {
           refresh();
         }
       }).fail(onAjaxError);
@@ -416,7 +416,7 @@ const (
         <h1>Basket: {{.}}</h1>
       </div>
       <div class="col-md-3 col-md-offset-1">
-        <h4><abbr title="Current size (Total count)">Requests</abbr>: <span id="requests_count"></span></h4>
+        <h4><abbr title="Current requests count (Total count)">Requests</abbr>: <span id="requests_count"></span></h4>
       </div>
     </div>
     <hr/>

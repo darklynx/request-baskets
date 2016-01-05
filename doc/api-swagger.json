@@ -25,12 +25,12 @@
     "/baskets" : {
       "get" : {
         "tags" : [ "baskets" ],
-        "summary" : "Get registered baskets",
-        "description" : "Returns list of registered baskets",
+        "summary" : "Retrieve registered basket names",
+        "description" : "Returns list of registered basket names",
         "parameters" : [ {
           "name" : "max",
           "in" : "query",
-          "description" : "Maximum number of basket names to return, default 100",
+          "description" : "Maximum number of basket names to return, default 20",
           "required" : false,
           "type" : "integer"
         }, {
@@ -57,7 +57,7 @@
       "get" : {
         "tags" : [ "baskets" ],
         "summary" : "Get basket configuration",
-        "description" : "Get current configuration of basket",
+        "description" : "Get current configuration of a basket",
         "parameters" : [ {
           "name" : "basket-name",
           "in" : "path",
@@ -181,12 +181,12 @@
     "/baskets/{basket-name}/requests" : {
       "get" : {
         "tags" : [ "requests" ],
-        "summary" : "Get requests collected by basket",
+        "summary" : "Retrieve requests collected by basket",
         "description" : "Returns list of collected requests",
         "parameters" : [ {
           "name" : "max",
           "in" : "query",
-          "description" : "Maximum number of requests to return, default 100",
+          "description" : "Maximum number of requests to return, default 20",
           "required" : false,
           "type" : "integer"
         }, {
@@ -269,7 +269,7 @@
         },
         "has_more" : {
           "type" : "boolean",
-          "description" : "Indicates if there are more baskets in the system"
+          "description" : "Indicates if there are more baskets to fetch"
         }
       }
     },
@@ -295,7 +295,7 @@
       }
     },
     "Requests" : {
-      "required" : [ "count", "has_more", "requests", "size" ],
+      "required" : [ "count", "has_more", "requests", "total_count" ],
       "properties" : {
         "requests" : {
           "type" : "array",
@@ -306,15 +306,15 @@
         },
         "count" : {
           "type" : "integer",
-          "description" : "Total number of requests passed through this basket"
+          "description" : "Current number of collected requests hold by basket"
         },
-        "size" : {
+        "total_count" : {
           "type" : "integer",
-          "description" : "Current number of requests collected by basket"
+          "description" : "Total number of all requests passed through this basket"
         },
         "has_more" : {
           "type" : "boolean",
-          "description" : "Indicates if there are more requests collected by basket"
+          "description" : "Indicates if there are more requests collected by basket to fetch"
         }
       }
     },

@@ -76,9 +76,9 @@ func (basket *memoryBasket) GetRequests(max int, skip int) RequestsPage {
 	last := skip + max
 
 	requestsPage := RequestsPage{
-		Count:   basket.totalCount,
-		Size:    size,
-		HasMore: last < size}
+		Count:      size,
+		TotalCount: basket.totalCount,
+		HasMore:    last < size}
 
 	if skip < size {
 		if last > size {

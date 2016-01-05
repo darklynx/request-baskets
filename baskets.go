@@ -30,10 +30,10 @@ type RequestData struct {
 }
 
 type RequestsPage struct {
-	Requests []*RequestData `json:"requests"`
-	Count    int            `json:"count"`
-	Size     int            `json:"size"`
-	HasMore  bool           `json:"has_more"`
+	Requests   []*RequestData `json:"requests"`
+	Count      int            `json:"count"`
+	TotalCount int            `json:"total_count"`
+	HasMore    bool           `json:"has_more"`
 }
 
 type BasketNamesPage struct {
