@@ -131,8 +131,12 @@ func (db *memoryDatabase) Create(name string, config BasketConfig) (BasketAuth, 
 }
 
 func (db *memoryDatabase) Get(name string) Basket {
-	basket, _ := db.baskets[name]
-	return basket
+	basket, exists := db.baskets[name]
+	if exists {
+		return basket
+	} else {
+		return nil
+	}
 }
 
 func (db *memoryDatabase) Delete(name string) {
