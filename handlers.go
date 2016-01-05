@@ -20,7 +20,7 @@ var validBasketName = regexp.MustCompile(BASKET_NAME)
 var indexPage = template.Must(template.New("index").Parse(INDEX_HTML))
 var basketPage = template.Must(template.New("basket").Parse(BASKET_HTML))
 
-var basketDb = MakeBasketDb()
+var baskets = NewMemoryDatabase()
 var httpClient = new(http.Client)
 
 // writeJson writes JSON content to HTTP response
@@ -34,9 +34,9 @@ func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
 	}
 }
 
-// getIntParam retrieves integer parameter from HTTP request query
-func getIntParam(r *http.Request, name string, defaultValue int) int {
-	value := r.URL.Query().Get(name)
+// getValue retrieves integer parameter from HTTP request query
+func getValue(r *http.Request, param string, defaultValue int) int {
+	value := r.URL.Query().Get(param)
 	if len(value) > 0 {
 		i, err := strconv.Atoi(value)
 		if err == nil {
@@ -46,14 +46,19 @@ func getIntParam(r *http.Request, name string, defaultValue int) int {
 	return defaultValue
 }
 
+// getPage retrieves page settings from HTTP request query params
+func getPage(r *http.Request) (int, int) {
+	return getValue(r, "max", serverConfig.PageSize), getValue(r, "skip", 0)
+}
+
 // getAndAuthBasket retrieves basket by name from HTTP request path and authorize access to the basket object
-func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, *Basket) {
+func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, Basket) {
 	name := ps.ByName("basket")
-	basket := basketDb.Get(name)
+	basket := baskets.Get(name)
 	if basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
 		token := r.Header.Get("Authorization")
-		if token == basket.Token || token == serverConfig.MasterToken {
+		if basket.Authorize(token) || token == serverConfig.MasterToken {
 			return name, basket
 		} else {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -66,7 +71,7 @@ func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 }
 
 // parseBasketConfig parses basket configuration and validate its content
-func parseBasketConfig(body []byte, config *Config) error {
+func parseBasketConfig(body []byte, config *BasketConfig) error {
 	// parse request
 	if err := json.Unmarshal(body, config); err != nil {
 		return err
@@ -93,16 +98,14 @@ func parseBasketConfig(body []byte, config *Config) error {
 
 // GetBaskets handles HTTP request to get registered baskets
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	json, err := basketDb.ToJson(
-		getIntParam(r, "max", serverConfig.PageSize),
-		getIntParam(r, "skip", 0))
+	json, err := json.Marshal(baskets.GetNames(getPage(r)))
 	writeJson(w, http.StatusOK, json, err)
 }
 
 // GetBasket handles HTTP request to get basket configuration
 func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
-		json, err := basket.ToJson()
+		json, err := json.Marshal(basket.Config())
 		writeJson(w, http.StatusOK, json, err)
 	}
 }
@@ -130,7 +133,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 
 	// default config
-	config := Config{ForwardUrl: "", Capacity: serverConfig.InitCapacity}
+	config := BasketConfig{ForwardUrl: "", Capacity: serverConfig.InitCapacity}
 	if len(body) > 0 {
 		if err := parseBasketConfig(body, &config); err != nil {
 			http.Error(w, err.Error(), 422)
@@ -138,11 +141,11 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		}
 	}
 
-	basket, err := basketDb.Create(name, config)
+	auth, err := baskets.Create(name, config)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
 	} else {
-		json, err := basket.ToAuthJson()
+		json, err := json.Marshal(auth)
 		writeJson(w, http.StatusCreated, json, err)
 	}
 }
@@ -156,14 +159,13 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else if len(body) > 0 {
-			config := basket.Config
+			config := basket.Config()
 			if err := parseBasketConfig(body, &config); err != nil {
 				http.Error(w, err.Error(), 422)
 				return
 			}
 
-			basket.Config = config
-			basket.Requests.UpdateCapacity(config.Capacity)
+			basket.Update(config)
 
 			w.WriteHeader(http.StatusNoContent)
 		} else {
@@ -177,7 +179,7 @@ func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	if name, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		log.Printf("Deleting basket: %s", name)
 
-		basketDb.Delete(name)
+		baskets.Delete(name)
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -185,9 +187,7 @@ func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 // GetBasketRequests handles HTTP request to get requests collected by basket
 func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
-		json, err := basket.Requests.ToJson(
-			getIntParam(r, "max", serverConfig.PageSize),
-			getIntParam(r, "skip", 0))
+		json, err := json.Marshal(basket.GetRequests(getPage(r)))
 		writeJson(w, http.StatusOK, json, err)
 	}
 }
@@ -195,7 +195,7 @@ func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 // ClearBasket handles HTTP request to delete all requests collected by basket
 func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
-		basket.Requests.Clear()
+		basket.Clear()
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -220,13 +220,13 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	name := parts[1]
-	basket := basketDb.Get(name)
+	basket := baskets.Get(name)
 	if basket != nil {
-		request := basket.Requests.Add(r)
+		request := basket.Add(r)
 		w.WriteHeader(http.StatusOK)
 
-		if len(basket.Config.ForwardUrl) > 0 {
-			go request.Forward(httpClient, basket.Config.ForwardUrl)
+		if len(basket.Config().ForwardUrl) > 0 {
+			go request.Forward(httpClient, basket.Config().ForwardUrl)
 		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
