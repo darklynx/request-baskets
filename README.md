@@ -58,9 +58,9 @@ Usage of request-baskets:
 
 Open [http://localhost:55555](http://localhost:55555) in your browser. The main page will display a list of baskets that may be accessed if the basket *token* is known. It is possible to create a new basket if the name is not in use.
 
-If basket was successfully created the authorization *token* will be displayed. It is **important** to remember the *token*, which authorizes access to created basket. The token is temporary stored in browser session to simplify browser integration. However, once browser tab is closed the token will be lost.
+If basket was successfully created the authorization *token* is displayed. It is **important** to remember the *token* - it authorizes the access to manage created basket and view collected HTTP requests. The token is temporary stored in browser session to simplify UI integration and improve user experience. However, once browser tab is closed, the token will be lost.
 
-To collect HTTP (GET, POST, PUT, DELETE, etc.) requests send them to `http://localhost:55555/<basket_name>`
+To collect HTTP requests send them (GET, POST, PUT, DELETE, etc.) to `http://localhost:55555/<basket_name>`
 
 To view collected requests and manage basket:
  * Open basket web UI `http://localhost:55555/web/<basket_name>`
