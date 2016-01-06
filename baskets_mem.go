@@ -100,19 +100,18 @@ type memoryDatabase struct {
 }
 
 func (db *memoryDatabase) Create(name string, config BasketConfig) (BasketAuth, error) {
+	auth := BasketAuth{}
+	token, err := GenerateToken()
+	if err != nil {
+		return auth, fmt.Errorf("Failed to generate token: %s", err)
+	}
+
 	db.Lock()
 	defer db.Unlock()
-
-	auth := BasketAuth{}
 
 	_, exists := db.baskets[name]
 	if exists {
 		return auth, fmt.Errorf("Basket with name '%s' already exists", name)
-	}
-
-	token, err := GenerateToken()
-	if err != nil {
-		return auth, fmt.Errorf("Failed to generate token: %s", err.Error())
 	}
 
 	basket := new(memoryBasket)

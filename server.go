@@ -18,6 +18,9 @@ func StartServer() {
 	// create database
 	basketsDb = NewMemoryDatabase()
 
+	//botl := NewBoltDatabase("requests.db")
+	//botl.Release()
+
 	// configure service HTTP router
 	router := httprouter.New()
 
