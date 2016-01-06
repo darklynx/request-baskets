@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -17,6 +20,10 @@ func StartServer() {
 	serverConfig = CreateConfig()
 	// create database
 	basketsDb = NewMemoryDatabase()
+	if basketsDb == nil {
+		log.Print("Failed to create basket database")
+		return
+	}
 
 	// configure service HTTP router
 	router := httprouter.New()
@@ -43,6 +50,25 @@ func StartServer() {
 	// basket requests
 	router.NotFound = http.HandlerFunc(AcceptBasketRequests)
 
+	go shutdownHook()
+
 	log.Printf("Starting HTTP server on port: %d", serverConfig.ServerPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverConfig.ServerPort), router))
+}
+
+func shutdownHook() {
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigs
+		log.Printf("Received signal: %s, shutting down database", sig)
+		basketsDb.Release()
+		done <- true
+	}()
+
+	<-done
+	log.Printf("Terminating server")
+	os.Exit(0)
 }
