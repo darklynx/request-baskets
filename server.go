@@ -19,14 +19,12 @@ func StartServer() {
 	// read config
 	serverConfig = CreateConfig()
 	// create database
-	basketsDb = NewMemoryDatabase()
+	//basketsDb = NewMemoryDatabase()
+	basketsDb = NewBoltDatabase("requests.db")
 	if basketsDb == nil {
 		log.Print("Failed to create basket database")
 		return
 	}
-
-	//botl := NewBoltDatabase("requests.db")
-	//botl.Release()
 
 	// configure service HTTP router
 	router := httprouter.New()
