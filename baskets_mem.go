@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+const DB_TYPE_MEM = "mem"
+
 /// Basket interface ///
 
 type memoryBasket struct {
@@ -179,10 +181,11 @@ func (db *memoryDatabase) GetNames(max int, skip int) BasketNamesPage {
 }
 
 func (db *memoryDatabase) Release() {
-	log.Printf("Releasing in-memory database resources")
+	log.Printf("[info] releasing in-memory database resources")
 }
 
 // NewMemoryDatabase creates an instance of in-memory Baskets Database
 func NewMemoryDatabase() BasketsDatabase {
+	log.Print("[info] using in-memory database to store baskets")
 	return &memoryDatabase{baskets: make(map[string]*memoryBasket), names: make([]string, 0)}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 )
 
@@ -21,6 +22,7 @@ type ServerConfig struct {
 	MaxCapacity  int
 	PageSize     int
 	MasterToken  string
+	DbType       string
 }
 
 // CreateConfig creates server configuration base on application command line arguments
@@ -30,12 +32,14 @@ func CreateConfig() *ServerConfig {
 	var maxCapacity = flag.Int("maxsize", MAX_BASKET_CAPACITY, "Maximum allowed basket size (max capacity)")
 	var pageSize = flag.Int("page", DEFAULT_PAGE_SIZE, "Default page size")
 	var masterToken = flag.String("token", "", "Master token, random token is generated if not provided")
+	var dbType = flag.String("db", "mem", fmt.Sprintf(
+		"Baskets storage type: %s - in-memory, %s - bolt DB", DB_TYPE_MEM, DB_TYPE_BOLT))
 	flag.Parse()
 
 	var token = *masterToken
 	if len(token) == 0 {
 		token, _ = GenerateToken()
-		log.Printf("Generated master token: %s", token)
+		log.Printf("[info] generated master token: %s", token)
 	}
 
 	return &ServerConfig{
@@ -43,5 +47,6 @@ func CreateConfig() *ServerConfig {
 		InitCapacity: *initCapacity,
 		MaxCapacity:  *maxCapacity,
 		PageSize:     *pageSize,
-		MasterToken:  token}
+		MasterToken:  token,
+		DbType:       *dbType}
 }

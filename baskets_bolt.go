@@ -11,6 +11,8 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+const DB_TYPE_BOLT = "bolt"
+
 var (
 	KEY_TOKEN       = []byte("token")
 	KEY_FORWARD_URL = []byte("url")
@@ -43,7 +45,7 @@ func (basket *boltBasket) update(fn func(*bolt.Bucket) error) error {
 		if b != nil {
 			return fn(b)
 		} else {
-			return fmt.Errorf("Failed to locate bucket by name")
+			return fmt.Errorf("failed to locate bucket by name")
 		}
 	})
 
@@ -60,7 +62,7 @@ func (basket *boltBasket) view(fn func(*bolt.Bucket) error) error {
 		if b != nil {
 			return fn(b)
 		} else {
-			return fmt.Errorf("Failed to locate bucket by name")
+			return fmt.Errorf("failed to locate bucket by name")
 		}
 	})
 
@@ -160,7 +162,7 @@ func (basket *boltBasket) Add(req *http.Request) *RequestData {
 
 			if count > cap {
 				// should not happen
-				log.Printf("[warning] Number of requests: %d exceeds capacity: %d; basket: %s", count, cap, basket.name)
+				log.Printf("[warn] number of requests: %d exceeds capacity: %d; basket: %s", count, cap, basket.name)
 			}
 		}
 
@@ -243,7 +245,7 @@ func (bdb *boltDatabase) Create(name string, config BasketConfig) (BasketAuth, e
 	err = bdb.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucket([]byte(name))
 		if err != nil {
-			return fmt.Errorf("Failed to create bucket: %s - %s", name, err)
+			return fmt.Errorf("Failed to create basket: %s - %s", name, err)
 		}
 
 		// initialize basket bucket (assume no issues arised)
@@ -271,7 +273,7 @@ func (bdb *boltDatabase) Get(name string) Basket {
 		if tx.Bucket([]byte(name)) != nil {
 			return nil
 		} else {
-			return fmt.Errorf("No basket found: %s", name)
+			return fmt.Errorf("no basket found: %s", name)
 		}
 	})
 
@@ -329,7 +331,7 @@ func (bdb *boltDatabase) GetNames(max int, skip int) BasketNamesPage {
 }
 
 func (bdb *boltDatabase) Release() {
-	log.Printf("Releasing bolt database resources")
+	log.Printf("[info] closing bolt database")
 	err := bdb.db.Close()
 	if err != nil {
 		log.Print(err)
@@ -338,7 +340,8 @@ func (bdb *boltDatabase) Release() {
 
 // NewBoltDatabase creates an instance of Baskets Database backed with Bolt DB
 func NewBoltDatabase(file string) BasketsDatabase {
-	log.Printf("Bolt database location: %s", file)
+	log.Print("[info] using bolt DB to store baskets")
+	log.Printf("[info] bolt database location: %s", file)
 	db, err := bolt.Open(file, 0600, &bolt.Options{Timeout: 10 * time.Second})
 	if err != nil {
 		log.Fatal(err)
