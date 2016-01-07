@@ -23,6 +23,7 @@ type ServerConfig struct {
 	PageSize     int
 	MasterToken  string
 	DbType       string
+	DbFile       string
 }
 
 // CreateConfig creates server configuration base on application command line arguments
@@ -34,6 +35,7 @@ func CreateConfig() *ServerConfig {
 	var masterToken = flag.String("token", "", "Master token, random token is generated if not provided")
 	var dbType = flag.String("db", "mem", fmt.Sprintf(
 		"Baskets storage type: %s - in-memory, %s - bolt DB", DB_TYPE_MEM, DB_TYPE_BOLT))
+	var dbFile = flag.String("file", "./baskets.db", "Database location, only applicable for file databases")
 	flag.Parse()
 
 	var token = *masterToken
@@ -48,5 +50,6 @@ func CreateConfig() *ServerConfig {
 		MaxCapacity:  *maxCapacity,
 		PageSize:     *pageSize,
 		MasterToken:  token,
-		DbType:       *dbType}
+		DbType:       *dbType,
+		DbFile:       *dbFile}
 }

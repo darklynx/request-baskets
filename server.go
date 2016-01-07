@@ -61,7 +61,7 @@ func createBasketsDatabase() BasketsDatabase {
 	case DB_TYPE_MEM:
 		return NewMemoryDatabase()
 	case DB_TYPE_BOLT:
-		return NewBoltDatabase("requests.db")
+		return NewBoltDatabase(serverConfig.DbFile)
 	default:
 		log.Printf("[error] unknown database type: %s", serverConfig.DbType)
 		return nil
