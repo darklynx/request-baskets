@@ -10,7 +10,7 @@ Distinguishing features of Request Baskets service:
  * Pagination support to retrieve collections: basket names, collected requests
  * Alternative storage types for configured baskets and collected requests:
    * *in-memory* - ultra fast, but limited to available RAM and collected data is lost after service restart
-   * *bolt DB* - fast persistent storage of collected data, embedded database, service can be restarted without data loss, storage is not limited to the available RAM
+   * *bolt DB* - fast persistent storage for collected data based on embedded database, service can be restarted without data loss, storage is not limited to available RAM
    * can be extended by custom implementations of storage interface
 
 ## Screenshot
