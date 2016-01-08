@@ -19,9 +19,9 @@ func StartServer() {
 	// read config
 	serverConfig = CreateConfig()
 	// create database
-	basketsDb = NewMemoryDatabase()
+	basketsDb = createBasketsDatabase()
 	if basketsDb == nil {
-		log.Print("Failed to create basket database")
+		log.Print("[error] failed to create basket database")
 		return
 	}
 
@@ -52,8 +52,20 @@ func StartServer() {
 
 	go shutdownHook()
 
-	log.Printf("Starting HTTP server on port: %d", serverConfig.ServerPort)
+	log.Printf("[info] starting HTTP server on port: %d", serverConfig.ServerPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverConfig.ServerPort), router))
+}
+
+func createBasketsDatabase() BasketsDatabase {
+	switch serverConfig.DbType {
+	case DB_TYPE_MEM:
+		return NewMemoryDatabase()
+	case DB_TYPE_BOLT:
+		return NewBoltDatabase(serverConfig.DbFile)
+	default:
+		log.Printf("[error] unknown database type: %s", serverConfig.DbType)
+		return nil
+	}
 }
 
 func shutdownHook() {
@@ -63,12 +75,12 @@ func shutdownHook() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
-		log.Printf("Received signal: %s, shutting down database", sig)
+		log.Printf("[info] received signal: %s, shutting down database", sig)
 		basketsDb.Release()
 		done <- true
 	}()
 
 	<-done
-	log.Printf("Terminating server")
+	log.Printf("[info] terminating server")
 	os.Exit(0)
 }

@@ -121,7 +121,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		return
 	}
 
-	log.Printf("Creating basket: %s", name)
+	log.Printf("[info] creating basket: %s", name)
 
 	// read config (max 2 kB)
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2048))
@@ -176,7 +176,7 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 // DeleteBasket handles HTTP request to delete basket
 func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if name, basket := getAndAuthBasket(w, r, ps); basket != nil {
-		log.Printf("Deleting basket: %s", name)
+		log.Printf("[info] deleting basket: %s", name)
 
 		basketsDb.Delete(name)
 		w.WriteHeader(http.StatusNoContent)

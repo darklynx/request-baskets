@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+const DB_TYPE_MEM = "mem"
+
 /// Basket interface ///
 
 type memoryBasket struct {
@@ -100,19 +102,18 @@ type memoryDatabase struct {
 }
 
 func (db *memoryDatabase) Create(name string, config BasketConfig) (BasketAuth, error) {
+	auth := BasketAuth{}
+	token, err := GenerateToken()
+	if err != nil {
+		return auth, fmt.Errorf("Failed to generate token: %s", err)
+	}
+
 	db.Lock()
 	defer db.Unlock()
-
-	auth := BasketAuth{}
 
 	_, exists := db.baskets[name]
 	if exists {
 		return auth, fmt.Errorf("Basket with name '%s' already exists", name)
-	}
-
-	token, err := GenerateToken()
-	if err != nil {
-		return auth, fmt.Errorf("Failed to generate token: %s", err.Error())
 	}
 
 	basket := new(memoryBasket)
@@ -180,10 +181,11 @@ func (db *memoryDatabase) GetNames(max int, skip int) BasketNamesPage {
 }
 
 func (db *memoryDatabase) Release() {
-	log.Printf("Releasing in-memory database resources")
+	log.Printf("[info] releasing in-memory database resources")
 }
 
 // NewMemoryDatabase creates an instance of in-memory Baskets Database
 func NewMemoryDatabase() BasketsDatabase {
+	log.Print("[info] using in-memory database to store baskets")
 	return &memoryDatabase{baskets: make(map[string]*memoryBasket), names: make([]string, 0)}
 }
