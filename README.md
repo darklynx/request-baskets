@@ -8,6 +8,10 @@ Distinguishing features of Request Baskets service:
  * All baskets are protected by **unique** tokens from unauthorized access (end-points to collect requests do not require authorization though)
  * Individually configurable capacity for every basket
  * Pagination support to retrieve collections: basket names, collected requests
+ * Alternative storage types for configured baskets and collected requests:
+   * *in-memory* - ultra fast, but limited to available RAM and collected data is lost after service restart
+   * *bolt DB* - fast persistent storage of collected data, embedded database, service can be restarted without data loss, storage is not limited to the available RAM
+   * can be extended by custom implementations of storage interface
 
 ## Screenshot
 
@@ -31,9 +35,14 @@ $ request-baskets
 ## Configuration
 
 Request baskets service supports several command line configuration parameters. Use `-h` or `--help` to print command line help:
+
 ```
 $ request-baskets --help
-Usage of request-baskets:
+Usage of bin/request-baskets:
+  -db string
+    	Baskets storage type: mem - in-memory, bolt - bolt DB (default "mem")
+  -file string
+    	Database location, only applicable for file databases (default "./baskets.db")
   -maxsize int
     	Maximum allowed basket size (max capacity) (default 2000)
   -p int
@@ -53,6 +62,8 @@ Usage of request-baskets:
  * `-size` *size* - default basket capacity of new baskets if not specified
  * `-maxsize` *size* - maximum allowed basket capacity, basket capacity greater than this number will be rejected by service
  * `-token` *token* - master token to gain control over all baskets, if not specified a random token will be generated when service is launched and printed to *stdout*
+ * `-db` *type* - defines baskets storage type: `mem` - in-memory storage, `bolt` - [bolt DB](https://github.com/boltdb/bolt/) database
+ * `-file` *location* - location of bolt DB database file, only relevant if appropriate storage type is chosen
 
 ## Usage
 
@@ -67,3 +78,20 @@ To view collected requests and manage basket:
  * Use [RESTful API](https://github.com/darklynx/request-baskets/blob/master/doc/api-swagger.yaml) exposed at `http://localhost:55555/baskets/<basket_name>`
 
 It is possible to forward all incoming HTTP requests to arbitrary URL by configuring basket via web UI or RESTful API.
+
+### Persistent storage
+
+By default request baskets service stores configured baskets and collected HTTP requests in memory. This data is lost after service or server restart. However the service can be configured to keep collected data on file system. This allows service restart without loosing created baskets and collected data.
+
+To start service in persistent mode simply configure the appropriate storage type, such as [bolt DB](https://github.com/boltdb/bolt/):
+
+```
+$ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
+2016/01/08 23:15:28 [info] generated master token: abcdefgh1234567...
+2016/01/08 23:15:28 [info] using bolt DB to store baskets
+2016/01/08 23:15:28 [info] bolt database location: /var/lib/rbaskets/baskets.db
+2016/01/08 23:15:28 [info] starting HTTP server on port: 55555
+...
+```
+
+Any other kind of storages or databases (e.g. MySQL, MongoDb) to keep collected data can be introduced by implementing following interfaces: `BasketsDatabase` and `Basket`
