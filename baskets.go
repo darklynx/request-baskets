@@ -3,7 +3,9 @@ package main
 import (
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -11,8 +13,10 @@ import (
 const TO_MS = int64(time.Millisecond) / int64(time.Nanosecond)
 
 type BasketConfig struct {
-	ForwardUrl string `json:"forward_url"`
-	Capacity   int    `json:"capacity"`
+	ForwardUrl  string `json:"forward_url"`
+	ExpandPath  bool   `json:"expand_path"`
+	InsecureTls bool   `json:"insecure_tls"`
+	Capacity    int    `json:"capacity"`
 }
 
 type BasketAuth struct {
@@ -89,29 +93,46 @@ func ToRequestData(req *http.Request) *RequestData {
 }
 
 // Forward forwards request data to specified URL
-func (req *RequestData) Forward(client *http.Client, forwardUrl string) {
+func (req *RequestData) Forward(config BasketConfig, basket string) {
 	body := strings.NewReader(req.Body)
+	forwardUrl, err := url.ParseRequestURI(config.ForwardUrl)
 
-	// append query
-	if len(req.Query) > 0 {
-		if strings.Index(forwardUrl, "?") < 0 {
-			forwardUrl += "?"
+	if err != nil {
+		log.Printf("[warn] invalid forward URL: %s; basket: %s", config.ForwardUrl, basket)
+	} else {
+		// append query
+		if len(req.Query) > 0 {
+			if len(forwardUrl.RawQuery) > 0 {
+				forwardUrl.RawQuery += "&" + req.Query
+			} else {
+				forwardUrl.RawQuery = req.Query
+			}
+		}
+
+		forwardReq, err := http.NewRequest(req.Method, forwardUrl.String(), body)
+		if err != nil {
+			log.Printf("[error] failed to create forward request: %s", err)
 		} else {
-			forwardUrl += "&"
+			// copy headers
+			for header, vals := range req.Header {
+				for _, val := range vals {
+					forwardReq.Header.Add(header, val)
+				}
+			}
+
+			var response *http.Response
+			if config.InsecureTls {
+				response, err = httpInsecureClient.Do(forwardReq)
+			} else {
+				response, err = httpClient.Do(forwardReq)
+			}
+
+			if err != nil {
+				log.Printf("[error] failed to forward request: %s", err)
+			} else {
+				io.Copy(ioutil.Discard, response.Body)
+				response.Body.Close()
+			}
 		}
-		forwardUrl += req.Query
 	}
-
-	forwardReq, _ := http.NewRequest(req.Method, forwardUrl, body)
-
-	// copy headers
-	for header, vals := range req.Header {
-		for _, val := range vals {
-			forwardReq.Header.Add(header, val)
-		}
-	}
-
-	response, _ := client.Do(forwardReq)
-	io.Copy(ioutil.Discard, response.Body)
-	response.Body.Close()
 }

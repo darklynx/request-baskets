@@ -167,9 +167,13 @@
     function updateConfig() {
       if (currentConfig && (
         currentConfig.forward_url != $("#basket_forward_url").val() ||
+        currentConfig.expand_path != $("#basket_expand_path").prop("checked") ||
+        currentConfig.insecure_tls != $("#basket_insecure_tls").prop("checked") ||
         currentConfig.capacity != $("#basket_capacity").val()
       )) {
         currentConfig.forward_url = $("#basket_forward_url").val();
+        currentConfig.expand_path = $("#basket_expand_path").prop("checked");
+        currentConfig.insecure_tls = $("#basket_insecure_tls").prop("checked");
         currentConfig.capacity = parseInt($("#basket_capacity").val());
 
         $.ajax({
@@ -221,6 +225,8 @@
         if (data) {
           currentConfig = data;
           $("#basket_forward_url").val(currentConfig.forward_url);
+          $("#basket_expand_path").prop("checked", currentConfig.expand_path);
+          $("#basket_insecure_tls").prop("checked", currentConfig.insecure_tls);
           $("#basket_capacity").val(currentConfig.capacity);
           $("#config_dialog").modal();
         }
@@ -385,6 +391,17 @@
           <div class="form-group">
             <label for="basket_forward_url" class="control-label">Forward URL:</label>
             <input type="input" class="form-control" id="basket_forward_url">
+          </div>
+          <div class="checkbox">
+            <label><input type="checkbox" id="basket_insecure_tls">
+              <abbr class="text-danger" title="Warning! Enabling this feature will bypass certificate verification">Insecure TLS</abbr>
+              only affects forward URLs to <kbd>https://...</kbd>
+            </label>
+          </div>
+          <div class="checkbox">
+            <label><input type="checkbox" id="basket_expand_path"> Expand Forward Path</label>
+          </div>
+          <div class="form-group">
             <label for="basket_capacity" class="control-label">Basket Capacity:</label>
             <input type="input" class="form-control" id="basket_capacity">
           </div>

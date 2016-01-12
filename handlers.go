@@ -20,8 +20,6 @@ var validBasketName = regexp.MustCompile(BASKET_NAME)
 var indexPage = template.Must(template.New("index").Parse(INDEX_HTML))
 var basketPage = template.Must(template.New("basket").Parse(BASKET_HTML))
 
-var httpClient = new(http.Client)
-
 // writeJson writes JSON content to HTTP response
 func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
 	if err != nil {
@@ -225,7 +223,7 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
 		if len(basket.Config().ForwardUrl) > 0 {
-			go request.Forward(httpClient, basket.Config().ForwardUrl)
+			go request.Forward(basket.Config(), name)
 		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)

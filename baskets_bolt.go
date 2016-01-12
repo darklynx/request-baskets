@@ -13,9 +13,15 @@ import (
 
 const DB_TYPE_BOLT = "bolt"
 
+const (
+	OPT_EXPAND_PATH = 1 << iota
+	OPT_INSECURE_TLS
+)
+
 var (
 	KEY_TOKEN       = []byte("token")
 	KEY_FORWARD_URL = []byte("url")
+	KEY_OPTIONS     = []byte("opts")
 	KEY_CAPACITY    = []byte("capacity")
 	KEY_TOTAL_COUNT = []byte("total")
 	KEY_COUNT       = []byte("count")
@@ -30,6 +36,28 @@ func itob(i int) []byte {
 
 func btoi(b []byte) int {
 	return int(binary.BigEndian.Uint32(b))
+}
+
+func toOpts(config BasketConfig) []byte {
+	opts := byte(0)
+	if config.ExpandPath {
+		opts |= OPT_EXPAND_PATH
+	}
+	if config.InsecureTls {
+		opts |= OPT_INSECURE_TLS
+	}
+
+	return []byte{opts}
+}
+
+func fromOpts(opts []byte, config *BasketConfig) {
+	if len(opts) > 0 {
+		config.ExpandPath = opts[0]&OPT_EXPAND_PATH != 0
+		config.InsecureTls = opts[0]&OPT_INSECURE_TLS != 0
+	} else {
+		config.ExpandPath = false
+		config.InsecureTls = false
+	}
 }
 
 /// Basket interface ///
@@ -80,6 +108,8 @@ func (basket *boltBasket) Config() BasketConfig {
 		config.ForwardUrl = string(b.Get(KEY_FORWARD_URL))
 		config.Capacity = btoi(b.Get(KEY_CAPACITY))
 
+		fromOpts(b.Get(KEY_OPTIONS), &config)
+
 		return nil
 	})
 
@@ -92,6 +122,7 @@ func (basket *boltBasket) Update(config BasketConfig) {
 		curCount := btoi(b.Get(KEY_COUNT))
 
 		b.Put(KEY_FORWARD_URL, []byte(config.ForwardUrl))
+		b.Put(KEY_OPTIONS, toOpts(config))
 		b.Put(KEY_CAPACITY, itob(config.Capacity))
 
 		if oldCap != config.Capacity && curCount > config.Capacity {
@@ -251,6 +282,7 @@ func (bdb *boltDatabase) Create(name string, config BasketConfig) (BasketAuth, e
 		// initialize basket bucket (assume no issues arised)
 		b.Put(KEY_TOKEN, []byte(token))
 		b.Put(KEY_FORWARD_URL, []byte(config.ForwardUrl))
+		b.Put(KEY_OPTIONS, toOpts(config))
 		b.Put(KEY_CAPACITY, itob(config.Capacity))
 		b.Put(KEY_TOTAL_COUNT, itob(0))
 		b.Put(KEY_COUNT, itob(0))
