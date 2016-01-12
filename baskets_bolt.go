@@ -273,7 +273,7 @@ func (bdb *boltDatabase) Get(name string) Basket {
 		if tx.Bucket([]byte(name)) != nil {
 			return nil
 		} else {
-			return fmt.Errorf("no basket found: %s", name)
+			return fmt.Errorf("[warn] no basket found: %s", name)
 		}
 	})
 

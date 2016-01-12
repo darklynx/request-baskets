@@ -137,6 +137,7 @@ func (db *memoryDatabase) Get(name string) Basket {
 	if exists {
 		return basket
 	} else {
+		log.Printf("[warn] no basket found: %s", name)
 		return nil
 	}
 }
