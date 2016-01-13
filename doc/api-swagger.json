@@ -2,7 +2,7 @@
   "swagger" : "2.0",
   "info" : {
     "description" : "RESTful API of Request Baskets service",
-    "version" : "0.2",
+    "version" : "0.3",
     "title" : "Request Baskets API",
     "contact" : {
       "name" : "darklynx",
@@ -277,11 +277,19 @@
       "properties" : {
         "forward_url" : {
           "type" : "string",
-          "description" : "URL to forward all incoming requests of the basket"
+          "description" : "URL to forward all incoming requests of the basket, `empty` value disables forwarding"
+        },
+        "insecure_tls" : {
+          "type" : "boolean",
+          "description" : "If set to `true` the sertificate verification will be disabled if forward URL indicates HTTPS scheme.\nThis allows to forward collected HTTP requests via HTTPS protocol even if the forward end-point is configured\nwith self-signed TLS/SSL certificate. **Warning:** enabling this feature has known security implications.\n"
+        },
+        "expand_path" : {
+          "type" : "boolean",
+          "description" : "If set to `true` the forward URL path will be expanded if original HTTP request contains compound path.\nFor example, a basket with name `collector` is configured to forward all requests to URL\n`http://my.internal.service/listener` and it has received an HTTP GET request like\n`GET http://baskets.example.com/collector/company/12/users?action=find&name=John`.\nDepending on `expand_path` settings the request will be forwarded as following:\n`true` => `GET http://my.internal.service/listener/company/12/users?action=find&name=John`,\n`false` => `GET http://my.internal.service/listener?action=find&name=John`\n"
         },
         "capacity" : {
           "type" : "integer",
-          "description" : "Maximum number of requests to store"
+          "description" : "Baskets capacity, defines maximum number of requests to store"
         }
       }
     },

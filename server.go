@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,6 +14,8 @@ import (
 
 var serverConfig *ServerConfig
 var basketsDb BasketsDatabase
+var httpClient *http.Client
+var httpInsecureClient *http.Client
 
 // StartServer starts Request Baskets server
 func StartServer() {
@@ -24,6 +27,11 @@ func StartServer() {
 		log.Print("[error] failed to create basket database")
 		return
 	}
+
+	// HTTP clients
+	httpClient = new(http.Client)
+	insecureTransport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	httpInsecureClient = &http.Client{Transport: insecureTransport}
 
 	// configure service HTTP router
 	router := httprouter.New()
