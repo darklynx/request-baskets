@@ -100,6 +100,11 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 	if err != nil {
 		log.Printf("[warn] invalid forward URL: %s; basket: %s", config.ForwardUrl, basket)
 	} else {
+		// expand path
+		if config.ExpandPath && len(req.Path) > len(basket) + 1 {
+			forwardUrl.Path = expand(forwardUrl.Path, req.Path, name)
+		}
+
 		// append query
 		if len(req.Query) > 0 {
 			if len(forwardUrl.RawQuery) > 0 {
@@ -135,4 +140,8 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 			}
 		}
 	}
+}
+
+func expand(url string, original string, basket string) string {
+	return strings.TrimSuffix(url, "/") + strings.TrimPrefix(original, "/" + basket)
 }
