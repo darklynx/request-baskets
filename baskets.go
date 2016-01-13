@@ -102,7 +102,7 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 	} else {
 		// expand path
 		if config.ExpandPath && len(req.Path) > len(basket) + 1 {
-			forwardUrl.Path = expand(forwardUrl.Path, req.Path, name)
+			forwardUrl.Path = expand(forwardUrl.Path, req.Path, basket)
 		}
 
 		// append query
