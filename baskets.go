@@ -14,8 +14,8 @@ const TO_MS = int64(time.Millisecond) / int64(time.Nanosecond)
 
 type BasketConfig struct {
 	ForwardUrl  string `json:"forward_url"`
-	ExpandPath  bool   `json:"expand_path"`
 	InsecureTls bool   `json:"insecure_tls"`
+	ExpandPath  bool   `json:"expand_path"`
 	Capacity    int    `json:"capacity"`
 }
 
@@ -101,7 +101,7 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 		log.Printf("[warn] invalid forward URL: %s; basket: %s", config.ForwardUrl, basket)
 	} else {
 		// expand path
-		if config.ExpandPath && len(req.Path) > len(basket) + 1 {
+		if config.ExpandPath && len(req.Path) > len(basket)+1 {
 			forwardUrl.Path = expand(forwardUrl.Path, req.Path, basket)
 		}
 
@@ -143,5 +143,5 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 }
 
 func expand(url string, original string, basket string) string {
-	return strings.TrimSuffix(url, "/") + strings.TrimPrefix(original, "/" + basket)
+	return strings.TrimSuffix(url, "/") + strings.TrimPrefix(original, "/"+basket)
 }
