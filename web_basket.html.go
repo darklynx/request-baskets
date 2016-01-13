@@ -388,7 +388,7 @@ const (
           <div class="checkbox">
             <label><input type="checkbox" id="basket_insecure_tls">
               <abbr class="text-danger" title="Warning! Enabling this feature will bypass certificate verification">Insecure TLS</abbr>
-              only affects forward URLs to <kbd>https://...</kbd>
+              only affects forwarding to URLs like <kbd>https://...</kbd>
             </label>
           </div>
           <div class="checkbox">
