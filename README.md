@@ -1,6 +1,8 @@
 # Request Baskets
 
-Request baskets is an HTTP request collector service. It is strongly inspired by ideas from [RequestHub](https://github.com/kyledayton/requesthub) project.
+Request Baskets is a web service to collect arbitrary HTTP requests and inspect them via RESTful API or simple web UI.
+
+It is strongly inspired by ideas and application design of the [RequestHub](https://github.com/kyledayton/requesthub) project and reproduces functionality offered by [RequestBin](http://requestb.in/) service.
 
 Distinguishing features of Request Baskets service:
 
@@ -9,9 +11,9 @@ Distinguishing features of Request Baskets service:
  * Individually configurable capacity for every basket
  * Pagination support to retrieve collections: basket names, collected requests
  * Alternative storage types for configured baskets and collected requests:
-   * *in-memory* - ultra fast, but limited to available RAM and collected data is lost after service restart
-   * *bolt DB* - fast persistent storage for collected data based on embedded database, service can be restarted without data loss, storage is not limited to available RAM
-   * can be extended by custom implementations of storage interface
+   * *In-memory* - ultra fast, but limited to available RAM and collected data is lost after service restart
+   * *Bolt DB* - fast persistent storage for collected data based on embedded [Bolt](https://github.com/boltdb/bolt) database, service can be restarted without data loss and storage is not limited by available RAM
+   * Can be extended by custom implementations of storage interface
 
 ## Screenshot
 
@@ -34,7 +36,7 @@ $ request-baskets
 
 ## Configuration
 
-Request baskets service supports several command line configuration parameters. Use `-h` or `--help` to print command line help:
+Request Baskets service supports several command line configuration parameters. Use `-h` or `--help` to print command line help:
 
 ```
 $ request-baskets --help
@@ -62,7 +64,7 @@ Usage of bin/request-baskets:
  * `-size` *size* - default basket capacity of new baskets if not specified
  * `-maxsize` *size* - maximum allowed basket capacity, basket capacity greater than this number will be rejected by service
  * `-token` *token* - master token to gain control over all baskets, if not specified a random token will be generated when service is launched and printed to *stdout*
- * `-db` *type* - defines baskets storage type: `mem` - in-memory storage, `bolt` - [bolt DB](https://github.com/boltdb/bolt/) database
+ * `-db` *type* - defines baskets storage type: `mem` - in-memory storage, `bolt` - [Bolt DB](https://github.com/boltdb/bolt/) database
  * `-file` *location* - location of bolt DB database file, only relevant if appropriate storage type is chosen
 
 ## Usage
@@ -81,7 +83,7 @@ It is possible to forward all incoming HTTP requests to arbitrary URL by configu
 
 ### Persistent storage
 
-By default request baskets service stores configured baskets and collected HTTP requests in memory. This data is lost after service or server restart. However the service can be configured to keep collected data on file system. This allows service restart without loosing created baskets and collected data.
+By default Request Baskets service stores configured baskets and collected HTTP requests in memory. This data is lost after service or server restart. However the service can be configured to keep collected data on file system. This allows service restart without loosing created baskets and collected data.
 
 To start service in persistent mode simply configure the appropriate storage type, such as [bolt DB](https://github.com/boltdb/bolt/):
 
