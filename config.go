@@ -34,7 +34,7 @@ func CreateConfig() *ServerConfig {
 	var pageSize = flag.Int("page", DEFAULT_PAGE_SIZE, "Default page size")
 	var masterToken = flag.String("token", "", "Master token, random token is generated if not provided")
 	var dbType = flag.String("db", "mem", fmt.Sprintf(
-		"Baskets storage type: %s - in-memory, %s - bolt DB", DB_TYPE_MEM, DB_TYPE_BOLT))
+		"Baskets storage type: %s - in-memory, %s - Bolt DB", DB_TYPE_MEM, DB_TYPE_BOLT))
 	var dbFile = flag.String("file", "./baskets.db", "Database location, only applicable for file databases")
 	flag.Parse()
 

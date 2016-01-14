@@ -363,7 +363,7 @@ func (bdb *boltDatabase) GetNames(max int, skip int) BasketNamesPage {
 }
 
 func (bdb *boltDatabase) Release() {
-	log.Printf("[info] closing bolt database")
+	log.Printf("[info] closing Bolt database")
 	err := bdb.db.Close()
 	if err != nil {
 		log.Print(err)
@@ -372,8 +372,8 @@ func (bdb *boltDatabase) Release() {
 
 // NewBoltDatabase creates an instance of Baskets Database backed with Bolt DB
 func NewBoltDatabase(file string) BasketsDatabase {
-	log.Print("[info] using bolt DB to store baskets")
-	log.Printf("[info] bolt database location: %s", file)
+	log.Print("[info] using Bolt database to store baskets")
+	log.Printf("[info] Bolt database location: %s", file)
 	db, err := bolt.Open(file, 0600, &bolt.Options{Timeout: 10 * time.Second})
 	if err != nil {
 		log.Fatal(err)

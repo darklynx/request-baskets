@@ -42,7 +42,7 @@ Request Baskets service supports several command line configuration parameters. 
 $ request-baskets --help
 Usage of bin/request-baskets:
   -db string
-    	Baskets storage type: mem - in-memory, bolt - bolt DB (default "mem")
+    	Baskets storage type: mem - in-memory, bolt - Bolt DB (default "mem")
   -file string
     	Database location, only applicable for file databases (default "./baskets.db")
   -maxsize int
@@ -64,8 +64,8 @@ Usage of bin/request-baskets:
  * `-size` *size* - default basket capacity of new baskets if not specified
  * `-maxsize` *size* - maximum allowed basket capacity, basket capacity greater than this number will be rejected by service
  * `-token` *token* - master token to gain control over all baskets, if not specified a random token will be generated when service is launched and printed to *stdout*
- * `-db` *type* - defines baskets storage type: `mem` - in-memory storage, `bolt` - [Bolt DB](https://github.com/boltdb/bolt/) database
- * `-file` *location* - location of bolt DB database file, only relevant if appropriate storage type is chosen
+ * `-db` *type* - defines baskets storage type: `mem` - in-memory storage, `bolt` - [Bolt](https://github.com/boltdb/bolt/) database
+ * `-file` *location* - location of Bolt database file, only relevant if appropriate storage type is chosen
 
 ## Usage
 
@@ -85,13 +85,13 @@ It is possible to forward all incoming HTTP requests to arbitrary URL by configu
 
 By default Request Baskets service stores configured baskets and collected HTTP requests in memory. This data is lost after service or server restart. However the service can be configured to keep collected data on file system. This allows service restart without loosing created baskets and collected data.
 
-To start service in persistent mode simply configure the appropriate storage type, such as [bolt DB](https://github.com/boltdb/bolt/):
+To start service in persistent mode simply configure the appropriate storage type, such as [Bolt database](https://github.com/boltdb/bolt/):
 
 ```
 $ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
 2016/01/08 23:15:28 [info] generated master token: abcdefgh1234567...
-2016/01/08 23:15:28 [info] using bolt DB to store baskets
-2016/01/08 23:15:28 [info] bolt database location: /var/lib/rbaskets/baskets.db
+2016/01/08 23:15:28 [info] using Bolt database to store baskets
+2016/01/08 23:15:28 [info] Bolt database location: /var/lib/rbaskets/baskets.db
 2016/01/08 23:15:28 [info] starting HTTP server on port: 55555
 ...
 ```
