@@ -83,7 +83,7 @@ It is possible to forward all incoming HTTP requests to arbitrary URL by configu
 
 ### Persistent storage
 
-By default Request Baskets service keeps configured baskets and collected HTTP requests in memory. This data is lost after service or server restart. However the service can be configured to store collected data on file system. That would allow to restart service without loosing created baskets and collected data.
+By default Request Baskets service keeps configured baskets and collected HTTP requests in memory. This data is lost after service or server restart. However a service can be configured to store collected data on file system. In this case the service can be restarted without loosing created baskets and collected data.
 
 To start service in persistent mode simply configure the appropriate storage type, such as [Bolt database](https://github.com/boltdb/bolt/):
 
@@ -96,4 +96,4 @@ $ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
 ...
 ```
 
-Any other kind of storages or databases (e.g. MySQL, MongoDb) to store collected data can be introduced by implementing following interfaces: `BasketsDatabase` and `Basket`
+Any other kind of storages or databases (e.g. MySQL, MongoDb) to keep collected data can be introduced by implementing following interfaces: `BasketsDatabase` and `Basket`
