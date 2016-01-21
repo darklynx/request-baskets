@@ -13,7 +13,7 @@ const (
 	MAX_BASKET_CAPACITY  = 2000
 	BASKETS_ROOT         = "baskets"
 	WEB_ROOT             = "web"
-	BASKET_NAME          = `^[\w\d\-_]+$`
+	BASKET_NAME          = `^[\w\d\-_\.]+$`
 )
 
 type ServerConfig struct {

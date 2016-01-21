@@ -11,7 +11,10 @@ const (
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
   <style>
-    body { padding-top: 70px; }
+    html { position: relative; min-height: 100%; }
+    body { padding-top: 70px; margin-bottom: 60px; }
+    .footer { position: absolute; bottom: 0; width: 100%; height: 60px; background-color: #f5f5f5; }
+    .container .text-muted { margin: 20px 0; }
     h1 { margin-top: 2px; }
     #more { margin-left: 40px; }
   </style>
@@ -222,6 +225,12 @@ const (
       </div>
     </div>
   </div>
+
+  <footer class="footer">
+    <div class="container">
+      <p class="text-muted"><small>Powered by <a href="https://github.com/darklynx/request-baskets">request-baskets</a></small></p>
+    </div>
+  </footer>
 </body>
 </html>`
 )
