@@ -254,6 +254,7 @@
   },
   "definitions" : {
     "Baskets" : {
+      "type" : "object",
       "required" : [ "count", "has_more", "names" ],
       "properties" : {
         "names" : {
@@ -274,6 +275,7 @@
       }
     },
     "Config" : {
+      "type" : "object",
       "properties" : {
         "forward_url" : {
           "type" : "string",
@@ -294,6 +296,7 @@
       }
     },
     "Token" : {
+      "type" : "object",
       "required" : [ "token" ],
       "properties" : {
         "token" : {
@@ -303,6 +306,7 @@
       }
     },
     "Requests" : {
+      "type" : "object",
       "required" : [ "count", "has_more", "requests", "total_count" ],
       "properties" : {
         "requests" : {
@@ -327,6 +331,7 @@
       }
     },
     "Request" : {
+      "type" : "object",
       "properties" : {
         "date" : {
           "type" : "integer",
