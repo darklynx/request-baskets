@@ -59,13 +59,13 @@
         }
       }
     },
-    "/baskets/{basket-name}" : {
+    "/baskets/{name}" : {
       "get" : {
         "tags" : [ "baskets" ],
         "summary" : "Get basket configuration",
         "description" : "Get current configuration of a basket",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The basket name",
           "required" : true,
@@ -94,7 +94,7 @@
         "summary" : "Create a new basket",
         "description" : "Creates a new basket with specified name",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The name of basket to create",
           "required" : true,
@@ -128,7 +128,7 @@
         "summary" : "Update basket configuration",
         "description" : "Update current configuration of basket.\n\nSpecial configuration parameters for request forwarding:\n  * `insecure_tls` controls certificate verification when forwarding requests. Setting this parameter to `true`\n  allows to forward collected HTTP requests via HTTPS protocol even if the forward end-point is configured with\n  self-signed TLS/SSL certificate. **Warning:** enabling this feature has known security implications.\n  * `expand_path` changes the logic of constructing taget URL when forwarding requests. If this parameter is\n  set to `true` the forward URL path will be expanded when original HTTP request contains compound path. For\n  example, a basket with name **server1** is configured to forward all requests to `http://server1.intranet:8001/myservice`\n  and it has received an HTTP request like `GET http://baskets.example.com/server1/component/123/events?status=OK`\n  then depending on `expand_path` settings the request will be forwarded to:\n    * `true` => `GET http://server1.intranet:8001/myservice/component/123/events?status=OK`\n    * `false` => `GET http://server1.intranet:8001/myservice?status=OK`\n",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The basket name",
           "required" : true,
@@ -162,7 +162,7 @@
         "summary" : "Delete basket",
         "description" : "Delete basket and all collected requests",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The basket name",
           "required" : true,
@@ -184,7 +184,7 @@
         } ]
       }
     },
-    "/baskets/{basket-name}/requests" : {
+    "/baskets/{name}/requests" : {
       "get" : {
         "tags" : [ "requests" ],
         "summary" : "Retrieve requests collected by basket",
@@ -241,7 +241,7 @@
         "summary" : "Delete all requests",
         "description" : "Delete all requests collected by this basket",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The basket name",
           "required" : true,

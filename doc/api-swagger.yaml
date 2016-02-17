@@ -67,14 +67,14 @@ paths:
         204:
           description: No Content. No baskets available for specified limits
 
-  /baskets/{basket-name}:
+  /baskets/{name}:
     post:
       tags:
         - baskets
       summary: Create a new basket
       description: Creates a new basket with specified name
       parameters:
-        - name: basket-name
+        - name: name
           in: path
           type: string
           description: The name of basket to create
@@ -100,7 +100,7 @@ paths:
       summary: Get basket configuration
       description: Get current configuration of a basket
       parameters:
-        - name: basket-name
+        - name: name
           in: path
           type: string
           description: The basket name
@@ -135,7 +135,7 @@ paths:
             * `true` => `GET http://server1.intranet:8001/myservice/component/123/events?status=OK`
             * `false` => `GET http://server1.intranet:8001/myservice?status=OK`
       parameters:
-        - name: basket-name
+        - name: name
           in: path
           type: string
           description: The basket name
@@ -161,7 +161,7 @@ paths:
       summary: Delete basket
       description: Delete basket and all collected requests
       parameters:
-        - name: basket-name
+        - name: name
           in: path
           type: string
           description: The basket name
@@ -176,7 +176,7 @@ paths:
       security:
         - basket_token: []
 
-  /baskets/{basket-name}/requests:
+  /baskets/{name}/requests:
     get:
       tags:
         - requests
@@ -225,7 +225,7 @@ paths:
       summary: Delete all requests
       description: Delete all requests collected by this basket
       parameters:
-        - name: basket-name
+        - name: name
           in: path
           type: string
           description: The basket name
