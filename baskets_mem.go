@@ -95,8 +95,30 @@ func (basket *memoryBasket) GetRequests(max int, skip int) RequestsPage {
 }
 
 func (basket *memoryBasket) FindRequests(query string, in string, max int, skip int) RequestsQueryPage {
-	// TODO: implement
-	return RequestsQueryPage{HasMore: false}
+	basket.RLock()
+	defer basket.RUnlock()
+
+	result := make([]*RequestData, 0, max)
+	skipped := 0
+
+	for index, request := range basket.requests {
+		// filter
+		if request.Matches(query, in) {
+			if skipped < skip {
+				skipped++
+			} else {
+				result = append(result, request)
+			}
+		}
+
+		// early exit
+		if len(result) == max {
+			return RequestsQueryPage{Requests: result, HasMore: index < len(basket.requests)-1}
+		}
+	}
+
+	// whole basket is scanned through
+	return RequestsQueryPage{Requests: result, HasMore: false}
 }
 
 /// BasketsDatabase interface ///

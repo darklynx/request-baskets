@@ -262,8 +262,39 @@ func (basket *boltBasket) GetRequests(max int, skip int) RequestsPage {
 }
 
 func (basket *boltBasket) FindRequests(query string, in string, max int, skip int) RequestsQueryPage {
-	// TODO: implement
-	return RequestsQueryPage{HasMore: false}
+	page := RequestsQueryPage{make([]*RequestData, 0, max), false}
+
+	basket.view(func(b *bolt.Bucket) error {
+		cur := b.Bucket(KEY_REQUESTS).Cursor()
+		skipped := 0
+		for key, val := cur.Last(); key != nil; key, val = cur.Prev() {
+			request := new(RequestData)
+			if err := json.Unmarshal(val, request); err != nil {
+				return err
+			}
+
+			// filter
+			if request.Matches(query, in) {
+				if skipped < skip {
+					skipped++
+				} else {
+					page.Requests = append(page.Requests, request)
+				}
+			}
+
+			// early exit
+			if len(page.Requests) == max {
+				// check if there are more keys (basket names)
+				key, _ = cur.Next()
+				page.HasMore = key != nil
+				break
+			}
+		}
+
+		return nil
+	})
+
+	return page
 }
 
 /// BasketsDatabase interface ///
@@ -391,7 +422,7 @@ func (bdb *boltDatabase) FindNames(query string, max int, skip int) BasketNamesQ
 				// check if there are more keys (basket names)
 				key, _ = cur.Next()
 				page.HasMore = key != nil
-				return nil
+				break
 			}
 		}
 		return nil

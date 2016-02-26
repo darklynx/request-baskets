@@ -157,3 +157,42 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 func expand(url string, original string, basket string) string {
 	return strings.TrimSuffix(url, "/") + strings.TrimPrefix(original, "/"+basket)
 }
+
+func (req *RequestData) Matches(query string, in string) bool {
+	// detect where to search
+	inBody := false
+	inQuery := false
+	inHeaders := false
+	switch in {
+	case "body":
+		inBody = true
+	case "query":
+		inQuery = true
+	case "headers":
+		inHeaders = true
+	default:
+		inBody = true
+		inQuery = true
+		inHeaders = true
+	}
+
+	if inBody && strings.Contains(req.Body, query) {
+		return true
+	}
+
+	if inQuery && strings.Contains(req.Query, query) {
+		return true
+	}
+
+	if inHeaders {
+		for _, vals := range req.Header {
+			for _, val := range vals {
+				if strings.Contains(val, query) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}

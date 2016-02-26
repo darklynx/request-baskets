@@ -201,10 +201,11 @@ paths:
         - name: in
           in: query
           type: string
-          enum: [ 'any', 'body', 'query' ]
+          enum: [ 'any', 'body', 'query', 'headers' ]
           description: |
             Defines what is taken into account when filtering is applied: `body` - search in content body of collected requests,
-            `query` - search among query parameters of collected requests, `any` - search anwywhere; default `any`
+            `query` - search among query parameters of collected requests, `headers` - search among request header values,
+            `any` - search anywhere; default `any`
           required: false
       responses:
         200:
