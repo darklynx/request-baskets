@@ -246,7 +246,6 @@ definitions:
     type: object
     required:
       - names
-      - count
       - has_more
     properties:
       names:
@@ -256,7 +255,7 @@ definitions:
           type: string
       count:
         type: integer
-        description: Total number of baskets in the system
+        description: Total number of baskets in the system; not present if query is applied
       has_more:
         type: boolean
         description: Indicates if there are more baskets to fetch
@@ -292,8 +291,6 @@ definitions:
     type: object
     required:
       - requests
-      - count
-      - total_count
       - has_more
     properties:
       requests:
@@ -303,10 +300,10 @@ definitions:
           $ref: '#/definitions/Request'
       count:
         type: integer
-        description: Current number of collected requests hold by basket
+        description: Current number of collected requests hold by basket; not present if query is applied
       total_count:
         type: integer
-        description: Total number of all requests passed through this basket
+        description: Total number of all requests passed through this basket; not present if query is applied
       has_more:
         type: boolean
         description: Indicates if there are more requests collected by basket to fetch

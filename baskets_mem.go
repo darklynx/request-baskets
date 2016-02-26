@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -93,6 +94,11 @@ func (basket *memoryBasket) GetRequests(max int, skip int) RequestsPage {
 	return requestsPage
 }
 
+func (basket *memoryBasket) FindRequests(query string, in string, max int, skip int) RequestsQueryPage {
+	// TODO: implement
+	return RequestsQueryPage{HasMore: false}
+}
+
 /// BasketsDatabase interface ///
 
 type memoryDatabase struct {
@@ -179,6 +185,33 @@ func (db *memoryDatabase) GetNames(max int, skip int) BasketNamesPage {
 	}
 
 	return namesPage
+}
+
+func (db *memoryDatabase) FindNames(query string, max int, skip int) BasketNamesQueryPage {
+	db.RLock()
+	defer db.RUnlock()
+
+	result := make([]string, 0, max)
+	skipped := 0
+
+	for index, name := range db.names {
+		// filter
+		if strings.Contains(name, query) {
+			if skipped < skip {
+				skipped++
+			} else {
+				result = append(result, name)
+			}
+		}
+
+		// early exit
+		if len(result) == max {
+			return BasketNamesQueryPage{Names: result, HasMore: index < len(db.names)-1}
+		}
+	}
+
+	// whole database is scanned through
+	return BasketNamesQueryPage{Names: result, HasMore: false}
 }
 
 func (db *memoryDatabase) Release() {

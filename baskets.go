@@ -40,9 +40,19 @@ type RequestsPage struct {
 	HasMore    bool           `json:"has_more"`
 }
 
+type RequestsQueryPage struct {
+	Requests []*RequestData `json:"requests"`
+	HasMore  bool           `json:"has_more"`
+}
+
 type BasketNamesPage struct {
 	Names   []string `json:"names"`
 	Count   int      `json:"count"`
+	HasMore bool     `json:"has_more"`
+}
+
+type BasketNamesQueryPage struct {
+	Names   []string `json:"names"`
 	HasMore bool     `json:"has_more"`
 }
 
@@ -57,6 +67,7 @@ type Basket interface {
 
 	Size() int
 	GetRequests(max int, skip int) RequestsPage
+	FindRequests(query string, in string, max int, skip int) RequestsQueryPage
 }
 
 // BasketsDatabase is an interface that represent database to manage collection of request baskets
@@ -67,6 +78,7 @@ type BasketsDatabase interface {
 
 	Size() int
 	GetNames(max int, skip int) BasketNamesPage
+	FindNames(query string, max int, skip int) BasketNamesQueryPage
 
 	Release()
 }

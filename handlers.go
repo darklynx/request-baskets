@@ -31,21 +31,24 @@ func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
 	}
 }
 
-// getValue retrieves integer parameter from HTTP request query
-func getValue(r *http.Request, param string, defaultValue int) int {
-	value := r.URL.Query().Get(param)
+// parseInt parses integer parameter from HTTP request query
+func parseInt(value string, defaultValue int) int {
 	if len(value) > 0 {
 		i, err := strconv.Atoi(value)
 		if err == nil {
 			return i
 		}
 	}
+
 	return defaultValue
 }
 
 // getPage retrieves page settings from HTTP request query params
-func getPage(r *http.Request) (int, int) {
-	return getValue(r, "max", serverConfig.PageSize), getValue(r, "skip", 0)
+func getPage(values url.Values) (int, int) {
+	max := parseInt(values.Get("max"), serverConfig.PageSize)
+	skip := parseInt(values.Get("skip"), 0)
+
+	return max, skip
 }
 
 // getAndAuthBasket retrieves basket by name from HTTP request path and authorize access to the basket object
@@ -95,8 +98,18 @@ func parseBasketConfig(body []byte, config *BasketConfig) error {
 
 // GetBaskets handles HTTP request to get registered baskets
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	json, err := json.Marshal(basketsDb.GetNames(getPage(r)))
-	writeJson(w, http.StatusOK, json, err)
+	values := r.URL.Query()
+	query := values.Get("q")
+	if len(query) > 0 {
+		// Find names
+		max, skip := getPage(values)
+		json, err := json.Marshal(basketsDb.FindNames(query, max, skip))
+		writeJson(w, http.StatusOK, json, err)
+	} else {
+		// Get basket names page
+		json, err := json.Marshal(basketsDb.GetNames(getPage(values)))
+		writeJson(w, http.StatusOK, json, err)
+	}
 }
 
 // GetBasket handles HTTP request to get basket configuration
@@ -184,8 +197,18 @@ func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 // GetBasketRequests handles HTTP request to get requests collected by basket
 func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
-		json, err := json.Marshal(basket.GetRequests(getPage(r)))
-		writeJson(w, http.StatusOK, json, err)
+		values := r.URL.Query()
+		query := values.Get("q")
+		if len(query) > 0 {
+			// Find requests
+			max, skip := getPage(values)
+			json, err := json.Marshal(basket.FindRequests(query, values.Get("in"), max, skip))
+			writeJson(w, http.StatusOK, json, err)
+		} else {
+			// Get requests page
+			json, err := json.Marshal(basket.GetRequests(getPage(values)))
+			writeJson(w, http.StatusOK, json, err)
+		}
 	}
 }
 

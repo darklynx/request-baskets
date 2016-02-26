@@ -274,7 +274,7 @@
   "definitions" : {
     "Baskets" : {
       "type" : "object",
-      "required" : [ "count", "has_more", "names" ],
+      "required" : [ "has_more", "names" ],
       "properties" : {
         "names" : {
           "type" : "array",
@@ -285,7 +285,7 @@
         },
         "count" : {
           "type" : "integer",
-          "description" : "Total number of baskets in the system"
+          "description" : "Total number of baskets in the system; not present if query is applied"
         },
         "has_more" : {
           "type" : "boolean",
@@ -326,7 +326,7 @@
     },
     "Requests" : {
       "type" : "object",
-      "required" : [ "count", "has_more", "requests", "total_count" ],
+      "required" : [ "has_more", "requests" ],
       "properties" : {
         "requests" : {
           "type" : "array",
@@ -337,11 +337,11 @@
         },
         "count" : {
           "type" : "integer",
-          "description" : "Current number of collected requests hold by basket"
+          "description" : "Current number of collected requests hold by basket; not present if query is applied"
         },
         "total_count" : {
           "type" : "integer",
-          "description" : "Total number of all requests passed through this basket"
+          "description" : "Total number of all requests passed through this basket; not present if query is applied"
         },
         "has_more" : {
           "type" : "boolean",

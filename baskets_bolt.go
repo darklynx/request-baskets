@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -260,6 +261,11 @@ func (basket *boltBasket) GetRequests(max int, skip int) RequestsPage {
 	return page
 }
 
+func (basket *boltBasket) FindRequests(query string, in string, max int, skip int) RequestsQueryPage {
+	// TODO: implement
+	return RequestsQueryPage{HasMore: false}
+}
+
 /// BasketsDatabase interface ///
 
 type boltDatabase struct {
@@ -353,8 +359,40 @@ func (bdb *boltDatabase) GetNames(max int, skip int) BasketNamesPage {
 				page.Names = append(page.Names, string(key))
 			} else if page.Count >= last {
 				page.HasMore = true
+				// cannot break here, we need to countinue counting
 			}
 			page.Count++
+		}
+		return nil
+	})
+
+	return page
+}
+
+func (bdb *boltDatabase) FindNames(query string, max int, skip int) BasketNamesQueryPage {
+	page := BasketNamesQueryPage{make([]string, 0, max), false}
+
+	bdb.db.View(func(tx *bolt.Tx) error {
+		skipped := 0
+		cur := tx.Cursor()
+		for key, _ := cur.First(); key != nil; key, _ = cur.Next() {
+			// filter
+			name := string(key)
+			if strings.Contains(name, query) {
+				if skipped < skip {
+					skipped++
+				} else {
+					page.Names = append(page.Names, name)
+				}
+			}
+
+			// early exit
+			if len(page.Names) == max {
+				// check if there are more keys (basket names)
+				key, _ = cur.Next()
+				page.HasMore = key != nil
+				return nil
+			}
 		}
 		return nil
 	})
