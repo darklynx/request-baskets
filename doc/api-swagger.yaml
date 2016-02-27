@@ -183,6 +183,11 @@ paths:
       summary: Retrieve requests collected by basket
       description: Returns list of collected requests
       parameters:
+        - name: name
+          in: path
+          type: string
+          description: The basket name
+          required: true
         - name: max
           in: query
           type: integer

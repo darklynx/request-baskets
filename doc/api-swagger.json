@@ -190,6 +190,12 @@
         "summary" : "Retrieve requests collected by basket",
         "description" : "Returns list of collected requests",
         "parameters" : [ {
+          "name" : "name",
+          "in" : "path",
+          "description" : "The basket name",
+          "required" : true,
+          "type" : "string"
+        }, {
           "name" : "max",
           "in" : "query",
           "description" : "Maximum number of requests to return; default 20",
