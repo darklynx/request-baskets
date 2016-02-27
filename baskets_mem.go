@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -93,6 +94,33 @@ func (basket *memoryBasket) GetRequests(max int, skip int) RequestsPage {
 	return requestsPage
 }
 
+func (basket *memoryBasket) FindRequests(query string, in string, max int, skip int) RequestsQueryPage {
+	basket.RLock()
+	defer basket.RUnlock()
+
+	result := make([]*RequestData, 0, max)
+	skipped := 0
+
+	for index, request := range basket.requests {
+		// filter
+		if request.Matches(query, in) {
+			if skipped < skip {
+				skipped++
+			} else {
+				result = append(result, request)
+			}
+		}
+
+		// early exit
+		if len(result) == max {
+			return RequestsQueryPage{Requests: result, HasMore: index < len(basket.requests)-1}
+		}
+	}
+
+	// whole basket is scanned through
+	return RequestsQueryPage{Requests: result, HasMore: false}
+}
+
 /// BasketsDatabase interface ///
 
 type memoryDatabase struct {
@@ -179,6 +207,33 @@ func (db *memoryDatabase) GetNames(max int, skip int) BasketNamesPage {
 	}
 
 	return namesPage
+}
+
+func (db *memoryDatabase) FindNames(query string, max int, skip int) BasketNamesQueryPage {
+	db.RLock()
+	defer db.RUnlock()
+
+	result := make([]string, 0, max)
+	skipped := 0
+
+	for index, name := range db.names {
+		// filter
+		if strings.Contains(name, query) {
+			if skipped < skip {
+				skipped++
+			} else {
+				result = append(result, name)
+			}
+		}
+
+		// early exit
+		if len(result) == max {
+			return BasketNamesQueryPage{Names: result, HasMore: index < len(db.names)-1}
+		}
+	}
+
+	// whole database is scanned through
+	return BasketNamesQueryPage{Names: result, HasMore: false}
 }
 
 func (db *memoryDatabase) Release() {

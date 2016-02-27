@@ -40,9 +40,19 @@ type RequestsPage struct {
 	HasMore    bool           `json:"has_more"`
 }
 
+type RequestsQueryPage struct {
+	Requests []*RequestData `json:"requests"`
+	HasMore  bool           `json:"has_more"`
+}
+
 type BasketNamesPage struct {
 	Names   []string `json:"names"`
 	Count   int      `json:"count"`
+	HasMore bool     `json:"has_more"`
+}
+
+type BasketNamesQueryPage struct {
+	Names   []string `json:"names"`
 	HasMore bool     `json:"has_more"`
 }
 
@@ -57,6 +67,7 @@ type Basket interface {
 
 	Size() int
 	GetRequests(max int, skip int) RequestsPage
+	FindRequests(query string, in string, max int, skip int) RequestsQueryPage
 }
 
 // BasketsDatabase is an interface that represent database to manage collection of request baskets
@@ -67,6 +78,7 @@ type BasketsDatabase interface {
 
 	Size() int
 	GetNames(max int, skip int) BasketNamesPage
+	FindNames(query string, max int, skip int) BasketNamesQueryPage
 
 	Release()
 }
@@ -144,4 +156,43 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 
 func expand(url string, original string, basket string) string {
 	return strings.TrimSuffix(url, "/") + strings.TrimPrefix(original, "/"+basket)
+}
+
+func (req *RequestData) Matches(query string, in string) bool {
+	// detect where to search
+	inBody := false
+	inQuery := false
+	inHeaders := false
+	switch in {
+	case "body":
+		inBody = true
+	case "query":
+		inQuery = true
+	case "headers":
+		inHeaders = true
+	default:
+		inBody = true
+		inQuery = true
+		inHeaders = true
+	}
+
+	if inBody && strings.Contains(req.Body, query) {
+		return true
+	}
+
+	if inQuery && strings.Contains(req.Query, query) {
+		return true
+	}
+
+	if inHeaders {
+		for _, vals := range req.Header {
+			for _, val := range vals {
+				if strings.Contains(val, query) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
 }

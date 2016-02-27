@@ -2,7 +2,7 @@
   "swagger" : "2.0",
   "info" : {
     "description" : "RESTful API of Request Baskets service",
-    "version" : "0.3",
+    "version" : "0.4",
     "title" : "Request Baskets API",
     "contact" : {
       "name" : "darklynx",
@@ -30,15 +30,21 @@
         "parameters" : [ {
           "name" : "max",
           "in" : "query",
-          "description" : "Maximum number of basket names to return, default 20",
+          "description" : "Maximum number of basket names to return; default 20",
           "required" : false,
           "type" : "integer"
         }, {
           "name" : "skip",
           "in" : "query",
-          "description" : "Number of basket names to skip, default 0",
+          "description" : "Number of basket names to skip; default 0",
           "required" : false,
           "type" : "integer"
+        }, {
+          "name" : "q",
+          "in" : "query",
+          "description" : "Query string to filter result, only those basket names that match the query will be included in response",
+          "required" : false,
+          "type" : "string"
         } ],
         "responses" : {
           "200" : {
@@ -53,13 +59,13 @@
         }
       }
     },
-    "/baskets/{basket-name}" : {
+    "/baskets/{name}" : {
       "get" : {
         "tags" : [ "baskets" ],
         "summary" : "Get basket configuration",
         "description" : "Get current configuration of a basket",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The basket name",
           "required" : true,
@@ -86,9 +92,9 @@
       "post" : {
         "tags" : [ "baskets" ],
         "summary" : "Create a new basket",
-        "description" : "Allows to create a new basket with specified name",
+        "description" : "Creates a new basket with specified name",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The name of basket to create",
           "required" : true,
@@ -120,9 +126,9 @@
       "put" : {
         "tags" : [ "baskets" ],
         "summary" : "Update basket configuration",
-        "description" : "Update current configuration of basket",
+        "description" : "Update current configuration of basket.\n\nSpecial configuration parameters for request forwarding:\n  * `insecure_tls` controls certificate verification when forwarding requests. Setting this parameter to `true`\n  allows to forward collected HTTP requests via HTTPS protocol even if the forward end-point is configured with\n  self-signed TLS/SSL certificate. **Warning:** enabling this feature has known security implications.\n  * `expand_path` changes the logic of constructing taget URL when forwarding requests. If this parameter is\n  set to `true` the forward URL path will be expanded when original HTTP request contains compound path. For\n  example, a basket with name **server1** is configured to forward all requests to `http://server1.intranet:8001/myservice`\n  and it has received an HTTP request like `GET http://baskets.example.com/server1/component/123/events?status=OK`\n  then depending on `expand_path` settings the request will be forwarded to:\n    * `true` => `GET http://server1.intranet:8001/myservice/component/123/events?status=OK`\n    * `false` => `GET http://server1.intranet:8001/myservice?status=OK`\n",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The basket name",
           "required" : true,
@@ -156,7 +162,7 @@
         "summary" : "Delete basket",
         "description" : "Delete basket and all collected requests",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The basket name",
           "required" : true,
@@ -178,23 +184,42 @@
         } ]
       }
     },
-    "/baskets/{basket-name}/requests" : {
+    "/baskets/{name}/requests" : {
       "get" : {
         "tags" : [ "requests" ],
         "summary" : "Retrieve requests collected by basket",
         "description" : "Returns list of collected requests",
         "parameters" : [ {
+          "name" : "name",
+          "in" : "path",
+          "description" : "The basket name",
+          "required" : true,
+          "type" : "string"
+        }, {
           "name" : "max",
           "in" : "query",
-          "description" : "Maximum number of requests to return, default 20",
+          "description" : "Maximum number of requests to return; default 20",
           "required" : false,
           "type" : "integer"
         }, {
           "name" : "skip",
           "in" : "query",
-          "description" : "Number of requests to skip, default 0",
+          "description" : "Number of requests to skip; default 0",
           "required" : false,
           "type" : "integer"
+        }, {
+          "name" : "q",
+          "in" : "query",
+          "description" : "Query string to filter result, only requests that match the query will be included in response",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "in",
+          "in" : "query",
+          "description" : "Defines what is taken into account when filtering is applied: `body` - search in content body of collected requests,\n`query` - search among query parameters of collected requests, `headers` - search among request header values,\n`any` - search anywhere; default `any`\n",
+          "required" : false,
+          "type" : "string",
+          "enum" : [ "any", "body", "query", "headers" ]
         } ],
         "responses" : {
           "200" : {
@@ -220,9 +245,9 @@
       "delete" : {
         "tags" : [ "requests" ],
         "summary" : "Delete all requests",
-        "description" : "Clear all requests collected by this basket so far",
+        "description" : "Delete all requests collected by this basket",
         "parameters" : [ {
-          "name" : "basket-name",
+          "name" : "name",
           "in" : "path",
           "description" : "The basket name",
           "required" : true,
@@ -255,7 +280,7 @@
   "definitions" : {
     "Baskets" : {
       "type" : "object",
-      "required" : [ "count", "has_more", "names" ],
+      "required" : [ "has_more", "names" ],
       "properties" : {
         "names" : {
           "type" : "array",
@@ -266,7 +291,7 @@
         },
         "count" : {
           "type" : "integer",
-          "description" : "Total number of baskets in the system"
+          "description" : "Total number of baskets in the system; not present if query is applied"
         },
         "has_more" : {
           "type" : "boolean",
@@ -283,11 +308,11 @@
         },
         "insecure_tls" : {
           "type" : "boolean",
-          "description" : "If set to `true` the sertificate verification will be disabled if forward URL indicates HTTPS scheme.\nThis allows to forward collected HTTP requests via HTTPS protocol even if the forward end-point is configured\nwith self-signed TLS/SSL certificate. **Warning:** enabling this feature has known security implications.\n"
+          "description" : "If set to `true` the sertificate verification will be disabled if forward URL indicates HTTPS scheme.\n**Warning:** enabling this feature has known security implications.\n"
         },
         "expand_path" : {
           "type" : "boolean",
-          "description" : "If set to `true` the forward URL path will be expanded if original HTTP request contains compound path.\nFor example, a basket with name `collector` is configured to forward all requests to URL\n`http://my.internal.service/listener` and it has received an HTTP GET request like\n`GET http://baskets.example.com/collector/company/12/users?action=find&name=John`.\nDepending on `expand_path` settings the request will be forwarded as following:\n`true` => `GET http://my.internal.service/listener/company/12/users?action=find&name=John`,\n`false` => `GET http://my.internal.service/listener?action=find&name=John`\n"
+          "description" : "If set to `true` the forward URL path will be expanded when original HTTP request contains compound path."
         },
         "capacity" : {
           "type" : "integer",
@@ -307,7 +332,7 @@
     },
     "Requests" : {
       "type" : "object",
-      "required" : [ "count", "has_more", "requests", "total_count" ],
+      "required" : [ "has_more", "requests" ],
       "properties" : {
         "requests" : {
           "type" : "array",
@@ -318,11 +343,11 @@
         },
         "count" : {
           "type" : "integer",
-          "description" : "Current number of collected requests hold by basket"
+          "description" : "Current number of collected requests hold by basket; not present if query is applied"
         },
         "total_count" : {
           "type" : "integer",
-          "description" : "Total number of all requests passed through this basket"
+          "description" : "Total number of all requests passed through this basket; not present if query is applied"
         },
         "has_more" : {
           "type" : "boolean",
