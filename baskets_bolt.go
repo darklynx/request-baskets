@@ -432,7 +432,7 @@ func (bdb *boltDatabase) FindNames(query string, max int, skip int) BasketNamesQ
 }
 
 func (bdb *boltDatabase) Release() {
-	log.Printf("[info] closing Bolt database")
+	log.Print("[info] closing Bolt database")
 	err := bdb.db.Close()
 	if err != nil {
 		log.Print(err)

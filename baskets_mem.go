@@ -237,7 +237,7 @@ func (db *memoryDatabase) FindNames(query string, max int, skip int) BasketNames
 }
 
 func (db *memoryDatabase) Release() {
-	log.Printf("[info] releasing in-memory database resources")
+	log.Print("[info] releasing in-memory database resources")
 }
 
 // NewMemoryDatabase creates an instance of in-memory Baskets Database

@@ -2,12 +2,33 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 )
 
-func TestBasketsDatabase_Create(t *testing.T) {
-	db := NewMemoryDatabase()
+func createTestDatabase() BasketsDatabase {
+	return NewMemoryDatabase()
+}
+
+func createTestPOSTRequest(content string, contentType string) *http.Request {
+	request := new(http.Request)
+	request.Method = "POST"
+	request.URL, _ = url.Parse("http://localhost/test/demo?name=abc&version=12")
+	request.Body = ioutil.NopCloser(strings.NewReader(content))
+	request.ContentLength = int64(len(content))
+	request.Header = make(http.Header)
+	request.Header.Add("Content-Type", contentType)
+	request.Header.Add("User-Agent", "Unit-Test")
+	request.Header.Add("Accept", "application/json")
+
+	return request
+}
+
+func TestMemoryDatabase_Create(t *testing.T) {
+	db := createTestDatabase()
 	defer db.Release()
 
 	name := "test1"
@@ -23,8 +44,8 @@ func TestBasketsDatabase_Create(t *testing.T) {
 	}
 }
 
-func TestBasketsDatabase_Create_NameConflict(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestMemoryDatabase_Create_NameConflict(t *testing.T) {
+	db := createTestDatabase()
 	defer db.Release()
 
 	name := "test2"
@@ -41,8 +62,8 @@ func TestBasketsDatabase_Create_NameConflict(t *testing.T) {
 	}
 }
 
-func TestBasketsDatabase_Get(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestMemoryDatabase_Get(t *testing.T) {
+	db := createTestDatabase()
 	defer db.Release()
 
 	name := "test3"
@@ -65,8 +86,8 @@ func TestBasketsDatabase_Get(t *testing.T) {
 	}
 }
 
-func TestBasketsDatabase_Get_NotFound(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestMemoryDatabase_Get_NotFound(t *testing.T) {
+	db := createTestDatabase()
 	defer db.Release()
 
 	name := "test4"
@@ -76,8 +97,8 @@ func TestBasketsDatabase_Get_NotFound(t *testing.T) {
 	}
 }
 
-func TestBasketsDatabase_Delete(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestMemoryDatabase_Delete(t *testing.T) {
+	db := createTestDatabase()
 	defer db.Release()
 
 	name := "test5"
@@ -93,8 +114,8 @@ func TestBasketsDatabase_Delete(t *testing.T) {
 	}
 }
 
-func TestBasketsDatabase_Delete_Multi(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestMemoryDatabase_Delete_Multi(t *testing.T) {
+	db := createTestDatabase()
 	defer db.Release()
 
 	name := "test6"
@@ -120,8 +141,8 @@ func TestBasketsDatabase_Delete_Multi(t *testing.T) {
 	}
 }
 
-func TestBasketsDatabase_Size(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestMemoryDatabase_Size(t *testing.T) {
+	db := createTestDatabase()
 	defer db.Release()
 
 	config := BasketConfig{Capacity: 15}
@@ -134,8 +155,8 @@ func TestBasketsDatabase_Size(t *testing.T) {
 	}
 }
 
-func TestBasketsDatabase_GetNames(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestMemoryDatabase_GetNames(t *testing.T) {
+	db := createTestDatabase()
 	defer db.Release()
 
 	config := BasketConfig{Capacity: 15}
@@ -182,8 +203,8 @@ func TestBasketsDatabase_GetNames(t *testing.T) {
 	}
 }
 
-func TestBasketsDatabase_FindNames(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestMemoryDatabase_FindNames(t *testing.T) {
+	db := createTestDatabase()
 	defer db.Release()
 
 	config := BasketConfig{Capacity: 5}
@@ -227,5 +248,118 @@ func TestBasketsDatabase_FindNames(t *testing.T) {
 	}
 	if len(db.FindNames("xyz", 5, 0).Names) > 0 {
 		t.Fatalf("names are not expected")
+	}
+}
+
+func TestMemoryBasket_Add(t *testing.T) {
+	db := createTestDatabase()
+	defer db.Release()
+
+	name := "test101"
+	db.Create(name, BasketConfig{Capacity: 20})
+
+	basket := db.Get(name)
+	if basket == nil {
+		t.Fatalf("basket with name: %v is expected", name)
+	}
+
+	// add 1st HTTP request
+	content := "{ \"user\": \"tester\", \"age\": 24 }"
+	data := basket.Add(createTestPOSTRequest(content, "application/json"))
+
+	if basket.Size() != 1 {
+		t.Fatalf("incorrect basket size: %v, expected: 1", basket.Size())
+	}
+
+	// detailed http.Request to RequestData tests should be covered by test of ToRequestData function
+	if data.Body != content {
+		t.Fatalf("unexpected body: %v", data.Body)
+	}
+	if data.ContentLength != int64(len(content)) {
+		t.Fatalf("unexpected content lenght: %v", data.ContentLength)
+	}
+
+	// add 2nd HTTP request
+	basket.Add(createTestPOSTRequest("Hellow world", "text/plain"))
+	if basket.Size() != 2 {
+		t.Fatalf("wrong basket size: %v, expected: 2", basket.Size())
+	}
+}
+
+func TestMemoryBasket_Add_ExceedLimit(t *testing.T) {
+	db := createTestDatabase()
+	defer db.Release()
+
+	name := "test102"
+	db.Create(name, BasketConfig{Capacity: 10})
+
+	basket := db.Get(name)
+	if basket == nil {
+		t.Fatalf("basket with name: %v is expected", name)
+	}
+
+	// fill basket
+	for i := 0; i < 35; i++ {
+		basket.Add(createTestPOSTRequest(fmt.Sprintf("test%v", i), "text/plain"))
+	}
+	if basket.Size() != 10 {
+		t.Fatalf("wrong basket size: %v, expected: 10", basket.Size())
+	}
+}
+
+func TestMemoryBasket_Clear(t *testing.T) {
+	db := createTestDatabase()
+	defer db.Release()
+
+	name := "test103"
+	db.Create(name, BasketConfig{Capacity: 20})
+
+	basket := db.Get(name)
+	if basket == nil {
+		t.Fatalf("basket with name: %v is expected", name)
+	}
+
+	// fill basket
+	for i := 0; i < 15; i++ {
+		basket.Add(createTestPOSTRequest(fmt.Sprintf("test%v", i), "text/plain"))
+	}
+	if basket.Size() != 15 {
+		t.Fatalf("wrong basket size: %v, expected: 15", basket.Size())
+	}
+
+	// clean basket
+	basket.Clear()
+	if basket.Size() != 0 {
+		t.Fatalf("wrong basket size: %v, expected empty basket", basket.Size())
+	}
+}
+
+func TestMemoryBasket_Update_Shrink(t *testing.T) {
+	db := createTestDatabase()
+	defer db.Release()
+
+	name := "test104"
+	db.Create(name, BasketConfig{Capacity: 30})
+
+	basket := db.Get(name)
+	if basket == nil {
+		t.Fatalf("basket with name: %v is expected", name)
+	}
+
+	// fill basket
+	for i := 0; i < 25; i++ {
+		basket.Add(createTestPOSTRequest(fmt.Sprintf("test%v", i), "text/plain"))
+	}
+	if basket.Size() != 25 {
+		t.Fatalf("wrong basket size: %v, expected: 25", basket.Size())
+	}
+
+	// update config with lower capacity
+	config := basket.Config()
+	config.Capacity = 12
+	basket.Update(config)
+
+	if basket.Size() != 12 {
+		t.Fatalf("wrong basket size: %v, expected: 12", basket.Size())
 	}
 }
