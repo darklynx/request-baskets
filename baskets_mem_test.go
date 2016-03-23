@@ -13,10 +13,10 @@ func createTestDatabase() BasketsDatabase {
 	return NewMemoryDatabase()
 }
 
-func createTestPOSTRequest(content string, contentType string) *http.Request {
+func createTestPOSTRequest(reqUrl string, content string, contentType string) *http.Request {
 	request := new(http.Request)
 	request.Method = "POST"
-	request.URL, _ = url.Parse("http://localhost/test/demo?name=abc&version=12")
+	request.URL, _ = url.Parse(reqUrl)
 	request.Body = ioutil.NopCloser(strings.NewReader(content))
 	request.ContentLength = int64(len(content))
 	request.Header = make(http.Header)
@@ -265,7 +265,7 @@ func TestMemoryBasket_Add(t *testing.T) {
 
 	// add 1st HTTP request
 	content := "{ \"user\": \"tester\", \"age\": 24 }"
-	data := basket.Add(createTestPOSTRequest(content, "application/json"))
+	data := basket.Add(createTestPOSTRequest("http://localhost/test/demo?name=abc&ver=12", content, "application/json"))
 
 	if basket.Size() != 1 {
 		t.Fatalf("incorrect basket size: %v, expected: 1", basket.Size())
@@ -280,7 +280,7 @@ func TestMemoryBasket_Add(t *testing.T) {
 	}
 
 	// add 2nd HTTP request
-	basket.Add(createTestPOSTRequest("Hellow world", "text/plain"))
+	basket.Add(createTestPOSTRequest("http://localhost/test/demo", "Hellow world", "text/plain"))
 	if basket.Size() != 2 {
 		t.Fatalf("wrong basket size: %v, expected: 2", basket.Size())
 	}
@@ -300,7 +300,7 @@ func TestMemoryBasket_Add_ExceedLimit(t *testing.T) {
 
 	// fill basket
 	for i := 0; i < 35; i++ {
-		basket.Add(createTestPOSTRequest(fmt.Sprintf("test%v", i), "text/plain"))
+		basket.Add(createTestPOSTRequest("http://localhost/test/demo", fmt.Sprintf("test%v", i), "text/plain"))
 	}
 	if basket.Size() != 10 {
 		t.Fatalf("wrong basket size: %v, expected: 10", basket.Size())
@@ -321,7 +321,7 @@ func TestMemoryBasket_Clear(t *testing.T) {
 
 	// fill basket
 	for i := 0; i < 15; i++ {
-		basket.Add(createTestPOSTRequest(fmt.Sprintf("test%v", i), "text/plain"))
+		basket.Add(createTestPOSTRequest("http://localhost/test/demo", fmt.Sprintf("test%v", i), "text/plain"))
 	}
 	if basket.Size() != 15 {
 		t.Fatalf("wrong basket size: %v, expected: 15", basket.Size())
@@ -348,7 +348,7 @@ func TestMemoryBasket_Update_Shrink(t *testing.T) {
 
 	// fill basket
 	for i := 0; i < 25; i++ {
-		basket.Add(createTestPOSTRequest(fmt.Sprintf("test%v", i), "text/plain"))
+		basket.Add(createTestPOSTRequest("http://localhost/test/demo", fmt.Sprintf("test%v", i), "text/plain"))
 	}
 	if basket.Size() != 25 {
 		t.Fatalf("wrong basket size: %v, expected: 25", basket.Size())

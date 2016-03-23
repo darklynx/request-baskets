@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// DB_TYPE_MEM defines name of in-memory database storage
 const DB_TYPE_MEM = "mem"
 
 /// Basket interface ///

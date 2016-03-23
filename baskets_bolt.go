@@ -12,6 +12,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+// DB_TYPE_BOLT defines name of Bolt database storage
 const DB_TYPE_BOLT = "bolt"
 
 const (
