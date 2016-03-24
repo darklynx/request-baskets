@@ -2,31 +2,16 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"net/url"
+	"os"
 	"strings"
 	"testing"
 )
 
-func createTestPOSTRequest(reqUrl string, content string, contentType string) *http.Request {
-	request := new(http.Request)
-	request.Method = "POST"
-	request.URL, _ = url.Parse(reqUrl)
-	request.Body = ioutil.NopCloser(strings.NewReader(content))
-	request.ContentLength = int64(len(content))
-	request.Header = make(http.Header)
-	request.Header.Add("Content-Type", contentType)
-	request.Header.Add("User-Agent", "Unit-Test")
-	request.Header.Add("Accept", "application/json")
-
-	return request
-}
-
-func TestMemoryDatabase_Create(t *testing.T) {
+func TestBoltDatabase_Create(t *testing.T) {
 	name := "test1"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	auth, err := db.Create(name, BasketConfig{Capacity: 20})
 	if err != nil {
@@ -40,17 +25,18 @@ func TestMemoryDatabase_Create(t *testing.T) {
 	}
 }
 
-func TestMemoryDatabase_Create_NameConflict(t *testing.T) {
+func TestBoltDatabase_Create_NameConflict(t *testing.T) {
 	name := "test2"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	db.Create(name, BasketConfig{Capacity: 20})
 	auth, err := db.Create(name, BasketConfig{Capacity: 20})
 	if err == nil {
 		t.Fatalf("error is expected")
 	}
-	if !strings.Contains(err.Error(), "'"+name+"'") {
+	if !strings.Contains(err.Error(), " "+name+" ") {
 		t.Fatalf("error is not detailed enough: %v", err)
 	}
 	if len(auth.Token) > 0 {
@@ -58,10 +44,11 @@ func TestMemoryDatabase_Create_NameConflict(t *testing.T) {
 	}
 }
 
-func TestMemoryDatabase_Get(t *testing.T) {
+func TestBoltDatabase_Get(t *testing.T) {
 	name := "test3"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	auth, err := db.Create(name, BasketConfig{Capacity: 16})
 	if err != nil {
@@ -82,10 +69,11 @@ func TestMemoryDatabase_Get(t *testing.T) {
 	}
 }
 
-func TestMemoryDatabase_Get_NotFound(t *testing.T) {
+func TestBoltDatabase_Get_NotFound(t *testing.T) {
 	name := "test4"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	basket := db.Get(name)
 	if basket != nil {
@@ -93,10 +81,11 @@ func TestMemoryDatabase_Get_NotFound(t *testing.T) {
 	}
 }
 
-func TestMemoryDatabase_Delete(t *testing.T) {
+func TestBoltDatabase_Delete(t *testing.T) {
 	name := "test5"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	db.Create(name, BasketConfig{Capacity: 10})
 	if db.Get(name) == nil {
@@ -110,10 +99,11 @@ func TestMemoryDatabase_Delete(t *testing.T) {
 	}
 }
 
-func TestMemoryDatabase_Delete_Multi(t *testing.T) {
+func TestBoltDatabase_Delete_Multi(t *testing.T) {
 	name := "test6"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	config := BasketConfig{Capacity: 10}
 	for i := 0; i < 10; i++ {
@@ -137,9 +127,10 @@ func TestMemoryDatabase_Delete_Multi(t *testing.T) {
 	}
 }
 
-func TestMemoryDatabase_Size(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestBoltDatabase_Size(t *testing.T) {
+	db := NewBoltDatabase("test7.db")
 	defer db.Release()
+	defer os.Remove("test7.db")
 
 	config := BasketConfig{Capacity: 15}
 	for i := 0; i < 25; i++ {
@@ -151,16 +142,17 @@ func TestMemoryDatabase_Size(t *testing.T) {
 	}
 }
 
-func TestMemoryDatabase_GetNames(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestBoltDatabase_GetNames(t *testing.T) {
+	db := NewBoltDatabase("test8.db")
 	defer db.Release()
+	defer os.Remove("test8.db")
 
 	config := BasketConfig{Capacity: 15}
 	for i := 0; i < 45; i++ {
 		db.Create(fmt.Sprintf("test%v", i), config)
 	}
 
-	// Get and validate page 1 (test0 - test9)
+	// Get and validate page 1 (test0, test1, test10, test11, ... - sorted)
 	page1 := db.GetNames(10, 0)
 	if page1.Count != 45 {
 		t.Fatalf("wrong baskets count: %v", page1.Count)
@@ -171,11 +163,11 @@ func TestMemoryDatabase_GetNames(t *testing.T) {
 	if len(page1.Names) != 10 {
 		t.Fatalf("wrong page size: %v", len(page1.Names))
 	}
-	if page1.Names[2] != "test2" {
+	if page1.Names[2] != "test10" {
 		t.Fatalf("wrong basket name: %v", page1.Names[2])
 	}
 
-	// Get and validate page 5 (test40 - test44)
+	// Get and validate page 5 (test5, test6, test7, test8, test9)
 	page5 := db.GetNames(10, 40)
 	if page5.Count != 45 {
 		t.Fatalf("wrong baskets count: %v", page5.Count)
@@ -186,7 +178,7 @@ func TestMemoryDatabase_GetNames(t *testing.T) {
 	if len(page5.Names) != 5 {
 		t.Fatalf("wrong page size: %v", len(page5.Names))
 	}
-	if page5.Names[0] != "test40" {
+	if page5.Names[0] != "test5" {
 		t.Fatalf("wrong basket name: %v", page5.Names[0])
 	}
 
@@ -199,9 +191,10 @@ func TestMemoryDatabase_GetNames(t *testing.T) {
 	}
 }
 
-func TestMemoryDatabase_FindNames(t *testing.T) {
-	db := NewMemoryDatabase()
+func TestBoltDatabase_FindNames(t *testing.T) {
+	db := NewBoltDatabase("test9.db")
 	defer db.Release()
+	defer os.Remove("test9.db")
 
 	config := BasketConfig{Capacity: 5}
 	for i := 0; i < 35; i++ {
@@ -247,10 +240,11 @@ func TestMemoryDatabase_FindNames(t *testing.T) {
 	}
 }
 
-func TestMemoryBasket_Add(t *testing.T) {
+func TestBoltBasket_Add(t *testing.T) {
 	name := "test101"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	db.Create(name, BasketConfig{Capacity: 20})
 
@@ -283,10 +277,11 @@ func TestMemoryBasket_Add(t *testing.T) {
 	}
 }
 
-func TestMemoryBasket_Add_ExceedLimit(t *testing.T) {
+func TestBoltBasket_Add_ExceedLimit(t *testing.T) {
 	name := "test102"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	db.Create(name, BasketConfig{Capacity: 10})
 
@@ -305,10 +300,11 @@ func TestMemoryBasket_Add_ExceedLimit(t *testing.T) {
 	}
 }
 
-func TestMemoryBasket_Clear(t *testing.T) {
+func TestBoltBasket_Clear(t *testing.T) {
 	name := "test103"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	db.Create(name, BasketConfig{Capacity: 20})
 
@@ -333,10 +329,11 @@ func TestMemoryBasket_Clear(t *testing.T) {
 	}
 }
 
-func TestMemoryBasket_Update_Shrink(t *testing.T) {
+func TestBoltBasket_Update_Shrink(t *testing.T) {
 	name := "test104"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	db.Create(name, BasketConfig{Capacity: 30})
 
@@ -364,10 +361,11 @@ func TestMemoryBasket_Update_Shrink(t *testing.T) {
 	}
 }
 
-func TestMemoryBasket_GetRequests(t *testing.T) {
+func TestBoltBasket_GetRequests(t *testing.T) {
 	name := "test105"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	db.Create(name, BasketConfig{Capacity: 25})
 
@@ -422,10 +420,11 @@ func TestMemoryBasket_GetRequests(t *testing.T) {
 	}
 }
 
-func TestMemoryBasket_FindRequests(t *testing.T) {
+func TestBoltBasket_FindRequests(t *testing.T) {
 	name := "test106"
-	db := NewMemoryDatabase()
+	db := NewBoltDatabase(name + ".db")
 	defer db.Release()
+	defer os.Remove(name + ".db")
 
 	db.Create(name, BasketConfig{Capacity: 100})
 
