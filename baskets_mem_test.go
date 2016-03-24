@@ -28,10 +28,10 @@ func createTestPOSTRequest(reqUrl string, content string, contentType string) *h
 }
 
 func TestMemoryDatabase_Create(t *testing.T) {
+	name := "test1"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test1"
 	auth, err := db.Create(name, BasketConfig{Capacity: 20})
 	if err != nil {
 		t.Fatalf("error: %v", err)
@@ -45,10 +45,10 @@ func TestMemoryDatabase_Create(t *testing.T) {
 }
 
 func TestMemoryDatabase_Create_NameConflict(t *testing.T) {
+	name := "test2"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test2"
 	db.Create(name, BasketConfig{Capacity: 20})
 	auth, err := db.Create(name, BasketConfig{Capacity: 20})
 	if err == nil {
@@ -63,10 +63,10 @@ func TestMemoryDatabase_Create_NameConflict(t *testing.T) {
 }
 
 func TestMemoryDatabase_Get(t *testing.T) {
+	name := "test3"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test3"
 	auth, err := db.Create(name, BasketConfig{Capacity: 16})
 	if err != nil {
 		t.Fatalf("error: %v", err)
@@ -87,10 +87,10 @@ func TestMemoryDatabase_Get(t *testing.T) {
 }
 
 func TestMemoryDatabase_Get_NotFound(t *testing.T) {
+	name := "test4"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test4"
 	basket := db.Get(name)
 	if basket != nil {
 		t.Fatalf("basket with name: %v is not expected", name)
@@ -98,10 +98,10 @@ func TestMemoryDatabase_Get_NotFound(t *testing.T) {
 }
 
 func TestMemoryDatabase_Delete(t *testing.T) {
+	name := "test5"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test5"
 	db.Create(name, BasketConfig{Capacity: 10})
 	if db.Get(name) == nil {
 		t.Fatalf("basket with name: %v is expected", name)
@@ -115,10 +115,10 @@ func TestMemoryDatabase_Delete(t *testing.T) {
 }
 
 func TestMemoryDatabase_Delete_Multi(t *testing.T) {
+	name := "test6"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test6"
 	config := BasketConfig{Capacity: 10}
 	for i := 0; i < 10; i++ {
 		db.Create(fmt.Sprintf("test%v", i), config)
@@ -252,10 +252,10 @@ func TestMemoryDatabase_FindNames(t *testing.T) {
 }
 
 func TestMemoryBasket_Add(t *testing.T) {
+	name := "test101"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test101"
 	db.Create(name, BasketConfig{Capacity: 20})
 
 	basket := db.Get(name)
@@ -288,10 +288,10 @@ func TestMemoryBasket_Add(t *testing.T) {
 }
 
 func TestMemoryBasket_Add_ExceedLimit(t *testing.T) {
+	name := "test102"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test102"
 	db.Create(name, BasketConfig{Capacity: 10})
 
 	basket := db.Get(name)
@@ -310,10 +310,10 @@ func TestMemoryBasket_Add_ExceedLimit(t *testing.T) {
 }
 
 func TestMemoryBasket_Clear(t *testing.T) {
+	name := "test103"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test103"
 	db.Create(name, BasketConfig{Capacity: 20})
 
 	basket := db.Get(name)
@@ -338,10 +338,10 @@ func TestMemoryBasket_Clear(t *testing.T) {
 }
 
 func TestMemoryBasket_Update_Shrink(t *testing.T) {
+	name := "test104"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test104"
 	db.Create(name, BasketConfig{Capacity: 30})
 
 	basket := db.Get(name)
@@ -369,10 +369,10 @@ func TestMemoryBasket_Update_Shrink(t *testing.T) {
 }
 
 func TestMemoryBasket_GetRequests(t *testing.T) {
+	name := "test105"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test105"
 	db.Create(name, BasketConfig{Capacity: 25})
 
 	basket := db.Get(name)
@@ -427,10 +427,10 @@ func TestMemoryBasket_GetRequests(t *testing.T) {
 }
 
 func TestMemoryBasket_FindRequests(t *testing.T) {
+	name := "test106"
 	db := createTestDatabase()
 	defer db.Release()
 
-	name := "test106"
 	db.Create(name, BasketConfig{Capacity: 100})
 
 	basket := db.Get(name)
