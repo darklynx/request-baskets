@@ -265,7 +265,8 @@ func TestMemoryBasket_Add(t *testing.T) {
 
 	// add 1st HTTP request
 	content := "{ \"user\": \"tester\", \"age\": 24 }"
-	data := basket.Add(createTestPOSTRequest("http://localhost/test/demo?name=abc&ver=12", content, "application/json"))
+	data := basket.Add(createTestPOSTRequest(
+		fmt.Sprintf("http://localhost/%v/demo?name=abc&ver=12", name), content, "application/json"))
 
 	if basket.Size() != 1 {
 		t.Fatalf("incorrect basket size: %v, expected: 1", basket.Size())
@@ -280,7 +281,7 @@ func TestMemoryBasket_Add(t *testing.T) {
 	}
 
 	// add 2nd HTTP request
-	basket.Add(createTestPOSTRequest("http://localhost/test/demo", "Hellow world", "text/plain"))
+	basket.Add(createTestPOSTRequest(fmt.Sprintf("http://localhost/%v/demo", name), "Hellow world", "text/plain"))
 	if basket.Size() != 2 {
 		t.Fatalf("wrong basket size: %v, expected: 2", basket.Size())
 	}
@@ -300,7 +301,8 @@ func TestMemoryBasket_Add_ExceedLimit(t *testing.T) {
 
 	// fill basket
 	for i := 0; i < 35; i++ {
-		basket.Add(createTestPOSTRequest("http://localhost/test/demo", fmt.Sprintf("test%v", i), "text/plain"))
+		basket.Add(createTestPOSTRequest(
+			fmt.Sprintf("http://localhost/%v/demo", name), fmt.Sprintf("test%v", i), "text/plain"))
 	}
 	if basket.Size() != 10 {
 		t.Fatalf("wrong basket size: %v, expected: 10", basket.Size())
@@ -321,7 +323,8 @@ func TestMemoryBasket_Clear(t *testing.T) {
 
 	// fill basket
 	for i := 0; i < 15; i++ {
-		basket.Add(createTestPOSTRequest("http://localhost/test/demo", fmt.Sprintf("test%v", i), "text/plain"))
+		basket.Add(createTestPOSTRequest(
+			fmt.Sprintf("http://localhost/%v/demo", name), fmt.Sprintf("test%v", i), "text/plain"))
 	}
 	if basket.Size() != 15 {
 		t.Fatalf("wrong basket size: %v, expected: 15", basket.Size())
@@ -348,7 +351,8 @@ func TestMemoryBasket_Update_Shrink(t *testing.T) {
 
 	// fill basket
 	for i := 0; i < 25; i++ {
-		basket.Add(createTestPOSTRequest("http://localhost/test/demo", fmt.Sprintf("test%v", i), "text/plain"))
+		basket.Add(createTestPOSTRequest(
+			fmt.Sprintf("http://localhost/%v/demo", name), fmt.Sprintf("test%v", i), "text/plain"))
 	}
 	if basket.Size() != 25 {
 		t.Fatalf("wrong basket size: %v, expected: 25", basket.Size())
@@ -369,7 +373,7 @@ func TestMemoryBasket_GetRequests(t *testing.T) {
 	defer db.Release()
 
 	name := "test105"
-	db.Create(name, BasketConfig{Capacity: 30})
+	db.Create(name, BasketConfig{Capacity: 25})
 
 	basket := db.Get(name)
 	if basket == nil {
@@ -377,14 +381,129 @@ func TestMemoryBasket_GetRequests(t *testing.T) {
 	}
 
 	// fill basket
-	for i := 0; i < 25; i++ {
+	for i := 1; i <= 35; i++ {
 		basket.Add(createTestPOSTRequest(
-			fmt.Sprintf("http://localhost/test/demo?id=%v", i), fmt.Sprintf("test%v", i), "text/plain"))
+			fmt.Sprintf("http://localhost/%v/demo?id=%v", name, i), fmt.Sprintf("req%v", i), "text/plain"))
 	}
 	if basket.Size() != 25 {
 		t.Fatalf("wrong basket size: %v, expected: 25", basket.Size())
 	}
 
-	// get requests
-	// ...
+	// Get and validate last 10 requests
+	page1 := basket.GetRequests(10, 0)
+	if !page1.HasMore {
+		t.Fatalf("expected more requests")
+	}
+	if len(page1.Requests) != 10 {
+		t.Fatalf("wrong page size: %v", len(page1.Requests))
+	}
+	if page1.Count != 25 {
+		t.Fatalf("wrong requests count: %v", page1.Count)
+	}
+	if page1.TotalCount != 35 {
+		t.Fatalf("wrong total count: %v", page1.Count)
+	}
+	if page1.Requests[0].Body != "req35" {
+		t.Fatalf("last request is expected, but was: %v", page1.Requests[0].Body)
+	}
+
+	// Get and validate 10 requests, skip 20
+	page3 := basket.GetRequests(10, 20)
+	if page3.HasMore {
+		t.Fatalf("no more requests are expected")
+	}
+	if len(page3.Requests) != 5 {
+		t.Fatalf("wrong page size: %v", len(page3.Requests))
+	}
+	if page3.Count != 25 {
+		t.Fatalf("wrong requests count: %v", page3.Count)
+	}
+	if page3.TotalCount != 35 {
+		t.Fatalf("wrong total count: %v", page3.Count)
+	}
+	if page3.Requests[0].Body != "req15" {
+		t.Fatalf("15th request is expected, but was: %v", page3.Requests[0].Body)
+	}
+}
+
+func TestMemoryBasket_FindRequests(t *testing.T) {
+	db := createTestDatabase()
+	defer db.Release()
+
+	name := "test106"
+	db.Create(name, BasketConfig{Capacity: 100})
+
+	basket := db.Get(name)
+	if basket == nil {
+		t.Fatalf("basket with name: %v is expected", name)
+	}
+
+	// fill basket
+	for i := 1; i <= 30; i++ {
+		r := createTestPOSTRequest(fmt.Sprintf("http://localhost/%v?id=%v", name, i), fmt.Sprintf("req%v", i), "text/plain")
+		r.Header.Add("HeaderId", fmt.Sprintf("header%v", i))
+		if i <= 10 {
+			r.Header.Add("ChocoPie", "yummy")
+		}
+		if i <= 20 {
+			r.Header.Add("Muffin", "tasty")
+		}
+		basket.Add(r)
+	}
+	if basket.Size() != 30 {
+		t.Fatalf("wrong basket size: %v, expected: 30", basket.Size())
+	}
+
+	// search everywhere
+	s1 := basket.FindRequests("req1", "any", 30, 0)
+	if s1.HasMore {
+		t.Fatalf("no more results are expected")
+	}
+	if len(s1.Requests) != 11 {
+		t.Fatalf("wrong number of found requests: %v", len(s1.Requests))
+	}
+	for _, r := range s1.Requests {
+		if !strings.Contains(r.Body, "req1") {
+			t.Fatalf("incorrect request: %v", r.Body)
+		}
+	}
+
+	// search everywhere (limited output)
+	s2 := basket.FindRequests("req2", "any", 5, 5)
+	if !s2.HasMore {
+		t.Fatalf("more results are expected")
+	}
+	if len(s2.Requests) != 5 {
+		t.Fatalf("wrong number of found requests: %v", len(s2.Requests))
+	}
+
+	// search in body (positive)
+	if len(basket.FindRequests("req3", "body", 100, 0).Requests) != 2 {
+		t.Fatalf("expected requests are not found")
+	}
+	// search in body (negative)
+	if len(basket.FindRequests("yummy", "body", 100, 0).Requests) != 0 {
+		t.Fatalf("found unexpected requests")
+	}
+
+	// search in headers (positive)
+	if len(basket.FindRequests("yummy", "headers", 100, 0).Requests) != 10 {
+		t.Fatalf("expected requests are not found")
+	}
+	if len(basket.FindRequests("tasty", "headers", 100, 0).Requests) != 20 {
+		t.Fatalf("expected requests are not found")
+	}
+	// search in headers (negative)
+	if len(basket.FindRequests("req1", "headers", 100, 0).Requests) != 0 {
+		t.Fatalf("found unexpected requests")
+	}
+
+	// search in query (positive)
+	if len(basket.FindRequests("id=1", "query", 100, 0).Requests) != 11 {
+		t.Fatalf("expected requests are not found")
+	}
+	// search in query (negative)
+	if len(basket.FindRequests("tasty", "query", 100, 0).Requests) != 0 {
+		t.Fatalf("found unexpected requests")
+	}
 }
