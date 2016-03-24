@@ -83,17 +83,17 @@ const (
       var html = '<div class="row"><div class="col-md-1"><h4 class="text-' + headerClass +
         '" title="' + new Date(request.date).toString() + '">[' + request.method +
         ']</h4></div><div class="col-md-11"><div class="panel-group" id="' + id + '">' +
-        '<div class="panel panel-' + headerClass + '"><div class="panel-heading"><h4 class="panel-title">' + path + '</h4></div></div>' +
+        '<div class="panel panel-' + headerClass + '"><div class="panel-heading"><h4 class="panel-title">' + escapeHTML(path) + '</h4></div></div>' +
         '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
         '<a class="collapsed" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_headers">Headers</a></h4></div>' +
         '<div id="' + id + '_headers" class="panel-collapse collapse">' +
-        '<div class="panel-body"><pre>' + headers.join('\n') + '</pre></div></div></div>';
+        '<div class="panel-body"><pre>' + escapeHTML(headers.join('\n')) + '</pre></div></div></div>';
 
       if (request.query) {
         html += '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
           '<a class="collapsed" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_query">Query Params</a></h4></div>' +
           '<div id="' + id + '_query" class="panel-collapse collapse">' +
-          '<div class="panel-body"><pre>' + request.query.split('&').join('\n') + '</pre></div></div></div>';
+          '<div class="panel-body"><pre>' + escapeHTML(request.query.split('&').join('\n')) + '</pre></div></div></div>';
       }
 
       if (request.body) {
@@ -258,6 +258,7 @@ const (
 
     // Initialization
     $(document).ready(function() {
+      $("#basket_uri").html(window.location.protocol + "//" + window.location.host + "/{{.}}");
       // dialogs
       $("#token_dialog").on("hidden.bs.modal", function (event) {
         sessionStorage.setItem("token_{{.}}", $("#basket_token").val());
@@ -448,7 +449,7 @@ const (
     <!-- Empty basket -->
     <div class="jumbotron text-center hide" id="empty_basket">
       <h1>Empty basket!</h1>
-      <p>This basket is empty, send requests to <kbd>/{{.}}</kbd> and they will appear here.</p>
+      <p>This basket is empty, send requests to <kbd id="basket_uri">/{{.}}</kbd> and they will appear here.</p>
     </div>
   </div>
 
