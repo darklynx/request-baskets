@@ -363,3 +363,28 @@ func TestMemoryBasket_Update_Shrink(t *testing.T) {
 		t.Fatalf("wrong basket size: %v, expected: 12", basket.Size())
 	}
 }
+
+func TestMemoryBasket_GetRequests(t *testing.T) {
+	db := createTestDatabase()
+	defer db.Release()
+
+	name := "test105"
+	db.Create(name, BasketConfig{Capacity: 30})
+
+	basket := db.Get(name)
+	if basket == nil {
+		t.Fatalf("basket with name: %v is expected", name)
+	}
+
+	// fill basket
+	for i := 0; i < 25; i++ {
+		basket.Add(createTestPOSTRequest(
+			fmt.Sprintf("http://localhost/test/demo?id=%v", i), fmt.Sprintf("test%v", i), "text/plain"))
+	}
+	if basket.Size() != 25 {
+		t.Fatalf("wrong basket size: %v, expected: 25", basket.Size())
+	}
+
+	// get requests
+	// ...
+}
