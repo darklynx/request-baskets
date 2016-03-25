@@ -1,4 +1,4 @@
-# Request Baskets [![Build Status](https://travis-ci.org/darklynx/request-baskets.svg?branch=master)](https://travis-ci.org/darklynx/request-baskets)
+# Request Baskets [![Build Status](https://travis-ci.org/darklynx/request-baskets.svg?branch=master)](https://travis-ci.org/darklynx/request-baskets) [![Coverage Status](https://coveralls.io/repos/github/darklynx/request-baskets/badge.svg?branch=master)](https://coveralls.io/github/darklynx/request-baskets?branch=master)
 
 Request Baskets is a web service to collect arbitrary HTTP requests and inspect them via RESTful API or simple web UI.
 
