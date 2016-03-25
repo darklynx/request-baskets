@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// DB_TYPE_MEM defines name of in-memory database storage
 const DB_TYPE_MEM = "mem"
 
 /// Basket interface ///
@@ -237,7 +238,7 @@ func (db *memoryDatabase) FindNames(query string, max int, skip int) BasketNames
 }
 
 func (db *memoryDatabase) Release() {
-	log.Printf("[info] releasing in-memory database resources")
+	log.Print("[info] releasing in-memory database resources")
 }
 
 // NewMemoryDatabase creates an instance of in-memory Baskets Database

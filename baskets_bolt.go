@@ -12,6 +12,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+// DB_TYPE_BOLT defines name of Bolt database storage
 const DB_TYPE_BOLT = "bolt"
 
 const (
@@ -311,9 +312,9 @@ func (bdb *boltDatabase) Create(name string, config BasketConfig) (BasketAuth, e
 	}
 
 	err = bdb.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucket([]byte(name))
-		if err != nil {
-			return fmt.Errorf("Failed to create basket: %s - %s", name, err)
+		b, cerr := tx.CreateBucket([]byte(name))
+		if cerr != nil {
+			return fmt.Errorf("Failed to create basket: %s - %s", name, cerr)
 		}
 
 		// initialize basket bucket (assume no issues arised)
@@ -432,7 +433,7 @@ func (bdb *boltDatabase) FindNames(query string, max int, skip int) BasketNamesQ
 }
 
 func (bdb *boltDatabase) Release() {
-	log.Printf("[info] closing Bolt database")
+	log.Print("[info] closing Bolt database")
 	err := bdb.db.Close()
 	if err != nil {
 		log.Print(err)
