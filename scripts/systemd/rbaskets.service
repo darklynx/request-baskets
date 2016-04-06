@@ -1,0 +1,15 @@
+[Unit]
+Description=Request Baskets
+Wants=network.target
+After=network.target
+
+[Service]
+Type=simple
+User=rbaskets
+Group=rbaskets
+WorkingDirectory=/var/lib/rbaskets
+ExecStart=/usr/local/bin/request-baskets -db bolt -file baskets.db
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
