@@ -8,10 +8,13 @@ Following steps let you set up Request Baskets as systemd service:
  * copy `request-baskets` executable file into `/usr/local/bin/` folder
  * copy `rbaskets.service` unit file into `/etc/systemd/system/` folder
  * create `rbaskets` system user:
+
  ```
  ~$ sudo adduser --system --no-create-home --group rbaskets
  ```
- * create folder `/var/lib/rbaskets` and assign it to `rbaskets` user:
+
+ * create `/var/lib/rbaskets` folder and assign it to `rbaskets` user:
+
  ```
  ~$ sudo mkdir -p /var/lib/rbaskets
  ~$ sudo chown rbaskets:rbaskets /var/lib/rbaskets
