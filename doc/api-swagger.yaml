@@ -11,10 +11,10 @@ info:
     name: darklynx
     url: https://github.com/darklynx
 
-host: localhost:55555
+host: rbaskets.in
 basePath: /
 schemes:
-  - http
+  - https
 consumes:
   - application/json
 produces:

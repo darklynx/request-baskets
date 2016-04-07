@@ -9,7 +9,7 @@
       "url" : "https://github.com/darklynx"
     }
   },
-  "host" : "localhost:55555",
+  "host" : "rbaskets.in",
   "basePath" : "/",
   "tags" : [ {
     "name" : "baskets",
@@ -18,7 +18,7 @@
     "name" : "requests",
     "description" : "Manage collected requests"
   } ],
-  "schemes" : [ "http" ],
+  "schemes" : [ "https" ],
   "consumes" : [ "application/json" ],
   "produces" : [ "application/json" ],
   "paths" : {

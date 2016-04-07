@@ -1,8 +1,16 @@
 # Request Baskets [![Build Status](https://travis-ci.org/darklynx/request-baskets.svg?branch=master)](https://travis-ci.org/darklynx/request-baskets) [![Coverage Status](https://coveralls.io/repos/github/darklynx/request-baskets/badge.svg?branch=master)](https://coveralls.io/github/darklynx/request-baskets?branch=master)
 
-Request Baskets is a web service to collect arbitrary HTTP requests and inspect them via RESTful API or simple web UI.
+[Request Baskets](https://rbaskets.in) is a web service to collect arbitrary HTTP requests and inspect them via RESTful API or simple web UI.
 
 It is strongly inspired by ideas and application design of the [RequestHub](https://github.com/kyledayton/requesthub) project and reproduces functionality offered by [RequestBin](http://requestb.in/) service.
+
+## Introduction
+
+[Request Baskets](https://rbaskets.in) service is available on our demonstration server: [https://rbaskets.in](https://rbaskets.in)
+
+However, we encourage you to set up your own server and keep control over the information passed through and collected by Request Baskets service.
+
+### Features
 
 Distinguishing features of Request Baskets service:
 
@@ -15,7 +23,7 @@ Distinguishing features of Request Baskets service:
    * *Bolt DB* - fast persistent storage for collected data based on embedded [Bolt](https://github.com/boltdb/bolt) database, service can be restarted without data loss and storage is not limited by available RAM
    * Can be extended by custom implementations of storage interface
 
-## Screenshot
+### Screenshot
 
 ![Request Baskets](http://i.imgur.com/T2mcNN9.png)
 
