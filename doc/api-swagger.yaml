@@ -4,7 +4,7 @@
 swagger: '2.0'
 
 info:
-  version: 0.4
+  version: '0.4'
   title: Request Baskets API
   description: RESTful API of Request Baskets service
   contact:
@@ -275,7 +275,7 @@ definitions:
       insecure_tls:
         type: boolean
         description: |
-          If set to `true` the sertificate verification will be disabled if forward URL indicates HTTPS scheme.
+          If set to `true` the certificate verification will be disabled if forward URL indicates HTTPS scheme.
           **Warning:** enabling this feature has known security implications.
       expand_path:
         type: boolean
