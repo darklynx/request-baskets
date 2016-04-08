@@ -323,7 +323,6 @@ definitions:
         description: Date and time of request in Unix time ms. format (number of miliseconds elapsed since January 1, 1970 UTC)
       headers:
         $ref: '#/definitions/Headers'
-        description: Map of request headers, key represents name, value is array of values
       content_length:
         type: integer
         description: Content lenght of request
@@ -342,6 +341,7 @@ definitions:
 
   Headers:
     type: object
+    description: Map of request headers, key represents name, value is array of values
     additionalProperties:
       type: array
       description: Collection of header values
