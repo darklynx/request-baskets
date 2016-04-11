@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg id="svg2" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="512" width="512" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512.00002" xmlns:dc="http://purl.org/dc/elements/1.1/">
- <title id="title7330">Request Baskets</title>
+ <title id="title3425">Request Baskets</title>
  <defs id="defs4">
-  <linearGradient id="linearGradient6231" y2="786.99" gradientUnits="userSpaceOnUse" x2="237.81" y1="763.09" x1="109.14">
+  <linearGradient id="b" y2="786.99" gradientUnits="userSpaceOnUse" x2="237.81" y1="763.09" x1="109.14">
    <stop id="stop6227" stop-color="#0ff" offset="0"/>
    <stop id="stop6229" stop-color="#0ff" stop-opacity="0" offset="1"/>
   </linearGradient>
-  <linearGradient id="linearGradient6239" y2="797.48" gradientUnits="userSpaceOnUse" x2="454.1" y1="756.25" x1="282.8">
+  <linearGradient id="a" y2="797.48" gradientUnits="userSpaceOnUse" x2="454.1" y1="756.25" x1="282.8">
    <stop id="stop6235" stop-color="#0f0" offset="0"/>
    <stop id="stop6237" stop-color="#0f0" stop-opacity="0" offset="1"/>
   </linearGradient>
@@ -45,8 +45,8 @@
   <ellipse id="path6288" fill-opacity=".88776" rx="253.91" ry="255.1" cy="797.26" cx="256.3" fill="#f2f2f2"/>
   <path id="rect3820" fill="#d4aa00" d="m74.039 818.67h365.54c11.409 0 23.729 9.3058 20.958 16.917l-49.789 136.75c-2.7712 7.6114-9.1848 14.163-20.594 14.163h-259.48c-11.409 0-17.522-6.6064-20.594-14.163l-55.188-135.75c-3.0715-7.5567 7.7286-17.919 19.138-17.919z"/>
   <g>
-   <path id="path4677" fill="url(#linearGradient6231)" d="m110 819.78a56.569 96.591 0 0 1 24.624 -97.474 56.569 96.591 0 0 1 62.17 -0.00001 56.569 96.591 0 0 1 24.624 97.474"/>
-   <path id="path4679" d="m283.71 823.54a59.662 114.67 0 0 1 25.971 -115.71 59.662 114.67 0 0 1 65.57 0 59.662 114.67 0 0 1 25.971 115.71" fill="url(#linearGradient6239)"/>
+   <path id="path4677" fill="url(#b)" d="m110 819.78a56.569 96.591 0 0 1 24.624 -97.474 56.569 96.591 0 0 1 62.17 -0.00001 56.569 96.591 0 0 1 24.624 97.474"/>
+   <path id="path4679" d="m283.71 823.54a59.662 114.67 0 0 1 25.971 -115.71 59.662 114.67 0 0 1 65.57 0 59.662 114.67 0 0 1 25.971 115.71" fill="url(#a)"/>
    <text id="text6379" style="word-spacing:0px;letter-spacing:0px" font-weight="bold" xml:space="preserve" transform="matrix(.94696 -.18480 .16317 1.0242 0 0)" line-height="125%" font-size="71.484px" y="796.74725" x="14.205831" font-family="sans-serif" fill="#333333"><tspan id="tspan6381" x="14.205831" y="796.74725">P</tspan></text>
    <text id="text6375" style="word-spacing:0px;letter-spacing:0px" font-weight="bold" xml:space="preserve" transform="matrix(.88825 -.33421 .35001 .99411 0 0)" line-height="125%" font-size="64.798px" y="822.8692" x="45.614708" font-family="sans-serif" fill="#333333"><tspan id="tspan6377" x="45.614708" y="822.8692">G</tspan></text>
   </g>
@@ -60,6 +60,13 @@
     <path id="path4663" d="m270.32 706.88c-5.6302 29.58 120.9-22.445 137.19-4.188 10.953 13.59 9.8299 84.147-28.379 90.376-32.209-1.7705-98.413-140.81-108.81-86.188z"/>
    </g>
    <ellipse id="path4669" rx="17.333" ry="16.667" cy="635.7" cx="129.33"/>
+  </g>
+  <g fill="#a05a2c" fill-opacity=".54082">
+   <rect id="rect6257" transform="rotate(90)" ry="8.747" height="76.633" width="16.403" y="-186.23" x="885.01"/>
+   <rect id="rect6261" ry="8.2015" transform="rotate(90)" height="93.361" width="16.403" y="-356.5" x="935.8"/>
+   <rect id="rect6263" transform="rotate(90)" ry="8.0735" height="113.08" width="16.403" y="-329.61" x="885.01"/>
+   <rect id="rect6265" transform="rotate(90)" ry="8.2015" height="73.048" width="16.403" y="-231.63" x="935.8"/>
+   <rect id="rect6267" ry="7.4427" transform="rotate(90)" height="52.736" width="16.403" y="-409.67" x="885.01"/>
   </g>
  </g>
 </svg>
