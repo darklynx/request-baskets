@@ -16,7 +16,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="logo_l2.svg">
+   sodipodi:docname="draft4.svg">
   <defs
      id="defs4">
     <linearGradient
@@ -101,10 +101,16 @@
         <cc:license
            rdf:resource="http://creativecommons.org/licenses/by-sa/3.0/" />
         <dc:creator>
-         <cc:Agent>
-          <dc:title>https://github.com/darklynx</dc:title>
-         </cc:Agent>
+          <cc:Agent>
+            <dc:title>https://github.com/darklynx</dc:title>
+          </cc:Agent>
         </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>HTTP requests basket logo</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:description>Request Baskets service logo</dc:description>
       </cc:Work>
       <cc:License
          rdf:about="http://creativecommons.org/licenses/by-sa/3.0/">
