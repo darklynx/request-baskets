@@ -222,7 +222,7 @@ func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // ForwardToWeb handels HTTP forwarding to /web
 func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	http.Redirect(w, r, "/web", 302)
+	http.Redirect(w, r, "/"+WEB_ROOT, 302)
 }
 
 // WebIndexPage handles HTTP request to render index page
