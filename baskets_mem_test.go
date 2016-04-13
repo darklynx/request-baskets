@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func createTestPOSTRequest(reqUrl string, content string, contentType string) *http.Request {
@@ -29,14 +31,9 @@ func TestMemoryDatabase_Create(t *testing.T) {
 	defer db.Release()
 
 	auth, err := db.Create(name, BasketConfig{Capacity: 20})
-	if err != nil {
-		t.Fatalf("error: %v", err)
-	}
-	if len(auth.Token) == 0 {
-		t.Fatalf("basket token is expected")
-	}
-	if len(auth.Token) < 30 {
-		t.Fatalf("insecure token is generated: %v", auth.Token)
+	if assert.NoError(t, err) {
+		assert.NotEmpty(t, auth.Token, "basket token may not be empty")
+		assert.False(t, len(auth.Token) < 30, "weak basket token: %v", auth.Token)
 	}
 }
 
@@ -47,14 +44,10 @@ func TestMemoryDatabase_Create_NameConflict(t *testing.T) {
 
 	db.Create(name, BasketConfig{Capacity: 20})
 	auth, err := db.Create(name, BasketConfig{Capacity: 20})
-	if err == nil {
-		t.Fatalf("error is expected")
-	}
-	if !strings.Contains(err.Error(), "'"+name+"'") {
-		t.Fatalf("error is not detailed enough: %v", err)
-	}
-	if len(auth.Token) > 0 {
-		t.Fatalf("token is not expected, but was: %v", auth.Token)
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "'"+name+"'", "error is not detailed enough")
+		assert.Empty(t, auth.Token, "basket token is not expected")
 	}
 }
 
