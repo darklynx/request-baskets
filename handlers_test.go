@@ -12,18 +12,18 @@ import (
 )
 
 func testsSetup() {
-	// Initialize global HTTP clients
+	// initialize global HTTP clients
 	httpClient = new(http.Client)
 	httpInsecureClient = new(http.Client)
 
-	// Global config
+	// global config
 	serverConfig = CreateConfig()
-	// Global DB (in memory)
+	// global DB (in memory)
 	basketsDb = createBasketsDatabase()
 }
 
 func testsShutdown() {
-	// Release global DB
+	// release global DB
 	basketsDb.Release()
 }
 
@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreateBasket(t *testing.T) {
-	basket := "test001"
+	basket := "create01"
 
 	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
@@ -83,5 +83,23 @@ func TestCreateBasket_InvalidName(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "Invalid basket name: "+basket, "error message is incomplete")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
+	}
+}
+
+func TestCreateBasket_Conflict(t *testing.T) {
+	basket := "create02"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(httptest.NewRecorder(), r, ps)
+
+		// create another basket with the same name
+		w := httptest.NewRecorder()
+		CreateBasket(w, r, ps)
+
+		// validate response: 409 - conflict
+		assert.Equal(t, 409, w.Code, "wrong HTTP result code")
+		assert.Contains(t, w.Body.String(), "already exists", "error message is incomplete")
 	}
 }
