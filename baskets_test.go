@@ -32,9 +32,6 @@ func TestRequestData_Forward(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	// Initialize global HTTP client
-	httpClient = new(http.Client)
-
 	// Config to forward requests to test HTTP server
 	config := BasketConfig{ForwardUrl: ts.URL, ExpandPath: false, Capacity: 20}
 	data.Forward(config, basket)
@@ -79,9 +76,6 @@ func TestRequestData_Forward_ComplexForwardURL(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer ts.Close()
-
-	// Initialize global HTTP client
-	httpClient = new(http.Client)
 
 	// Config to forward requests to test HTTP server (also enable expanding URL)
 	forwardUrl := ts.URL + "/captures?from=" + basket
