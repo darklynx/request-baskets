@@ -103,3 +103,41 @@ func TestCreateBasket_Conflict(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "already exists", "error message is incomplete")
 	}
 }
+
+func TestCreateBasket_InvalidCapacity(t *testing.T) {
+	basket := "create03"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+		strings.NewReader("{\"capacity\": -10}"))
+
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+
+		// validate response: 422 - unprocessable entity
+		assert.Equal(t, 422, w.Code, "wrong HTTP result code")
+		assert.Contains(t, w.Body.String(), "Capacity should be a positive number", "error message is incomplete")
+		// validate database
+		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
+	}
+}
+
+func TestCreateBasket_ExceedCapacityLimit(t *testing.T) {
+	basket := "create04"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+		strings.NewReader("{\"capacity\": 10000000}"))
+
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+
+		// validate response: 422 - unprocessable entity
+		assert.Equal(t, 422, w.Code, "wrong HTTP result code")
+		assert.Contains(t, w.Body.String(), "Capacity may not be greater than", "error message is incomplete")
+		// validate database
+		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
+	}
+}
