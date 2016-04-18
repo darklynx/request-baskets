@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -43,7 +44,7 @@ func TestCreateBasket(t *testing.T) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		CreateBasket(w, r, ps)
 
-		// validate response
+		// validate response: 201 - created
 		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
 		assert.Equal(t, "application/json; charset=UTF-8", w.Header().Get("Content-Type"), "wrong Content-Type")
 		assert.Contains(t, w.Body.String(), "\"token\"", "JSON response with token is expected")
@@ -139,5 +140,119 @@ func TestCreateBasket_ExceedCapacityLimit(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "Capacity may not be greater than", "error message is incomplete")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
+	}
+}
+
+func TestCreateBasket_InvalidForwardUrl(t *testing.T) {
+	basket := "create05"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+		strings.NewReader("{\"forward_url\": \".,?-7\"}"))
+
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+
+		// validate response: 422 - unprocessable entity
+		assert.Equal(t, 422, w.Code, "wrong HTTP result code")
+		assert.Contains(t, w.Body.String(), "invalid URI", "error message is incomplete")
+		// validate database
+		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
+	}
+}
+
+func TestGetBasket(t *testing.T) {
+	basket := "get01"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				w = httptest.NewRecorder()
+				GetBasket(w, r, ps)
+
+				// validate response: 200 - OK
+				assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+				assert.Equal(t, "application/json; charset=UTF-8", w.Header().Get("Content-Type"), "wrong Content-Type")
+
+				config := new(BasketConfig)
+				err = json.Unmarshal(w.Body.Bytes(), config)
+				if assert.NoError(t, err, "Failed to parse GetBasket response") {
+					assert.Equal(t, 200, config.Capacity, "wrong basket capacity")
+					assert.False(t, config.InsecureTls, "wrong value of Insecure TLS flag")
+					assert.False(t, config.ExpandPath, "wrong value of Expand Path flag")
+					assert.Empty(t, config.ForwardUrl, "Forward URL is not expected")
+				}
+			}
+		}
+	}
+}
+
+func TestGetBasket_Unauthorized(t *testing.T) {
+	basket := "get02"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		if assert.NoError(t, err) {
+			w = httptest.NewRecorder()
+			GetBasket(w, r, ps)
+
+			// validate response: 401 - unauthorized
+			assert.Equal(t, 401, w.Code, "wrong HTTP result code")
+		}
+	}
+}
+
+func TestGetBasket_WrongToken(t *testing.T) {
+	basket := "get03"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		if assert.NoError(t, err) {
+			r.Header.Add("Authorization", "wrong_token")
+			w = httptest.NewRecorder()
+			GetBasket(w, r, ps)
+
+			// validate response: 401 - unauthorized
+			assert.Equal(t, 401, w.Code, "wrong HTTP result code")
+		}
+	}
+}
+
+func TestGetBasket_NotFound(t *testing.T) {
+	basket := "get04"
+
+	r, err := http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		r.Header.Add("Authorization", "abcd12345")
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		GetBasket(w, r, ps)
+
+		// validate response: 404 - not found
+		assert.Equal(t, 404, w.Code, "wrong HTTP result code")
 	}
 }
