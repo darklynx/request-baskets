@@ -197,6 +197,25 @@ func TestCreateBasket_InvalidForwardUrl(t *testing.T) {
 	}
 }
 
+func TestCreateBasket_BrokenJson(t *testing.T) {
+	basket := "create07"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+		strings.NewReader("{\"capacity\": 300, "))
+
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+
+		// validate response: 422 - unprocessable entity
+		assert.Equal(t, 422, w.Code, "wrong HTTP result code")
+		assert.Contains(t, w.Body.String(), "unexpected end of JSON input", "error message is incomplete")
+		// validate database
+		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
+	}
+}
+
 func TestGetBasket(t *testing.T) {
 	basket := "get01"
 
