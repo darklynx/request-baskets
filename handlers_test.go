@@ -50,7 +50,42 @@ func TestCreateBasket(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "\"token\"", "JSON response with token is expected")
 
 		// validate database
-		assert.NotNil(t, basketsDb.Get(basket), "basket '%v' should be created", basket)
+		b := basketsDb.Get(basket)
+		if assert.NotNil(t, b, "basket '%v' should be created", basket) {
+			config := b.Config()
+			assert.Equal(t, 200, config.Capacity, "wrong basket capacity")
+			assert.False(t, config.InsecureTls, "wrong value of Insecure TLS flag")
+			assert.False(t, config.ExpandPath, "wrong value of Expand Path flag")
+			assert.Empty(t, config.ForwardUrl, "Forward URL is not expected")
+		}
+	}
+}
+
+func TestCreateBasket_CustomConfig(t *testing.T) {
+	basket := "create02"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(
+		"{\"capacity\":30,\"insecure_tls\":true,\"expand_path\":true,\"forward_url\": \"http://localhost:12345/test\"}"))
+
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+
+		// validate response: 201 - created
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		assert.Equal(t, "application/json; charset=UTF-8", w.Header().Get("Content-Type"), "wrong Content-Type")
+		assert.Contains(t, w.Body.String(), "\"token\"", "JSON response with token is expected")
+
+		// validate database
+		b := basketsDb.Get(basket)
+		if assert.NotNil(t, b, "basket '%v' should be created", basket) {
+			config := b.Config()
+			assert.Equal(t, 30, config.Capacity, "wrong basket capacity")
+			assert.True(t, config.InsecureTls, "wrong value of Insecure TLS flag")
+			assert.True(t, config.ExpandPath, "wrong value of Expand Path flag")
+			assert.Equal(t, "http://localhost:12345/test", config.ForwardUrl, "wrong Forward URL")
+		}
 	}
 }
 
@@ -88,7 +123,7 @@ func TestCreateBasket_InvalidName(t *testing.T) {
 }
 
 func TestCreateBasket_Conflict(t *testing.T) {
-	basket := "create02"
+	basket := "create03"
 
 	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
@@ -106,7 +141,7 @@ func TestCreateBasket_Conflict(t *testing.T) {
 }
 
 func TestCreateBasket_InvalidCapacity(t *testing.T) {
-	basket := "create03"
+	basket := "create04"
 
 	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
 		strings.NewReader("{\"capacity\": -10}"))
@@ -125,7 +160,7 @@ func TestCreateBasket_InvalidCapacity(t *testing.T) {
 }
 
 func TestCreateBasket_ExceedCapacityLimit(t *testing.T) {
-	basket := "create04"
+	basket := "create05"
 
 	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
 		strings.NewReader("{\"capacity\": 10000000}"))
@@ -144,7 +179,7 @@ func TestCreateBasket_ExceedCapacityLimit(t *testing.T) {
 }
 
 func TestCreateBasket_InvalidForwardUrl(t *testing.T) {
-	basket := "create05"
+	basket := "create06"
 
 	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
 		strings.NewReader("{\"forward_url\": \".,?-7\"}"))
