@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -492,6 +493,96 @@ func TestDeleteBasket_Unauthorized(t *testing.T) {
 
 			// validate not deleted
 			assert.NotNil(t, basketsDb.Get(basket), "basket '%v' is expected", basket)
+		}
+	}
+}
+
+func TestGetBaskets(t *testing.T) {
+	// create 5 baskets
+	for i := 0; i < 5; i++ {
+		basket := fmt.Sprintf("names0%v", i)
+		r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		if assert.NoError(t, err) {
+			w := httptest.NewRecorder()
+			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+			CreateBasket(w, r, ps)
+			assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		}
+	}
+
+	// get names
+	r, err := http.NewRequest("GET", "http://localhost:55555/baskets", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		GetBaskets(w, r, make(httprouter.Params, 0))
+
+		names := new(BasketNamesPage)
+		err = json.Unmarshal(w.Body.Bytes(), names)
+		if assert.NoError(t, err) {
+			// validate response
+			assert.NotEmpty(t, names.Names, "names are expected")
+			assert.True(t, names.Count > 0, "count should be greater than 0")
+		}
+	}
+}
+
+func TestGetBaskets_Query(t *testing.T) {
+	// create 10 baskets
+	for i := 0; i < 10; i++ {
+		basket := fmt.Sprintf("names1%v", i)
+		r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		if assert.NoError(t, err) {
+			w := httptest.NewRecorder()
+			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+			CreateBasket(w, r, ps)
+			assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		}
+	}
+
+	// get names
+	r, err := http.NewRequest("GET", "http://localhost:55555/baskets?q=names1", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		GetBaskets(w, r, make(httprouter.Params, 0))
+
+		names := new(BasketNamesQueryPage)
+		err = json.Unmarshal(w.Body.Bytes(), names)
+		if assert.NoError(t, err) {
+			// validate response
+			assert.NotEmpty(t, names.Names, "names are expected")
+			assert.Len(t, names.Names, 10, "unexpected number of found baskets")
+			assert.False(t, names.HasMore, "no more names are expected")
+		}
+	}
+}
+
+func TestGetBaskets_Page(t *testing.T) {
+	// create 10 baskets
+	for i := 0; i < 10; i++ {
+		basket := fmt.Sprintf("names2%v", i)
+		r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		if assert.NoError(t, err) {
+			w := httptest.NewRecorder()
+			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+			CreateBasket(w, r, ps)
+			assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		}
+	}
+
+	// get names
+	r, err := http.NewRequest("GET", "http://localhost:55555/baskets?max=5&skip=2", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		GetBaskets(w, r, make(httprouter.Params, 0))
+
+		names := new(BasketNamesPage)
+		err = json.Unmarshal(w.Body.Bytes(), names)
+		if assert.NoError(t, err) {
+			// validate response
+			assert.NotEmpty(t, names.Names, "names are expected")
+			assert.Len(t, names.Names, 5, "unexpected number of found baskets")
+			assert.Equal(t, names.Count, basketsDb.Size(), "wrong count of baskets")
+			assert.True(t, names.HasMore, "more names are expected")
 		}
 	}
 }
