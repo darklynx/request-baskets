@@ -310,3 +310,188 @@ func TestGetBasket_NotFound(t *testing.T) {
 		assert.Equal(t, 404, w.Code, "wrong HTTP result code")
 	}
 }
+
+func TestUpdateBasket(t *testing.T) {
+	basket := "update01"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("PUT", "http://localhost:55555/baskets/"+basket,
+				strings.NewReader("{\"capacity\":50, \"expand_path\":true, \"forward_url\":\"http://test.server/forward\"}"))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				w = httptest.NewRecorder()
+				UpdateBasket(w, r, ps)
+
+				// validate response: 204 - no content
+				assert.Equal(t, 204, w.Code, "wrong HTTP result code")
+
+				// validate update
+				config := basketsDb.Get(basket).Config()
+				assert.Equal(t, 50, config.Capacity, "wrong basket capacity")
+				assert.False(t, config.InsecureTls, "wrong value of Insecure TLS flag")
+				assert.True(t, config.ExpandPath, "wrong value of Expand Path flag")
+				assert.Equal(t, "http://test.server/forward", config.ForwardUrl, "wrong Forward URL")
+			}
+		}
+	}
+}
+
+func TestUpdateBasket_EmptyConfig(t *testing.T) {
+	basket := "update02"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("PUT", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				w = httptest.NewRecorder()
+				UpdateBasket(w, r, ps)
+
+				// validate response: 304 - not modified
+				assert.Equal(t, 304, w.Code, "wrong HTTP result code")
+
+				// validate update
+				config := basketsDb.Get(basket).Config()
+				assert.Equal(t, 200, config.Capacity, "wrong basket capacity")
+				assert.False(t, config.InsecureTls, "wrong value of Insecure TLS flag")
+				assert.False(t, config.ExpandPath, "wrong value of Expand Path flag")
+				assert.Empty(t, config.ForwardUrl, "Forward URL is not expected")
+			}
+		}
+	}
+}
+
+func TestUpdateBasket_BrokenJson(t *testing.T) {
+	basket := "update03"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("PUT", "http://localhost:55555/baskets/"+basket, strings.NewReader("{ capacity : 300 /"))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				w = httptest.NewRecorder()
+				UpdateBasket(w, r, ps)
+
+				// validate response: 422 - unprocessable entity
+				assert.Equal(t, 422, w.Code, "wrong HTTP result code")
+
+				// validate update
+				config := basketsDb.Get(basket).Config()
+				assert.Equal(t, 200, config.Capacity, "wrong basket capacity")
+				assert.False(t, config.InsecureTls, "wrong value of Insecure TLS flag")
+				assert.False(t, config.ExpandPath, "wrong value of Expand Path flag")
+				assert.Empty(t, config.ForwardUrl, "Forward URL is not expected")
+			}
+		}
+	}
+}
+
+func TestDeleteBasket(t *testing.T) {
+	basket := "delete01"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		assert.NotNil(t, basketsDb.Get(basket), "basket '%v' is expected", basket)
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("DELETE", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				w = httptest.NewRecorder()
+				DeleteBasket(w, r, ps)
+
+				// validate response: 204 - no content
+				assert.Equal(t, 204, w.Code, "wrong HTTP result code")
+
+				// validate deletion
+				assert.Nil(t, basketsDb.Get(basket), "basket '%v' is not expected", basket)
+			}
+		}
+	}
+}
+
+func TestDeleteBasket_NotFound(t *testing.T) {
+	basket := "delete02"
+
+	r, err := http.NewRequest("DELETE", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		r.Header.Add("Authorization", "abc123")
+
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+		DeleteBasket(w, r, ps)
+
+		// validate response: 404 - not found
+		assert.Equal(t, 404, w.Code, "wrong HTTP result code")
+	}
+}
+
+func TestDeleteBasket_Unauthorized(t *testing.T) {
+	basket := "delete03"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		assert.NotNil(t, basketsDb.Get(basket), "basket '%v' is expected", basket)
+
+		r, err = http.NewRequest("DELETE", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		if assert.NoError(t, err) {
+			r.Header.Add("Authorization", "123-wrong-token")
+			w = httptest.NewRecorder()
+			DeleteBasket(w, r, ps)
+
+			// validate response: 401 - unauthorized
+			assert.Equal(t, 401, w.Code, "wrong HTTP result code")
+
+			// validate not deleted
+			assert.NotNil(t, basketsDb.Get(basket), "basket '%v' is expected", basket)
+		}
+	}
+}
