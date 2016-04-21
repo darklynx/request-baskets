@@ -515,6 +515,8 @@ func TestGetBaskets(t *testing.T) {
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
 		GetBaskets(w, r, make(httprouter.Params, 0))
+		// HTTP 200 - OK
+		assert.Equal(t, 200, w.Code, "wrong HTTP result code")
 
 		names := new(BasketNamesPage)
 		err = json.Unmarshal(w.Body.Bytes(), names)
@@ -544,6 +546,8 @@ func TestGetBaskets_Query(t *testing.T) {
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
 		GetBaskets(w, r, make(httprouter.Params, 0))
+		// HTTP 200 - OK
+		assert.Equal(t, 200, w.Code, "wrong HTTP result code")
 
 		names := new(BasketNamesQueryPage)
 		err = json.Unmarshal(w.Body.Bytes(), names)
@@ -574,6 +578,8 @@ func TestGetBaskets_Page(t *testing.T) {
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
 		GetBaskets(w, r, make(httprouter.Params, 0))
+		// HTTP 200 - OK
+		assert.Equal(t, 200, w.Code, "wrong HTTP result code")
 
 		names := new(BasketNamesPage)
 		err = json.Unmarshal(w.Body.Bytes(), names)
@@ -585,4 +591,213 @@ func TestGetBaskets_Page(t *testing.T) {
 			assert.True(t, names.HasMore, "more names are expected")
 		}
 	}
+}
+
+func TestGetBasketRequests(t *testing.T) {
+	basket := "getreq01"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		assert.NotNil(t, basketsDb.Get(basket), "basket '%v' is expected", basket)
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			// collect some HTTP requests
+			for i := 1; i <= 10; i++ {
+				req := createTestPOSTRequest(fmt.Sprintf("http://localhost:55555/%v/data?id=%v", basket, i),
+					fmt.Sprintf("req%v data ...", i), "text/plain")
+				AcceptBasketRequests(httptest.NewRecorder(), req)
+			}
+
+			// get requests
+			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				w = httptest.NewRecorder()
+				GetBasketRequests(w, r, ps)
+				// HTTP 200 - OK
+				assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+
+				requests := new(RequestsPage)
+				err = json.Unmarshal(w.Body.Bytes(), requests)
+				if assert.NoError(t, err) {
+					// validate response
+					assert.NotEmpty(t, requests.Requests, "requests are expected")
+					assert.Len(t, requests.Requests, 10, "unexpected number of returned requests")
+					assert.Equal(t, requests.Count, 10, "wrong count of requests")
+					assert.Equal(t, requests.TotalCount, 10, "wrong total count of requests")
+					assert.False(t, requests.HasMore, "no more requests are expected")
+				}
+			}
+		}
+	}
+}
+
+func TestGetBasketRequests_Query(t *testing.T) {
+	basket := "getreq02"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		assert.NotNil(t, basketsDb.Get(basket), "basket '%v' is expected", basket)
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			// collect some HTTP requests
+			for i := 1; i <= 25; i++ {
+				req := createTestPOSTRequest(fmt.Sprintf("http://localhost:55555/%v/data?id=%v", basket, i),
+					fmt.Sprintf("req%v data ...", i), "text/plain")
+				if i > 10 && i < 15 {
+					req.Header.Add("Test-Key", "magic")
+				}
+				AcceptBasketRequests(httptest.NewRecorder(), req)
+			}
+
+			// get requests
+			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"?q=magic&in=headers", strings.NewReader(""))
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				w = httptest.NewRecorder()
+				GetBasketRequests(w, r, ps)
+				// HTTP 200 - OK
+				assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+
+				requests := new(RequestsQueryPage)
+				err = json.Unmarshal(w.Body.Bytes(), requests)
+				if assert.NoError(t, err) {
+					// validate response
+					assert.NotEmpty(t, requests.Requests, "requests are expected")
+					assert.Len(t, requests.Requests, 4, "unexpected number of returned requests")
+					assert.False(t, requests.HasMore, "no more requests are expected")
+				}
+			}
+		}
+	}
+}
+
+func TestGetBasketRequests_Page(t *testing.T) {
+	basket := "getreq03"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		assert.NotNil(t, basketsDb.Get(basket), "basket '%v' is expected", basket)
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			// collect some HTTP requests
+			for i := 1; i <= 300; i++ {
+				req := createTestPOSTRequest(fmt.Sprintf("http://localhost:55555/%v/data?id=%v", basket, i),
+					fmt.Sprintf("req%v data ...", i), "text/plain")
+				AcceptBasketRequests(httptest.NewRecorder(), req)
+			}
+
+			// get requests
+			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"?max=5&skip=5", strings.NewReader(""))
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				w = httptest.NewRecorder()
+				GetBasketRequests(w, r, ps)
+				// HTTP 200 - OK
+				assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+
+				requests := new(RequestsPage)
+				err = json.Unmarshal(w.Body.Bytes(), requests)
+				if assert.NoError(t, err) {
+					// validate response
+					assert.NotEmpty(t, requests.Requests, "requests are expected")
+					assert.Len(t, requests.Requests, 5, "unexpected number of returned requests")
+					assert.Equal(t, requests.Count, 200, "wrong count of requests")
+					assert.Equal(t, requests.TotalCount, 300, "wrong total count of requests")
+					assert.True(t, requests.HasMore, "more requests are expected")
+
+					assert.Contains(t, requests.Requests[0].Body, "req295", "wrong request")
+				}
+			}
+		}
+	}
+}
+
+func TestClearBasket(t *testing.T) {
+	basket := "clear01"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		assert.NotNil(t, basketsDb.Get(basket), "basket '%v' is expected", basket)
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			// collect some HTTP requests
+			for i := 1; i <= 25; i++ {
+				req := createTestPOSTRequest(fmt.Sprintf("http://localhost:55555/%v/data?id=%v", basket, i),
+					fmt.Sprintf("req%v data ...", i), "text/plain")
+				AcceptBasketRequests(httptest.NewRecorder(), req)
+			}
+
+			// clear basket
+			r, err = http.NewRequest("DELETE", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				w = httptest.NewRecorder()
+				ClearBasket(w, r, ps)
+				// HTTP 204 - no content
+				assert.Equal(t, 204, w.Code, "wrong HTTP result code")
+
+				// get requests
+				r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+				if assert.NoError(t, err) {
+					r.Header.Add("Authorization", auth.Token)
+					w = httptest.NewRecorder()
+					GetBasketRequests(w, r, ps)
+					// HTTP 200 - OK
+					assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+
+					requests := new(RequestsPage)
+					err = json.Unmarshal(w.Body.Bytes(), requests)
+					if assert.NoError(t, err) {
+						// validate response
+						assert.Empty(t, requests.Requests, "requests are not expected")
+						assert.Equal(t, requests.Count, 0, "wrong count of requests")
+						assert.Equal(t, requests.TotalCount, 0, "wrong total count of requests")
+						assert.False(t, requests.HasMore, "no more requests are expected")
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestAcceptBasketRequests_NotFound(t *testing.T) {
+	basket := "accept02"
+	req := createTestPOSTRequest("http://localhost:55555/"+basket, "super-data", "text/plain")
+	w := httptest.NewRecorder()
+	AcceptBasketRequests(w, req)
+	// HTTP 404 - not found
+	assert.Equal(t, 404, w.Code, "wrong HTTP result code")
 }
