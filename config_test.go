@@ -2,34 +2,19 @@ package main
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateDefaultConfig(t *testing.T) {
-	config := CreateConfig()
-	if config == nil {
-		t.Fatalf("default configuration is expected")
-	}
-
-	if config.DbType != DEFAULT_DB_TYPE {
-		t.Fatalf("wrong db type, expected: %v, but found: %v", DEFAULT_DB_TYPE, config.DbType)
-	}
-	if config.ServerPort != DEFAULT_PORT {
-		t.Fatalf("wrong server port, expected: %v, but found: %v", DEFAULT_PORT, config.ServerPort)
-	}
-	if config.InitCapacity != INIT_BASKET_CAPACITY {
-		t.Fatalf("wrong initial capacity, expected: %v, but found: %v", INIT_BASKET_CAPACITY, config.InitCapacity)
-	}
-	if config.MaxCapacity != MAX_BASKET_CAPACITY {
-		t.Fatalf("wrong max capacity, expected: %v, but found: %v", MAX_BASKET_CAPACITY, config.MaxCapacity)
-	}
-	if config.PageSize != DEFAULT_PAGE_SIZE {
-		t.Fatalf("wrong page size, expected: %v, but found: %v", DEFAULT_PAGE_SIZE, config.PageSize)
-	}
-	if config.DbFile != "./baskets.db" {
-		t.Fatalf("wrong page size, expected: ./baskets.db, but found: %v", config.DbFile)
-	}
-
-	if len(config.MasterToken) == 0 {
-		t.Fatalf("expected randomly generated master token, but was empty")
+	// serverConfig should be initialized by testsSetup function
+	if assert.NotNil(t, serverConfig, "server configuration is expected") {
+		assert.Equal(t, DEFAULT_DB_TYPE, serverConfig.DbType, "wrong db type")
+		assert.Equal(t, DEFAULT_PORT, serverConfig.ServerPort, "wrong server port")
+		assert.Equal(t, INIT_BASKET_CAPACITY, serverConfig.InitCapacity, "wrong initial capacity")
+		assert.Equal(t, MAX_BASKET_CAPACITY, serverConfig.MaxCapacity, "wrong max capacity")
+		assert.Equal(t, DEFAULT_PAGE_SIZE, serverConfig.PageSize, "wrong page size")
+		assert.Equal(t, "./baskets.db", serverConfig.DbFile, "wrong DB file location")
+		assert.NotEmpty(t, serverConfig.MasterToken, "expected randomly generated master token")
 	}
 }
