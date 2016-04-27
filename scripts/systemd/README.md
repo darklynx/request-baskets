@@ -6,7 +6,7 @@
 Following steps let you set up Request Baskets as systemd service:
 
  * copy `request-baskets` executable file into `/usr/local/bin/` folder
- * copy `rbaskets.service` unit file into `/usr/lib/systemd/system` or `/lib/systemd/system` folder (standard location of unit files may differ in different Linux distribution)
+ * copy `rbaskets.service` unit file into `/usr/lib/systemd/system` or `/lib/systemd/system` folder (standard location of unit files may differ in different Linux distributions)
  * create `rbaskets` system user:
 
  ```
