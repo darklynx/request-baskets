@@ -105,3 +105,36 @@ $ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
 ```
 
 Any other kind of storages or databases (e.g. MySQL, MongoDb) to keep collected data can be introduced by implementing following interfaces: `BasketsDatabase` and `Basket`
+
+## Docker
+
+### Build with docker
+
+```bash
+$ docker build -t my/rbaskets .
+```
+
+### Run docker container as a service
+
+```bash
+$ docker run --name rbaskets -d -p 55555:55555 my/rbaskets
+$ docker logs rbaskets
+```
+
+To extract executable from container:
+```bash
+$ docker cp <container id>:/go/bin/app ./request-baskets
+```
+
+### Cleanup
+
+Stop and delete docker container:
+```bash
+$ docker stop rbaskets
+$ docker rm rbaskets
+```
+
+Delete docker image:
+```bash
+$ docker rmi my/rbaskets
+```
