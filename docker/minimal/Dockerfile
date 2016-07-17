@@ -6,9 +6,9 @@ FROM alpine
 
 MAINTAINER Vladimir L, vladimir_l@gmx.net
 
-# Create a volume for rbaskets service (uncomment if backups are required)
-#VOLUME /var/lib/rbaskets
-RUN mkdir -p /var/lib/rbaskets
+# Create a volume for rbaskets service
+VOLUME /var/lib/rbaskets
+# RUN mkdir -p /var/lib/rbaskets
 
 # Copy built service
 COPY request-baskets /usr/local/bin/

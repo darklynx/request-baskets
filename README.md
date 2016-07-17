@@ -108,23 +108,22 @@ Any other kind of storages or databases (e.g. MySQL, MongoDb) to keep collected 
 
 ## Docker
 
-### Build docker container
+### Build image with service
 
 ```bash
 $ docker build -t request-baskets .
 ```
 
-This will create a docker container based on `golang:onbuild` container that will include compiled version of request
-baskets service ready to test. Size of built container is ~750 Mb.
+This will create a docker image based on `golang:onbuild` image with compiled version of request baskets service
+ready to test. Size of built image is ~750 Mb.
 
-To build minimalistic container based on `alpine` image (final container size is ~15 Mb) simply run:
+To build minimalistic image based on `alpine` image (final size is ~15 Mb) simply run:
 
 ```bash
 $ ./docker/minimal/build.sh
 ```
 
 See `docker/` folder for alternative docker builds.
-
 
 ### Run container as a service
 
