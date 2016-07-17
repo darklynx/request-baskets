@@ -6,7 +6,7 @@ FROM ubuntu
 MAINTAINER Vladimir L, vladimir_l@gmx.net
 
 # Create a volume for rbaskets service (uncomment if backups are required)
-#VOLUME /opt/rbaskets
+#VOLUME /var/lib/rbaskets
 
 # One liner:
 # - Install golang & git
@@ -19,7 +19,7 @@ RUN set -x \
 	&& export GOPATH="$(mktemp -d)" \
 	&& go get github.com/darklynx/request-baskets \
 	&& cp "$GOPATH/bin/request-baskets" /usr/local/bin/ \
-	&& mkdir -p /opt/rbaskets \
+	&& mkdir -p /var/lib/rbaskets \
 	&& rm -rf "$GOPATH" \
 	&& apt-get purge --auto-remove -y git golang-go \
 	&& apt-get autoclean -y \
@@ -28,4 +28,4 @@ RUN set -x \
 # Expose ports
 EXPOSE 55555
 
-CMD request-baskets -db bolt -file /opt/rbaskets/baskets.db
+CMD request-baskets -db bolt -file /var/lib/rbaskets/baskets.db

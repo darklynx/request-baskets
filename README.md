@@ -108,22 +108,29 @@ Any other kind of storages or databases (e.g. MySQL, MongoDb) to keep collected 
 
 ## Docker
 
-### Build with docker
+### Build docker container
 
 ```bash
-$ docker build -t my/rbaskets .
+$ docker build -t request-baskets .
 ```
 
-### Run docker container as a service
+This will create a docker container based on `golang:onbuild` container that will include compiled version of request
+baskets service ready to test. Size of built container is ~750 Mb.
+
+To build minimalistic container based on `alpine` image (final container size is ~15 Mb) simply run:
 
 ```bash
-$ docker run --name rbaskets -d -p 55555:55555 my/rbaskets
+$ ./docker/minimal/build.sh
+```
+
+See `docker/` folder for alternative docker builds.
+
+
+### Run container as a service
+
+```bash
+$ docker run --name rbaskets -d -p 55555:55555 request-baskets
 $ docker logs rbaskets
-```
-
-To extract executable from container:
-```bash
-$ docker cp <container id>:/go/bin/app ./request-baskets
 ```
 
 ### Cleanup
@@ -136,5 +143,5 @@ $ docker rm rbaskets
 
 Delete docker image:
 ```bash
-$ docker rmi my/rbaskets
+$ docker rmi request-baskets
 ```
