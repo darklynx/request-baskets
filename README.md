@@ -4,6 +4,23 @@
 
 It is strongly inspired by ideas and application design of the [RequestHub](https://github.com/kyledayton/requesthub) project and reproduces functionality offered by [RequestBin](http://requestb.in/) service.
 
+## Table of Contents
+
+- [Introduction](#introduction)
+  - [Features](#features)
+  - [Screenshot](#screenshot)
+- [Install](#install)
+  - [Build from source](#build-from-source)
+  - [Run](#run)
+- [Configuration](#configuration)
+  - [Parameters](#parameters)
+- [Usage](#usage)
+  - [Persistent storage](#persistent-storage)
+- [Docker](#docker)
+  - [Build docker image](#build-docker-image)
+  - [Run container as a service](#run-container-as-a-service)
+  - [Cleanup](#cleanup)
+
 ## Introduction
 
 [Request Baskets](https://rbaskets.in) service is available on our demonstration server: [https://rbaskets.in](https://rbaskets.in)
@@ -105,3 +122,42 @@ $ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
 ```
 
 Any other kind of storages or databases (e.g. MySQL, MongoDb) to keep collected data can be introduced by implementing following interfaces: `BasketsDatabase` and `Basket`
+
+## Docker
+
+### Build docker image
+
+```bash
+$ docker build -t request-baskets .
+```
+
+This will create a docker image based on `golang:onbuild` image with compiled version of request baskets service
+ready to test. Size of built image is ~750 Mb.
+
+To build minimalistic image based on `alpine` image (final size is ~15 Mb) simply run:
+
+```bash
+$ ./docker/minimal/build.sh
+```
+
+See [docker folder](./docker) for alternative docker builds.
+
+### Run container as a service
+
+```bash
+$ docker run --name rbaskets -d -p 55555:55555 request-baskets
+$ docker logs rbaskets
+```
+
+### Cleanup
+
+Stop and delete docker container:
+```bash
+$ docker stop rbaskets
+$ docker rm rbaskets
+```
+
+Delete docker image:
+```bash
+$ docker rmi request-baskets
+```
