@@ -28,7 +28,7 @@ Now you can visit [http://localhost:55555](http://localhost:55555) in your brows
 
 To stop the service simply hit `Ctrl+C` - this will stop and delete the running container (note `--rm` flag).
 
-Use of `golang:ongoing` image allows you to build and run Go applications without Go SDK being installed in your development environment. However the Go SDK with all dependencies remains in final image with built application, which results in big image size (see above).
+Use of `golang:ongoing` image allows you to build and run Go applications without Go SDK being installed on your computer. However the Go SDK with all dependencies remains in the final image of built application, which results in really big image size (see above).
 
 ## Docker with "ubuntu"
 
@@ -45,7 +45,7 @@ Since Docker persists every command as a separate layer, one-liner allows to kee
 
 However, the purge command does not remove all dependencies that are installed with `golang` & `git` packages and final image results in more than 350 MB, even though the original Ubuntu image is only 125 MB.
 
-Since application is built using `go get github.com/darklynx/request-baskets` command, which pulls the latest version of application from GitHub, you do not need to launch image built from source directory, it can be done from anywhere:
+Since application is built using `go get github.com/darklynx/request-baskets` command, which pulls the latest version of application from GitHub, you do not need to launch image built from source directory. This can be done from any location:
 
 ```bash
 $ cd docker/ubuntu
@@ -53,7 +53,7 @@ $ docker build -t request-baskets .
 $ docker run -d --name rbaskets -p 55555:55555 request-baskets
 ```
 
-Last command from above will launch an instance of container in detached mode (as a service). Now you can perform following commands.
+Last command from above launches an instance of container in detached mode (as a service). This let you use container in the background and provide you following possibilities to control container and service.
 
 Access log of running service:
 ```bash
@@ -76,8 +76,8 @@ Note that `request-baskets` is configured to save data in Bolt database, hence t
 
 Building minimalistic docker image with `request-baskets` service is spit in 2 steps:
 
- * Compile Go project with `golang:latest` container
- * Create image based on `alpine:latest` with `request-baskets` service only
+ * Compilation of Go project with a help of `golang:latest` container
+ * Creation of `request-baskets` service image based on `alpine:latest` image
 
 In order to simplify the process [build script](./minimal/build.sh) is provided. Simply run it from any location and it should build a minimalistic image with `request-baskets` service for you.
 
@@ -87,6 +87,6 @@ During initial step [golang](https://github.com/docker-library/docs/tree/master/
 
 Second step uses [Dockerfile](./minimal/Dockerfile) to build image based on simply wonderful [alpine](https://github.com/docker-library/docs/tree/master/alpine) image from official Docker library. This image has less then 5 MB size and with `request-baskets` service included the final image takes just ~15 MB.
 
-Important: since `alpine` image includes minimal or even less dependencies to minimize the image size the [static linking](http://www.blang.io/posts/2015-04_golang-alpine-build-golang-binaries-for-alpine-linux/) during Go compilation is a solution to build an executable that may run inside `alpine` container.
+**Important:** since `alpine` image includes minimal to none dependencies to minimize the original image size the [static linking](http://www.blang.io/posts/2015-04_golang-alpine-build-golang-binaries-for-alpine-linux/) during Go compilation is a solution to build an executable that may run inside `alpine` container.
 
 Similar to "ubuntu" Docker script this [Dockerfile](./minimal/Dockerfile) also declares a volume to expose the Bolt database location.
