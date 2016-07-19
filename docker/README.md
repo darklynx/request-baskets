@@ -6,9 +6,9 @@
 $ docker images
 
 REPOSITORY          TAG        IMAGE ID            CREATED             SIZE
+request-baskets     golang     8fe4269dbc19        7 minutes ago       768.4 MB
 request-baskets     ubuntu     86d1c3b87154        53 seconds ago      378.8 MB
 request-baskets     alpine     7991c7cec214        6 minutes ago       15.2 MB
-request-baskets     golang     8fe4269dbc19        7 minutes ago       768.4 MB
 ...
 ```
 
@@ -72,7 +72,7 @@ $ docker start rbaskets
 
 Note that `request-baskets` is configured to save data in Bolt database, hence the collected data is not lost after container restart. Database is placed on a volume that can be accessed from another containers for analyses or backup purposes.
 
-## Docker with "minimal"
+## Docker with "minimal" (alpine)
 
 Building minimalistic docker image with `request-baskets` service is spit in 2 steps:
 
