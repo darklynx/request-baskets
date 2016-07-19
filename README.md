@@ -4,6 +4,23 @@
 
 It is strongly inspired by ideas and application design of the [RequestHub](https://github.com/kyledayton/requesthub) project and reproduces functionality offered by [RequestBin](http://requestb.in/) service.
 
+## Table of Contents
+
+- [Introduction](#introduction)
+  - [Features](#features)
+  - [Screenshot](#screenshot)
+- [Install](#install)
+  - [Build from source](#build-from-source)
+  - [Run](#run)
+- [Configuration](#configuration)
+  - [Parameters](#parameters)
+- [Usage](#usage)
+  - [Persistent storage](#persistent-storage)
+- [Docker](#docker)
+  - [Build docker image](#build-docker-image)
+  - [Run container as a service](#run-container-as-a-service)
+  - [Cleanup](#cleanup)
+
 ## Introduction
 
 [Request Baskets](https://rbaskets.in) service is available on our demonstration server: [https://rbaskets.in](https://rbaskets.in)
@@ -108,7 +125,7 @@ Any other kind of storages or databases (e.g. MySQL, MongoDb) to keep collected 
 
 ## Docker
 
-### Build image with service
+### Build docker image
 
 ```bash
 $ docker build -t request-baskets .
