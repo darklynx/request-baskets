@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 docker run --rm -v "$PWD":/go/bin --env CGO_ENABLED=0 golang:latest go get -v github.com/darklynx/request-baskets
 
 # create a minimalistic docker image (based on alpine) with service only
-docker build -t request-baskets .
+docker build -t request-baskets:alpine .
 
 # cleanup
 rm request-baskets

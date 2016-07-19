@@ -123,7 +123,7 @@ To build minimalistic image based on `alpine` image (final size is ~15 Mb) simpl
 $ ./docker/minimal/build.sh
 ```
 
-See `docker/` folder for alternative docker builds.
+See [docker folder](./docker) for alternative docker builds.
 
 ### Run container as a service
 
