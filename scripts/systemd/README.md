@@ -30,7 +30,7 @@ Start Request Baskets service:
 
 Stop service:
 ```
-~$ sudo systemctl start rbaskets
+~$ sudo systemctl stop rbaskets
 ```
 
 Check service current status:
