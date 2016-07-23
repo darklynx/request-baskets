@@ -101,6 +101,7 @@ func TestCreateBasket_Forbidden(t *testing.T) {
 
 		// validate response: 403 - forbidden
 		assert.Equal(t, 403, w.Code, "wrong HTTP result code")
+		assert.Equal(t, "Basket name may not clash with system path: "+basket+"\n", w.Body.String(), "wrong error message")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
 	}
@@ -117,7 +118,8 @@ func TestCreateBasket_InvalidName(t *testing.T) {
 
 		// validate response: 400 - bad request
 		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
-		assert.Contains(t, w.Body.String(), "Invalid basket name: "+basket, "error message is incomplete")
+		assert.Equal(t, "Basket name does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+			"wrong error message")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
 	}
@@ -800,4 +802,60 @@ func TestAcceptBasketRequests_NotFound(t *testing.T) {
 	AcceptBasketRequests(w, req)
 	// HTTP 404 - not found
 	assert.Equal(t, 404, w.Code, "wrong HTTP result code")
+}
+
+func TestForwardToWeb(t *testing.T) {
+	r, err := http.NewRequest("GET", "http://localhost:55555/", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ForwardToWeb(w, r, make(httprouter.Params, 0))
+
+		// validate response: 302 - Found
+		assert.Equal(t, 302, w.Code, "wrong HTTP result code")
+		assert.Equal(t, "/"+WEB_ROOT, w.Header().Get("Location"), "wrong Location header")
+	}
+}
+
+func TestWebIndexPage(t *testing.T) {
+	r, err := http.NewRequest("GET", "http://localhost:55555/web", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		WebIndexPage(w, r, make(httprouter.Params, 0))
+
+		// validate response: 200 - OK
+		assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+		assert.Contains(t, w.Body.String(), "<title>Request Baskets</title>", "HTML index page with baskets is expected")
+	}
+}
+
+func TestWebBasketPage(t *testing.T) {
+	basket := "test"
+
+	r, err := http.NewRequest("GET", "http://localhost:55555/web/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		WebBasketPage(w, r, ps)
+
+		// validate response: 200 - OK
+		assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+		assert.Contains(t, w.Body.String(), "<title>Request Basket: "+basket+"</title>",
+			"HTML page to display basket is expected")
+	}
+}
+
+func TestWebBasketPage_InvalidName(t *testing.T) {
+	basket := ">>>"
+
+	r, err := http.NewRequest("GET", "http://localhost:55555/web/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		WebBasketPage(w, r, ps)
+
+		// validate response: 400 - bad request
+		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
+		assert.Equal(t, "Basket name does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+			"wrong error message")
+	}
 }
