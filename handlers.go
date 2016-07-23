@@ -124,11 +124,11 @@ func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
 	if name == BASKETS_ROOT || name == WEB_ROOT {
-		http.Error(w, "You cannot use system path as basket name: "+name, http.StatusForbidden)
+		http.Error(w, "Basket name may not clash with system path: "+name, http.StatusForbidden)
 		return
 	}
 	if !validBasketName.MatchString(name) {
-		http.Error(w, "Invalid basket name: "+name+", valid name pattern: "+validBasketName.String(), http.StatusBadRequest)
+		http.Error(w, "Basket name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 		return
 	}
 
@@ -145,7 +145,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	// default config
 	config := BasketConfig{ForwardUrl: "", Capacity: serverConfig.InitCapacity}
 	if len(body) > 0 {
-		if err := parseBasketConfig(body, &config); err != nil {
+		if err = parseBasketConfig(body, &config); err != nil {
 			http.Error(w, err.Error(), 422)
 			return
 		}
@@ -233,6 +233,10 @@ func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 // WebBasketPage handles HTTP request to render basket details page
 func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
+	if !validBasketName.MatchString(name) {
+		http.Error(w, "Basket name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+		return
+	}
 	basketPage.Execute(w, name)
 }
 
