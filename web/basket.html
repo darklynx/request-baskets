@@ -85,9 +85,12 @@
           break;
       }
 
-      var html = '<div class="row"><div class="col-md-1"><h4 class="text-' + headerClass +
-        '" title="' + new Date(request.date).toString() + '">[' + request.method +
-        ']</h4></div><div class="col-md-11"><div class="panel-group" id="' + id + '">' +
+      var date = new Date(request.date);
+
+      var html = '<div class="row"><div class="col-md-2"><h4 class="text-' + headerClass +
+        '">[' + request.method + ']</h4><div><i class="glyphicon glyphicon-time" title="' + date.toString() + '"></i> ' + date.toLocaleTimeString() +
+        '</div><div><i class="glyphicon glyphicon-calendar" title="' + date.toString() + '"></i> ' + date.toLocaleDateString() +
+        '</div></div><div class="col-md-10"><div class="panel-group" id="' + id + '">' +
         '<div class="panel panel-' + headerClass + '"><div class="panel-heading"><h4 class="panel-title">' + escapeHTML(path) + '</h4></div></div>' +
         '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
         '<a class="collapsed" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_headers">Headers</a></h4></div>' +

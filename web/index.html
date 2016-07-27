@@ -4,6 +4,7 @@
   <title>Request Baskets</title>
   <!-- Bootstrap -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
   <!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/flatly/bootstrap.min.css"-->
 
@@ -16,10 +17,13 @@
     .footer { position: absolute; bottom: 0; width: 100%; height: 60px; background-color: #f5f5f5; }
     .container .text-muted { margin: 20px 0; }
     h1 { margin-top: 2px; }
-    #more { margin-left: 40px; }
+    #more { margin-left: 60px; padding-bottom: 10px; }
+    #baskets ul { width: 100%; }
+    #baskets li { padding: 0 0 5px 20px; float: left; display: inline; position: relative; width: 50%; }
+    #baskets li:before { content: "\f291"; font-family: "FontAwesome"; position: absolute; left: 0px; top:0px; }
   </style>
 
-  <script >
+  <script>
   (function($) {
     var basketsCount = 0;
 
@@ -111,7 +115,7 @@
       $("#token").on("click", function(event) {
         $("#master_token_dialog").modal();
       });
-      $("#save_master_token").on("click", function(event) {
+      $("#master_token_form").on("submit", function(event) {
         saveMasterToken();
       });
       $("#fetch_more").on("click", function(event) {
@@ -185,7 +189,7 @@
           <button type="button" class="close" data-dismiss="modal">&times;</button>
           <h4 class="modal-title">Master Token</h4>
         </div>
-        <form>
+        <form id="master_token_form">
         <div class="modal-body">
           <p>By providing the master token you will gain additional privileges.</p>
           <div class="form-group">
@@ -195,7 +199,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-success" id="save_master_token">Authorize</button>
+          <button type="submit" class="btn btn-success">Authorize</button>
         </div>
         </form>
       </div>
@@ -221,7 +225,7 @@
       <ul id="baskets">
       </ul>
       <div id="more" class="hide">
-        <a id="fetch_more" class="btn btn-default btn-xs">more...</a>
+        <a id="fetch_more" class="btn btn-default btn-s">more...</a>
       </div>
     </div>
   </div>
