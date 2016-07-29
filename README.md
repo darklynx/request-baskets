@@ -31,8 +31,8 @@ However, we encourage you to set up your own server and keep control over the in
 
 Distinguishing features of Request Baskets service:
 
- * RESTful API to manage and configure baskets (see `doc/api-swagger.yaml`)
- * All baskets are protected by **unique** tokens from unauthorized access (end-points to collect requests do not require authorization though)
+ * [RESTful API](./doc/api-swagger.yaml) to manage and configure baskets, see [Request Baskets API](https://rebilly.github.io/ReDoc/?url=https://raw.githubusercontent.com/darklynx/request-baskets/master/doc/api-swagger.yaml) documentation in interactive mode
+ * All baskets are protected by **unique** tokens from unauthorized access; end-points to collect requests do not require authorization though
  * Individually configurable capacity for every basket
  * Pagination support to retrieve collections: basket names, collected requests
  * Alternative storage types for configured baskets and collected requests:
