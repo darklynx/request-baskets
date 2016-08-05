@@ -115,11 +115,17 @@
               "$ref" : "#/definitions/Token"
             }
           },
+          "400" : {
+            "description" : "Bad Request. Failed to parse JSON into basket configuration object."
+          },
           "403" : {
             "description" : "Forbidden. Indicates that basket name conflicts with reserved paths; e.g. `baskets`, `web`, etc."
           },
           "409" : {
             "description" : "Conflict. Indicates that basket with such name already exists"
+          },
+          "422" : {
+            "description" : "Unprocessable Entity. Basket configuration is not valid."
           }
         }
       },
@@ -146,11 +152,17 @@
           "204" : {
             "description" : "No Content. Basket configuration is updated"
           },
+          "400" : {
+            "description" : "Bad Request. Failed to parse JSON into basket configuration object."
+          },
           "401" : {
             "description" : "Unauthorized. Invalid or missing basket token"
           },
           "404" : {
             "description" : "Not Found. No basket with such name"
+          },
+          "422" : {
+            "description" : "Unprocessable Entity. Basket configuration is not valid."
           }
         },
         "security" : [ {
@@ -251,11 +263,17 @@
           "204" : {
             "description" : "No Content. Response configuration is updated"
           },
+          "400" : {
+            "description" : "Bad Request. Failed to parse JSON into response configuration object."
+          },
           "401" : {
             "description" : "Unauthorized. Invalid or missing basket token"
           },
           "404" : {
             "description" : "Not Found. No basket with such name"
+          },
+          "422" : {
+            "description" : "Unprocessable Entity. Response configuration is not valid."
           }
         },
         "security" : [ {
@@ -492,7 +510,7 @@
           "type" : "string",
           "description" : "Content of response body"
         },
-        "template" : {
+        "is_template" : {
           "type" : "boolean",
           "description" : "If set to `true` the body is treated as [HTML template](https://golang.org/pkg/html/template) that accepts\ninput from request parameters.\n"
         }

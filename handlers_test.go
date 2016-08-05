@@ -211,8 +211,8 @@ func TestCreateBasket_BrokenJson(t *testing.T) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		CreateBasket(w, r, ps)
 
-		// validate response: 422 - unprocessable entity
-		assert.Equal(t, 422, w.Code, "wrong HTTP result code")
+		// validate response: 400 - bad request
+		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
 		assert.Contains(t, w.Body.String(), "unexpected end of JSON input", "error message is incomplete")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
@@ -409,8 +409,8 @@ func TestUpdateBasket_BrokenJson(t *testing.T) {
 				w = httptest.NewRecorder()
 				UpdateBasket(w, r, ps)
 
-				// validate response: 422 - unprocessable entity
-				assert.Equal(t, 422, w.Code, "wrong HTTP result code")
+				// validate response: 400 - bad request
+				assert.Equal(t, 400, w.Code, "wrong HTTP result code")
 
 				// validate update
 				config := basketsDb.Get(basket).Config()

@@ -70,13 +70,8 @@ func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	return "", nil
 }
 
-// parseBasketConfig parses basket configuration and validate its content
-func parseBasketConfig(body []byte, config *BasketConfig) error {
-	// parse request
-	if err := json.Unmarshal(body, config); err != nil {
-		return err
-	}
-
+// validateBasketConfig validates basket configuration
+func validateBasketConfig(config *BasketConfig) error {
 	// validate Capacity
 	if config.Capacity < 1 {
 		return fmt.Errorf("Capacity should be a positive number, but was %d", config.Capacity)
@@ -145,7 +140,11 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	// default config
 	config := BasketConfig{ForwardUrl: "", Capacity: serverConfig.InitCapacity}
 	if len(body) > 0 {
-		if err = parseBasketConfig(body, &config); err != nil {
+		if err = json.Unmarshal(body, &config); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err = validateBasketConfig(&config); err != nil {
 			http.Error(w, err.Error(), 422)
 			return
 		}
@@ -169,8 +168,13 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else if len(body) > 0 {
+			// get current config
 			config := basket.Config()
-			if err := parseBasketConfig(body, &config); err != nil {
+			if err = json.Unmarshal(body, &config); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if err = validateBasketConfig(&config); err != nil {
 				http.Error(w, err.Error(), 422)
 				return
 			}
