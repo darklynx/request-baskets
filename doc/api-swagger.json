@@ -2,7 +2,7 @@
   "swagger" : "2.0",
   "info" : {
     "description" : "RESTful API of Request Baskets service",
-    "version" : "0.4",
+    "version" : "0.5",
     "title" : "Request Baskets API",
     "contact" : {
       "name" : "darklynx",
@@ -171,6 +171,85 @@
         "responses" : {
           "204" : {
             "description" : "No Content. Basket is deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized. Invalid or missing basket token"
+          },
+          "404" : {
+            "description" : "Not Found. No basket with such name"
+          }
+        },
+        "security" : [ {
+          "basket_token" : [ ]
+        } ]
+      }
+    },
+    "/baskets/{name}/responses/{method}" : {
+      "get" : {
+        "tags" : [ "baskets" ],
+        "summary" : "Get configured response",
+        "description" : "Gets information about configured response that service will reply with to an HTTP request sent to the basket\nwith specified HTTP method.\n\nIf nothing is configured the default response is HTTP 200 - OK with empty content.\n",
+        "parameters" : [ {
+          "name" : "name",
+          "in" : "path",
+          "description" : "The basket name",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "method",
+          "in" : "path",
+          "description" : "The HTTP method this response is configured for",
+          "required" : true,
+          "type" : "string",
+          "enum" : [ "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE" ]
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK. Returns configured response information",
+            "schema" : {
+              "$ref" : "#/definitions/Response"
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized. Invalid or missing basket token"
+          },
+          "404" : {
+            "description" : "Not Found. No basket with such name"
+          }
+        },
+        "security" : [ {
+          "basket_token" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "baskets" ],
+        "summary" : "Configure basket response",
+        "description" : "Allows to configure HTTP response that service will reply with to an HTTP request sent to the basket\nwith specified HTTP method.\n\nIf nothing is configured the default response is HTTP 200 - OK with empty content.\n",
+        "parameters" : [ {
+          "name" : "name",
+          "in" : "path",
+          "description" : "The basket name",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "method",
+          "in" : "path",
+          "description" : "The HTTP method this response is configured for",
+          "required" : true,
+          "type" : "string",
+          "enum" : [ "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE" ]
+        }, {
+          "in" : "body",
+          "name" : "response",
+          "description" : "HTTP response configuration",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/Response"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content. Response configuration is updated"
           },
           "401" : {
             "description" : "Unauthorized. Invalid or missing basket token"
@@ -390,12 +469,32 @@
     },
     "Headers" : {
       "type" : "object",
-      "description" : "Map of request headers, key represents name, value is array of values",
+      "description" : "Map of HTTP headers, key represents name, value is array of values",
       "additionalProperties" : {
         "type" : "array",
         "description" : "Collection of header values",
         "items" : {
           "type" : "string"
+        }
+      }
+    },
+    "Response" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "integer",
+          "description" : "The HTTP status code to reply with"
+        },
+        "headers" : {
+          "$ref" : "#/definitions/Headers"
+        },
+        "body" : {
+          "type" : "string",
+          "description" : "Content of response body"
+        },
+        "template" : {
+          "type" : "boolean",
+          "description" : "If set to `true` the body is treated as [HTML template](https://golang.org/pkg/html/template) that accepts\ninput from request parameters.\n"
         }
       }
     }
