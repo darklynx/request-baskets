@@ -17,6 +17,7 @@ import (
 )
 
 var validBasketName = regexp.MustCompile(BASKET_NAME)
+var defaultResponse = ResponseConfig{Status: 200, IsTemplate: false}
 var indexPage = template.Must(template.New("index").Parse(INDEX_HTML))
 var basketPage = template.Must(template.New("basket").Parse(BASKET_HTML))
 
@@ -89,6 +90,44 @@ func validateBasketConfig(config *BasketConfig) error {
 	}
 
 	return nil
+}
+
+// validateResponseConfig validates basket response configuration
+func validateResponseConfig(config *ResponseConfig) error {
+	// validate status
+	if config.Status < 100 || config.Status >= 600 {
+		return fmt.Errorf("Invalid HTTP status of response: %d", config.Status)
+	}
+
+	// validate template
+	if config.IsTemplate && len(config.Body) > 0 {
+		if _, err := template.New("body").Parse(config.Body); err != nil {
+			return fmt.Errorf("Error in body %s", err)
+		}
+	}
+
+	return nil
+}
+
+// getValidMethod retrieves mathod name from HTTP request path and validates it
+func getValidMethod(ps httprouter.Params) (string, error) {
+	method := strings.ToUpper(ps.ByName("method"))
+
+	// valid HTTP methods
+	switch method {
+	case http.MethodGet,
+		http.MethodHead,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodPatch,
+		http.MethodDelete,
+		http.MethodConnect,
+		http.MethodOptions,
+		http.MethodTrace:
+		return method, nil
+	}
+
+	return method, fmt.Errorf("Unknown HTTP method: %s", method)
 }
 
 // GetBaskets handles HTTP request to get registered baskets
@@ -198,6 +237,57 @@ func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 }
 
+// GetBasketResponse handles HTTP request to get basket response configuration
+func GetBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
+		method, errm := getValidMethod(ps)
+		if errm != nil {
+			http.Error(w, errm.Error(), http.StatusBadRequest)
+		} else {
+			response := basket.GetResponse(method)
+			if response == nil {
+				response = &defaultResponse
+			}
+
+			json, err := json.Marshal(response)
+			writeJson(w, http.StatusOK, json, err)
+		}
+	}
+}
+
+// UpdateBasketResponse handles HTTP request to update basket response configuration
+func UpdateBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
+		method, errm := getValidMethod(ps)
+		if errm != nil {
+			http.Error(w, errm.Error(), http.StatusBadRequest)
+		} else {
+			// read response (max 64 kB)
+			body, err := ioutil.ReadAll(io.LimitReader(r.Body, 64*1024))
+			r.Body.Close()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			} else if len(body) > 0 {
+				// get current config
+				response := ResponseConfig{Status: defaultResponse.Status, IsTemplate: false}
+				if err = json.Unmarshal(body, &response); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+				if err = validateResponseConfig(&response); err != nil {
+					http.Error(w, err.Error(), 422)
+					return
+				}
+
+				basket.SetResponse(method, response)
+				w.WriteHeader(http.StatusNoContent)
+			} else {
+				w.WriteHeader(http.StatusNotModified)
+			}
+		}
+	}
+}
+
 // GetBasketRequests handles HTTP request to get requests collected by basket
 func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
@@ -226,7 +316,7 @@ func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // ForwardToWeb handels HTTP forwarding to /web
 func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	http.Redirect(w, r, "/"+WEB_ROOT, 302)
+	http.Redirect(w, r, "/"+WEB_ROOT, http.StatusFound)
 }
 
 // WebIndexPage handles HTTP request to render index page
@@ -251,10 +341,40 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	basket := basketsDb.Get(name)
 	if basket != nil {
 		request := basket.Add(r)
-		w.WriteHeader(http.StatusOK)
 
+		// forward request in separate thread
 		if len(basket.Config().ForwardUrl) > 0 {
 			go request.Forward(basket.Config(), name)
+		}
+
+		// HTTP response
+		response := basket.GetResponse(r.Method)
+		if response == nil {
+			response = &defaultResponse
+		}
+
+		// headers
+		for k, v := range response.Headers {
+			w.Header()[k] = v
+		}
+		// body
+		if response.IsTemplate && len(response.Body) > 0 {
+			// template
+			t, err := template.New(name + "-" + r.Method).Parse(response.Body)
+			if err != nil {
+				// invalid template
+				http.Error(w, "Error in "+err.Error(), http.StatusInternalServerError)
+			} else {
+				// status
+				w.WriteHeader(response.Status)
+				// templated body
+				t.Execute(w, r.URL.Query())
+			}
+		} else {
+			// status
+			w.WriteHeader(response.Status)
+			// plain body
+			w.Write([]byte(response.Body))
 		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
