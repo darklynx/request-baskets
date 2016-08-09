@@ -41,8 +41,8 @@ paths:
     get:
       tags:
         - baskets
-      summary: Retrieve registered basket names
-      description: Returns list of registered basket names
+      summary: Get baskets
+      description: Fetches a list of basket names managed by service.
       parameters:
         - name: max
           in: query
@@ -71,13 +71,13 @@ paths:
     post:
       tags:
         - baskets
-      summary: Create a new basket
-      description: Creates a new basket with specified name
+      summary: Create new basket
+      description: Creates a new basket with this name.
       parameters:
         - name: name
           in: path
           type: string
-          description: The name of basket to create
+          description: The name of new basket
           required: true
         - name: config
           in: body
@@ -101,8 +101,8 @@ paths:
     get:
       tags:
         - baskets
-      summary: Get basket configuration
-      description: Get current configuration of a basket
+      summary: Get basket settings
+      description: Retrieves configuration settings of this basket.
       parameters:
         - name: name
           in: path
@@ -123,9 +123,9 @@ paths:
     put:
       tags:
         - baskets
-      summary: Update basket configuration
+      summary: Update basket settings
       description: |
-        Update current configuration of basket.
+        Updates configuration settings of this basket.
 
         Special configuration parameters for request forwarding:
           * `insecure_tls` controls certificate verification when forwarding requests. Setting this parameter to `true`
@@ -167,7 +167,7 @@ paths:
       tags:
         - baskets
       summary: Delete basket
-      description: Delete basket and all collected requests
+      description: Permanently deletes this basket and all collected requests.
       parameters:
         - name: name
           in: path
@@ -188,12 +188,12 @@ paths:
     get:
       tags:
         - baskets
-      summary: Get configured response
+      summary: Get response settings
       description: |
-          Gets information about configured response that service will reply with to an HTTP request sent to the basket
-          with specified HTTP method.
+          Retrieves information about configured response of the basket. Service will reply with this response to any
+          HTTP request sent to the basket with appropriate HTTP method.
 
-          If nothing is configured the default response is HTTP 200 - OK with empty content.
+          If nothing is configured, the default response is HTTP 200 - OK with empty content.
       parameters:
         - name: name
           in: path
@@ -220,12 +220,12 @@ paths:
     put:
       tags:
         - baskets
-      summary: Configure basket response
+      summary: Update response settings
       description: |
-          Allows to configure HTTP response that service will reply with to an HTTP request sent to the basket
-          with specified HTTP method.
+          Allows to configure HTTP response of this basket. The service will reply with configured response to any HTTP
+          request sent to the basket with appropriate HTTP method.
 
-          If nothing is configured the default response is HTTP 200 - OK with empty content.
+          If nothing is configured, the default response is HTTP 200 - OK with empty content.
       parameters:
         - name: name
           in: path
@@ -262,8 +262,8 @@ paths:
     get:
       tags:
         - requests
-      summary: Retrieve requests collected by basket
-      description: Returns list of collected requests
+      summary: Get collected requests
+      description: Fetches collection of requests collected by this basket.
       parameters:
         - name: name
           in: path
@@ -311,7 +311,7 @@ paths:
       tags:
         - requests
       summary: Delete all requests
-      description: Delete all requests collected by this basket
+      description: Deletes all requests collected by this basket.
       parameters:
         - name: name
           in: path
