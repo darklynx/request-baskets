@@ -24,6 +24,8 @@ produces:
 tags:
   - name: baskets
     description: Manage baskets
+  - name: responses
+    description: Configure basket responses
   - name: requests
     description: Manage collected requests
 
@@ -187,7 +189,7 @@ paths:
   /baskets/{name}/responses/{method}:
     get:
       tags:
-        - baskets
+        - responses
       summary: Get response settings
       description: |
           Retrieves information about configured response of the basket. Service will reply with this response to any
@@ -219,7 +221,7 @@ paths:
         - basket_token: []
     put:
       tags:
-        - baskets
+        - responses
       summary: Update response settings
       description: |
           Allows to configure HTTP response of this basket. The service will reply with configured response to any HTTP

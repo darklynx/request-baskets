@@ -15,6 +15,9 @@
     "name" : "baskets",
     "description" : "Manage baskets"
   }, {
+    "name" : "responses",
+    "description" : "Configure basket responses"
+  }, {
     "name" : "requests",
     "description" : "Manage collected requests"
   } ],
@@ -198,7 +201,7 @@
     },
     "/baskets/{name}/responses/{method}" : {
       "get" : {
-        "tags" : [ "baskets" ],
+        "tags" : [ "responses" ],
         "summary" : "Get response settings",
         "description" : "Retrieves information about configured response of the basket. Service will reply with this response to any\nHTTP request sent to the basket with appropriate HTTP method.\n\nIf nothing is configured, the default response is HTTP 200 - OK with empty content.\n",
         "parameters" : [ {
@@ -234,7 +237,7 @@
         } ]
       },
       "put" : {
-        "tags" : [ "baskets" ],
+        "tags" : [ "responses" ],
         "summary" : "Update response settings",
         "description" : "Allows to configure HTTP response of this basket. The service will reply with configured response to any HTTP\nrequest sent to the basket with appropriate HTTP method.\n\nIf nothing is configured, the default response is HTTP 200 - OK with empty content.\n",
         "parameters" : [ {
