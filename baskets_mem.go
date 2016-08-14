@@ -170,6 +170,7 @@ func (db *memoryDatabase) Create(name string, config BasketConfig) (BasketAuth, 
 	basket.config = config
 	basket.requests = make([]*RequestData, 0, config.Capacity)
 	basket.totalCount = 0
+	basket.responses = make(map[string]*ResponseConfig)
 
 	db.baskets[name] = basket
 	db.names = append(db.names, name)

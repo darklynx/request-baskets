@@ -373,7 +373,7 @@ func TestUpdateBasket_EmptyConfig(t *testing.T) {
 				w = httptest.NewRecorder()
 				UpdateBasket(w, r, ps)
 
-				// validate response: 304 - not modified
+				// validate response: 304 - Not Modified
 				assert.Equal(t, 304, w.Code, "wrong HTTP result code")
 
 				// validate update
@@ -857,5 +857,301 @@ func TestWebBasketPage_InvalidName(t *testing.T) {
 		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
 		assert.Equal(t, "Basket name does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
 			"wrong error message")
+	}
+}
+
+func TestGetBasketResponse(t *testing.T) {
+	basket := "response01"
+	method := "GET"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket},
+					httprouter.Param{Key: "method", Value: method})
+				w = httptest.NewRecorder()
+				GetBasketResponse(w, r, ps)
+
+				// validate response: 200 - OK
+				assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+				assert.Equal(t, "application/json; charset=UTF-8", w.Header().Get("Content-Type"), "wrong Content-Type")
+
+				// Default response: HTTP 200 - empty content
+				response := new(ResponseConfig)
+				err = json.Unmarshal(w.Body.Bytes(), response)
+				if assert.NoError(t, err, "Failed to parse GetBasketResponse response") {
+					assert.Equal(t, 200, response.Status, "wrong basket default response status")
+					assert.Empty(t, response.Body, "empty response is expected")
+					assert.Empty(t, response.Headers, "empty headers are expected")
+					assert.False(t, response.IsTemplate, "wrong value of IsTemplate flag")
+				}
+			}
+		}
+	}
+}
+
+func TestGetBasketResponse_InvalidMethod(t *testing.T) {
+	basket := "response02"
+	method := "DEMO"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket},
+					httprouter.Param{Key: "method", Value: method})
+				w = httptest.NewRecorder()
+				GetBasketResponse(w, r, ps)
+
+				// validate response: 400 - Bad Request
+				assert.Equal(t, 400, w.Code, "wrong HTTP result code")
+				assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"), "wrong Content-Type")
+				assert.Contains(t, w.Body.String(), "Unknown HTTP method: "+method, "wrong response message")
+			}
+		}
+	}
+}
+
+func TestGetBasketResponse_Unauthorized(t *testing.T) {
+	basket := "response03"
+	method := "POST"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
+		if assert.NoError(t, err) {
+			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket},
+				httprouter.Param{Key: "method", Value: method})
+			w = httptest.NewRecorder()
+			GetBasketResponse(w, r, ps)
+
+			// validate response: 401 - unauthorized
+			assert.Equal(t, 401, w.Code, "wrong HTTP result code")
+		}
+	}
+}
+
+func TestUpdateBasketResponse(t *testing.T) {
+	basket := "response04"
+	method := "DELETE"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+				strings.NewReader("{\"status\":404,\"body\":\"<error><code>404</code><message>Not Found</message></error>\",\"headers\":{\"Content-Type\":[\"application/xml\"]}}"))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket},
+					httprouter.Param{Key: "method", Value: method})
+				w = httptest.NewRecorder()
+
+				UpdateBasketResponse(w, r, ps)
+
+				// validate response: 204 - No Content
+				assert.Equal(t, 204, w.Code, "wrong HTTP result code")
+
+				// validate database update
+				response := basketsDb.Get(basket).GetResponse(method)
+				assert.Equal(t, 404, response.Status, "wrong response status")
+				assert.Equal(t, "application/xml", response.Headers["Content-Type"][0], "wrong Content-Type header")
+				assert.Equal(t, "<error><code>404</code><message>Not Found</message></error>", response.Body, "wrong response body")
+				assert.False(t, response.IsTemplate, "wrong value of IsTemplate flag")
+			}
+		}
+	}
+}
+
+func TestUpdateBasketResponse_InvalidMethod(t *testing.T) {
+	basket := "response05"
+	method := "WRONG"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+				strings.NewReader("{\"status\":201,\"body\":\"{}\",\"headers\":{\"Content-Type\":[\"application/json\"]}}"))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket},
+					httprouter.Param{Key: "method", Value: method})
+				w = httptest.NewRecorder()
+
+				UpdateBasketResponse(w, r, ps)
+
+				// validate response: 400 - Bad Request
+				assert.Equal(t, 400, w.Code, "wrong HTTP result code")
+				assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"), "wrong Content-Type")
+				assert.Contains(t, w.Body.String(), "Unknown HTTP method: "+method, "wrong response message")
+
+				// validate database is not updated
+				assert.Nil(t, basketsDb.Get(basket).GetResponse(method), "response configuration is not expected")
+			}
+		}
+	}
+}
+
+func TestUpdateBasketResponse_BrokenJson(t *testing.T) {
+	basket := "response06"
+	method := "PUT"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+				strings.NewReader("<config><status>204</status></config>"))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket},
+					httprouter.Param{Key: "method", Value: method})
+				w = httptest.NewRecorder()
+
+				UpdateBasketResponse(w, r, ps)
+
+				// validate response: 400 - Bad Request
+				assert.Equal(t, 400, w.Code, "wrong HTTP result code")
+				assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"), "wrong Content-Type")
+				assert.Contains(t, w.Body.String(), "invalid character '<'", "wrong response message")
+
+				// validate database is not updated
+				assert.Nil(t, basketsDb.Get(basket).GetResponse(method), "response configuration is not expected")
+			}
+		}
+	}
+}
+
+func TestUpdateBasketResponse_InvalidConfig(t *testing.T) {
+	basket := "response07"
+	method := "OPTIONS"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+				strings.NewReader("{\"status\":20}"))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket},
+					httprouter.Param{Key: "method", Value: method})
+				w = httptest.NewRecorder()
+
+				UpdateBasketResponse(w, r, ps)
+
+				// validate response: 422 - Unprocessable Entity
+				assert.Equal(t, 422, w.Code, "wrong HTTP result code")
+				assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"), "wrong Content-Type")
+				assert.Contains(t, w.Body.String(), "Invalid HTTP status of response: 20", "wrong response message")
+
+				// validate database is not updated
+				assert.Nil(t, basketsDb.Get(basket).GetResponse(method), "response configuration is not expected")
+			}
+		}
+	}
+}
+
+func TestUpdateBasketResponse_NotModified(t *testing.T) {
+	basket := "response08"
+	method := "GET"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// get auth token
+		auth := new(BasketAuth)
+		err = json.Unmarshal(w.Body.Bytes(), auth)
+		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
+			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
+
+			if assert.NoError(t, err) {
+				r.Header.Add("Authorization", auth.Token)
+				ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket},
+					httprouter.Param{Key: "method", Value: method})
+				w = httptest.NewRecorder()
+
+				UpdateBasketResponse(w, r, ps)
+
+				// validate response: 304 - Not Modified
+				assert.Equal(t, 304, w.Code, "wrong HTTP result code")
+
+				// validate database is not updated
+				assert.Nil(t, basketsDb.Get(basket).GetResponse(method), "response configuration is not expected")
+			}
+		}
 	}
 }
