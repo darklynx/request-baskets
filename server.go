@@ -45,6 +45,9 @@ func StartServer() {
 	router.PUT("/"+BASKETS_ROOT+"/:basket", UpdateBasket)
 	router.DELETE("/"+BASKETS_ROOT+"/:basket", DeleteBasket)
 
+	router.GET("/"+BASKETS_ROOT+"/:basket/responses/:method", GetBasketResponse)
+	router.PUT("/"+BASKETS_ROOT+"/:basket/responses/:method", UpdateBasketResponse)
+
 	// requests management
 	router.GET("/"+BASKETS_ROOT+"/:basket/requests", GetBasketRequests)
 	router.DELETE("/"+BASKETS_ROOT+"/:basket/requests", ClearBasket)

@@ -349,3 +349,54 @@ func TestBoltBasket_FindRequests(t *testing.T) {
 		assert.Empty(t, basket.FindRequests("tasty", "query", 100, 0).Requests, "found unexpected requests")
 	}
 }
+
+func TestBoltBasket_SetResponse(t *testing.T) {
+	name := "test107"
+	method := "POST"
+	db := NewBoltDatabase(name + ".db")
+	defer db.Release()
+	defer os.Remove(name + ".db")
+
+	db.Create(name, BasketConfig{Capacity: 20})
+
+	basket := db.Get(name)
+	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
+		// Ensure no response
+		assert.Nil(t, basket.GetResponse(method))
+
+		// Set response
+		basket.SetResponse(method, ResponseConfig{Status: 201, Body: "{ 'message' : 'created' }"})
+		// Get and validate
+		response := basket.GetResponse(method)
+		if assert.NotNil(t, response, "response for method: %v is expected", method) {
+			assert.Equal(t, 201, response.Status, "wrong HTTP response status")
+			assert.Equal(t, "{ 'message' : 'created' }", response.Body, "wrong HTTP response body")
+			assert.False(t, response.IsTemplate, "template is not expected")
+		}
+	}
+}
+
+func TestBoltBasket_SetResponse_Update(t *testing.T) {
+	name := "test108"
+	method := "GET"
+	db := NewBoltDatabase(name + ".db")
+	defer db.Release()
+	defer os.Remove(name + ".db")
+
+	db.Create(name, BasketConfig{Capacity: 20})
+
+	basket := db.Get(name)
+	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
+		// Set response
+		basket.SetResponse(method, ResponseConfig{Status: 200, Body: ""})
+		// Update response
+		basket.SetResponse(method, ResponseConfig{Status: 200, Body: "welcome", IsTemplate: true})
+		// Get and validate
+		response := basket.GetResponse(method)
+		if assert.NotNil(t, response, "response for method: %v is expected", method) {
+			assert.Equal(t, 200, response.Status, "wrong HTTP response status")
+			assert.Equal(t, "welcome", response.Body, "wrong HTTP response body")
+			assert.True(t, response.IsTemplate, "template is expected")
+		}
+	}
+}

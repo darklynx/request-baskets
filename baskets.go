@@ -19,6 +19,13 @@ type BasketConfig struct {
 	Capacity    int    `json:"capacity"`
 }
 
+type ResponseConfig struct {
+	Status     int         `json:"status"`
+	Headers    http.Header `json:"headers"`
+	Body       string      `json:"body"`
+	IsTemplate bool        `json:"is_template"`
+}
+
 type BasketAuth struct {
 	Token string `json:"token"`
 }
@@ -61,6 +68,9 @@ type Basket interface {
 	Config() BasketConfig
 	Update(config BasketConfig)
 	Authorize(token string) bool
+
+	GetResponse(method string) *ResponseConfig
+	SetResponse(method string, response ResponseConfig)
 
 	Add(req *http.Request) *RequestData
 	Clear()

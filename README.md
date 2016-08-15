@@ -8,7 +8,7 @@ It is strongly inspired by ideas and application design of the [RequestHub](http
 
 - [Introduction](#introduction)
   - [Features](#features)
-  - [Screenshot](#screenshot)
+  - [Screenshots](#screenshots)
 - [Install](#install)
   - [Build from source](#build-from-source)
   - [Run](#run)
@@ -35,14 +35,19 @@ Distinguishing features of Request Baskets service:
  * All baskets are protected by **unique** tokens from unauthorized access; end-points to collect requests do not require authorization though
  * Individually configurable capacity for every basket
  * Pagination support to retrieve collections: basket names, collected requests
+ * Configurable responses for every HTTP method
  * Alternative storage types for configured baskets and collected requests:
    * *In-memory* - ultra fast, but limited to available RAM and collected data is lost after service restart
    * *Bolt DB* - fast persistent storage for collected data based on embedded [Bolt](https://github.com/boltdb/bolt) database, service can be restarted without data loss and storage is not limited by available RAM
    * Can be extended by custom implementations of storage interface
 
-### Screenshot
+### Screenshots
 
-![Request Baskets](http://i.imgur.com/T2mcNN9.png)
+Basket requests overview:
+![Request Baskets - requests](http://i.imgur.com/NWNtYtY.png)
+
+Configuration of basket responses:
+![Request Baskets - responses](http://i.imgur.com/ooUdBib.png)
 
 ## Install
 
@@ -67,19 +72,19 @@ Request Baskets service supports several command line configuration parameters. 
 $ request-baskets --help
 Usage of bin/request-baskets:
   -db string
-    	Baskets storage type: mem - in-memory, bolt - Bolt DB (default "mem")
+      Baskets storage type: mem - in-memory, bolt - Bolt DB (default "mem")
   -file string
-    	Database location, only applicable for file databases (default "./baskets.db")
+      Database location, only applicable for file databases (default "./baskets.db")
   -maxsize int
-    	Maximum allowed basket size (max capacity) (default 2000)
+      Maximum allowed basket size (max capacity) (default 2000)
   -p int
-    	HTTP service port (default 55555)
+      HTTP service port (default 55555)
   -page int
-    	Default page size (default 20)
+      Default page size (default 20)
   -size int
-    	Initial basket size (capacity) (default 200)
+      Initial basket size (capacity) (default 200)
   -token string
-    	Master token, random token is generated if not provided
+      Master token, random token is generated if not provided
 ```
 
 ### Parameters

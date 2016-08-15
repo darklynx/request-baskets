@@ -28,6 +28,7 @@ var (
 	KEY_TOTAL_COUNT = []byte("total")
 	KEY_COUNT       = []byte("count")
 	KEY_REQUESTS    = []byte("requests")
+	KEY_RESPONSES   = []byte("responses")
 )
 
 func itob(i int) []byte {
@@ -155,6 +156,46 @@ func (basket *boltBasket) Authorize(token string) bool {
 	})
 
 	return result
+}
+
+func (basket *boltBasket) GetResponse(method string) *ResponseConfig {
+	var response *ResponseConfig = nil
+
+	basket.view(func(b *bolt.Bucket) error {
+		if resps := b.Bucket(KEY_RESPONSES); resps != nil {
+			if resp := resps.Get([]byte(method)); resp != nil {
+				// parse response configuration
+				response = new(ResponseConfig)
+				if err := json.Unmarshal(resp, response); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	return response
+}
+
+func (basket *boltBasket) SetResponse(method string, response ResponseConfig) {
+	basket.update(func(b *bolt.Bucket) error {
+		respj, err := json.Marshal(response)
+		if err != nil {
+			return err
+		}
+
+		resps := b.Bucket(KEY_RESPONSES)
+		if resps == nil {
+			// first time declaring response
+			if resps, err = b.CreateBucket(KEY_RESPONSES); err != nil {
+				return err
+			}
+		}
+
+		// save configuration
+		return resps.Put([]byte(method), respj)
+	})
 }
 
 func (basket *boltBasket) Add(req *http.Request) *RequestData {

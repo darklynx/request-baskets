@@ -65,9 +65,9 @@
       }
 
       var headers = [];
-      Object.keys(request.headers).map(function(header) {
+      for (header in request.headers) {
         headers.push(header + ": " + request.headers[header].join(","));
-      });
+      }
 
       var headerClass = "default";
       switch(request.method) {
@@ -167,6 +167,96 @@
       }).fail(onAjaxError);
     }
 
+    function fetchResponse(method) {
+      // keep in sync during page refresh
+      $("#response_method").val(method);
+      $.ajax({
+        method: "GET",
+        url: "/baskets/" + name + "/responses/" + method,
+        headers: {
+          "Authorization" : getToken()
+        }
+      }).done(function(data) {
+        displayResponse(data);
+      }).fail(onAjaxError);
+    }
+
+    function displayResponse(response) {
+      $("#response_status").val(response.status);
+      $("#response_body").val(response.body);
+      $("#response_is_template").prop("checked", response.is_template);
+
+      // headers
+      $("#response_headers").html(""); // reset
+
+      var row;
+      var index = 0;
+      for (header in response.headers) {
+        row = $('<div class="row"></div>');
+        row.append('<div class="col-md-3"><input type="input" class="form-control" id="header_name_' + index +
+          '" value="' + header + '" placeholder="name"></div>');
+        // multi-value headers are not supported, simply join values through comma
+        row.append('<div class="col-md-7"><input type="input" class="form-control" id="header_value_' + index +
+          '" value="' + response.headers[header].join(",") + '" placeholder="value"></div>');
+        row.appendTo($("#response_headers"));
+        index++;
+      }
+
+      // button or new header
+      if (index > 0) {
+        addHeaderButton(row);
+      } else {
+        addHeader();
+      }
+    }
+
+    function addHeader() {
+      $("#headers_add").remove();
+
+      var index = $("#response_headers > div.row").length;
+      var row = $('<div class="row"><div class="col-md-3"><input type="input" class="form-control" id="header_name_' + index +
+        '" placeholder="name"></div><div class="col-md-7"><input type="input" class="form-control" id="header_value_' + index +
+        '" placeholder="value"></div></div>');
+      row.appendTo($("#response_headers"));
+      addHeaderButton(row);
+    }
+
+    function addHeaderButton(row) {
+      row.append('<div id="headers_add" class="col-md-1"><button id="headers_add_btn" type="button" title="Add Header" class="btn btn-success">' +
+        '<span class="glyphicon glyphicon-plus-sign"></span></button></div>');
+      $("#headers_add_btn").on("click", function(event) {
+        addHeader();
+      });
+    }
+
+    function updateResponse() {
+      var method = $("#response_method").val();
+      var response = {};
+      response.status = parseInt($("#response_status").val());
+      response.body = $("#response_body").val();
+      response.is_template = $("#response_is_template").prop("checked");
+      response.headers = {};
+      $("#response_headers > div.row").each( function(index) {
+        var name = $("#header_name_" + index).val();
+        var value = $("#header_value_" + index).val();
+        if (name && name.length > 0 && value && value.length > 0) {
+          response.headers[name] = [ value ];
+        }
+      });
+
+      $.ajax({
+        method: "PUT",
+        url: "/baskets/" + name + "/responses/" + method,
+        dataType: "json",
+        data: JSON.stringify(response),
+        headers: {
+          "Authorization" : getToken()
+        }
+      }).done(function(data) {
+        alert("Response for HTTP " + method + " is updated");
+      }).fail(onAjaxError);
+    }
+
     function updateConfig() {
       if (currentConfig && (
         currentConfig.forward_url != $("#basket_forward_url").val() ||
@@ -236,6 +326,10 @@
       }).fail(onAjaxError);
     }
 
+    function responses() {
+      $("#responses_dialog").modal();
+    }
+
     function deleteRequests() {
       $.ajax({
         method: "DELETE",
@@ -288,6 +382,9 @@
       $("#config").on("click", function(event) {
         config();
       });
+      $("#responses").on("click", function(event) {
+        responses();
+      });
       $("#delete").on("click", function(event) {
         deleteRequests();
       });
@@ -300,11 +397,18 @@
       $("#fetch_more").on("click", function(event) {
         fetchRequests();
       });
+      $("#response_method").on("change", function(event) {
+        fetchResponse($(this).val());
+      });
+      $("#update_response").on("click", function(event) {
+        updateResponse();
+      });
       // autorefresh and initial fetch
       if (getToken()) {
         enableAutoRefresh(true);
       }
       fetchRequests();
+      fetchResponse("GET");
     });
   })(jQuery);
   </script>
@@ -325,8 +429,12 @@
             <span class="glyphicon glyphicon-repeat"></span>
           </button>
           &nbsp;
-          <button id="config" type="button" title="Configure" class="btn btn-default">
+          <button id="config" type="button" title="Settings" class="btn btn-default">
             <span class="glyphicon glyphicon-cog"></span>
+          </button>
+          <button id="responses" type="button" title="Responses" class="btn btn-default">
+            <!-- glyphicon-tags | glyphicon-transfer -->
+            <span class="glyphicon glyphicon-transfer"></span>
           </button>
           &nbsp;
           <button id="delete" type="button" title="Delete Requests" class="btn btn-warning">
@@ -339,23 +447,6 @@
       </div>
     </div>
   </nav>
-
-  <!-- Error message -->
-  <div class="modal fade" id="error_message" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content panel-danger">
-        <div class="modal-header panel-heading">
-          <h4 class="modal-title" id="error_message_label">HTTP error</h4>
-        </div>
-        <div class="modal-body">
-          <p id="error_message_text"></p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Login dialog -->
   <form>
@@ -388,7 +479,7 @@
       <div class="modal-content panel-default">
         <div class="modal-header panel-heading">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title" id="config_dialog_label">Configuration</h4>
+          <h4 class="modal-title" id="config_dialog_label">Configuration Settings</h4>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -418,6 +509,57 @@
   </div>
   </form>
 
+  <!-- Responses dialog -->
+  <form id="response_form">
+  <div class="modal fade" id="responses_dialog" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content panel-default">
+        <div class="modal-header panel-heading">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title" id="config_dialog_label">Basket Responses</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="response_method" class="control-label">HTTP method:</label>
+            <select class="form-control" id="response_method">
+              <option>GET</option>
+              <option>HEAD</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>PATCH</option>
+              <option>DELETE</option>
+              <option>CONNECT</option>
+              <option>OPTIONS</option>
+              <option>TRACE</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="response_status" class="control-label">HTTP status:</label>
+            <input type="input" class="form-control" id="response_status">
+          </div>
+          <div class="form-group">
+            <label class="control-label">HTTP headers:</label>
+            <div id="response_headers">
+              <!-- response headers -->
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="response_body" class="control-label">Response Body:</label>
+            <textarea class="form-control" id="response_body" rows="10"></textarea>
+          </div>
+          <div class="checkbox">
+            <label><input type="checkbox" id="response_is_template"> Process body as HTML template</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="update_response">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </form>
+
   <!-- Destroy dialog -->
   <div class="modal fade" id="destroy_dialog" tabindex="-1">
     <div class="modal-dialog">
@@ -432,6 +574,23 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-danger" id="destroy_confirmed">Destroy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div class="modal fade" id="error_message" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content panel-danger">
+        <div class="modal-header panel-heading">
+          <h4 class="modal-title" id="error_message_label">HTTP error</h4>
+        </div>
+        <div class="modal-body">
+          <p id="error_message_text"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>

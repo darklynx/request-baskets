@@ -19,6 +19,7 @@ type memoryBasket struct {
 	config     BasketConfig
 	requests   []*RequestData
 	totalCount int
+	responses  map[string]*ResponseConfig
 }
 
 func (basket *memoryBasket) applyLimit() {
@@ -42,6 +43,25 @@ func (basket *memoryBasket) Update(config BasketConfig) {
 
 func (basket *memoryBasket) Authorize(token string) bool {
 	return token == basket.token
+}
+
+func (basket *memoryBasket) GetResponse(method string) *ResponseConfig {
+	basket.Lock()
+	defer basket.Unlock()
+
+	response, exists := basket.responses[method]
+	if exists {
+		return response
+	} else {
+		return nil
+	}
+}
+
+func (basket *memoryBasket) SetResponse(method string, response ResponseConfig) {
+	basket.Lock()
+	defer basket.Unlock()
+
+	basket.responses[method] = &response
 }
 
 func (basket *memoryBasket) Add(req *http.Request) *RequestData {
@@ -150,6 +170,7 @@ func (db *memoryDatabase) Create(name string, config BasketConfig) (BasketAuth, 
 	basket.config = config
 	basket.requests = make([]*RequestData, 0, config.Capacity)
 	basket.totalCount = 0
+	basket.responses = make(map[string]*ResponseConfig)
 
 	db.baskets[name] = basket
 	db.names = append(db.names, name)
