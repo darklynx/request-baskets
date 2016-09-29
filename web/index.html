@@ -64,19 +64,25 @@
 
     function createBasket() {
       var basket = $("#basket_name").val();
-      $.post("/baskets/" + basket, function(data) {
-        sessionStorage.setItem("token_" + basket, data.token);
-        $("#created_message_text").html("<p>Basket '" + basket +
-          "' is successfully created!</p><p>Your token is: <mark>" + data.token + "</mark></p>");
-        $("#basket_link").attr("href", "/web/basket.html?name=" + basket);
-        $("#created_message").modal();
+      if (basket) {
+        $.post("/baskets/" + basket, function(data) {
+          sessionStorage.setItem("token_" + basket, data.token);
+          $("#created_message_text").html("<p>Basket '" + basket +
+            "' is successfully created!</p><p>Your token is: <mark>" + data.token + "</mark></p>");
+          $("#basket_link").attr("href", "/web/basket.html?name=" + basket);
+          $("#created_message").modal();
 
-        // refresh
-        clearBaskets();
-        fetchBaskets();
-      }).fail(onAjaxError).always(function() {
-        $("#basket_name").val("");
-      });
+          // refresh
+          clearBaskets();
+          fetchBaskets();
+        }).fail(onAjaxError).always(function() {
+          $("#basket_name").val("");
+        });
+      } else {
+        $("#error_message_label").html("Missing basket name");
+        $("#error_message_text").html("Please, provide a name of basket you would like to create");
+        $("#error_message").modal();
+      }
     }
 
     function saveMasterToken() {
