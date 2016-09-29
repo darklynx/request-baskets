@@ -90,10 +90,10 @@ Usage of bin/request-baskets:
 ### Parameters
 
  * `-p` *port* - HTTP service listener port, default value is `55555`
- * `-page` *size* - default page size to retrieve collections
- * `-size` *size* - default basket capacity of new baskets if not specified
+ * `-page` *size* - default page size when retrieving collections
+ * `-size` *size* - default new basket capacity, applied if basket capacity is not provided during creation
  * `-maxsize` *size* - maximum allowed basket capacity, basket capacity greater than this number will be rejected by service
- * `-token` *token* - master token to gain control over all baskets, if not specified a random token will be generated when service is launched and printed to *stdout*
+ * `-token` *token* - master token to gain control over all baskets, if not defined a random token will be generated when service is launched and printed to *stdout*
  * `-db` *type* - defines baskets storage type: `mem` - in-memory storage, `bolt` - [Bolt](https://github.com/boltdb/bolt/) database
  * `-file` *location* - location of Bolt database file, only relevant if appropriate storage type is chosen
 
