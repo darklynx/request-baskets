@@ -63,7 +63,7 @@
     }
 
     function createBasket() {
-      var basket = $("#basket_name").val();
+      var basket = $.trim($("#basket_name").val());
       if (basket) {
         $.post("/baskets/" + basket, function(data) {
           sessionStorage.setItem("token_" + basket, data.token);
