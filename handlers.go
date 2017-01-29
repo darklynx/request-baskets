@@ -36,7 +36,8 @@ func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
 func parseInt(value string, defaultValue int) int {
 	if len(value) > 0 {
 		i, err := strconv.Atoi(value)
-		if err == nil {
+		// TODO : use strconv.ParseUint(value, 10, 0) instead and switch to uint for paging
+		if err == nil && i >= 0 {
 			return i
 		}
 	}
