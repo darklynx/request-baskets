@@ -33,11 +33,18 @@ func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
 }
 
 // parseInt parses integer parameter from HTTP request query
-func parseInt(value string, defaultValue int) int {
+func parseInt(value string, min int, max int, defaultValue int) int {
 	if len(value) > 0 {
 		i, err := strconv.Atoi(value)
 		if err == nil {
-			return i
+			switch {
+			case i < min:
+				return min
+			case i > max:
+				return max
+			default:
+				return i
+			}
 		}
 	}
 
@@ -46,8 +53,8 @@ func parseInt(value string, defaultValue int) int {
 
 // getPage retrieves page settings from HTTP request query params
 func getPage(values url.Values) (int, int) {
-	max := parseInt(values.Get("max"), serverConfig.PageSize)
-	skip := parseInt(values.Get("skip"), 0)
+	max := parseInt(values.Get("max"), 1, serverConfig.PageSize*10, serverConfig.PageSize)
+	skip := parseInt(values.Get("skip"), 0, serverConfig.MaxCapacity, 0)
 
 	return max, skip
 }

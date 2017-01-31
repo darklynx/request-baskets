@@ -36,6 +36,15 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func TestParseInt(t *testing.T) {
+	assert.Equal(t, 12, parseInt("12", 1, 100, 50))
+	assert.Equal(t, 50, parseInt("abc", 1, 100, 50))
+	// out of range
+	assert.Equal(t, 1, parseInt("0", 1, 100, 50))
+	assert.Equal(t, 1, parseInt("-10", 1, 100, 50))
+	assert.Equal(t, 100, parseInt("500", 1, 100, 50))
+}
+
 func TestCreateBasket(t *testing.T) {
 	basket := "create01"
 
