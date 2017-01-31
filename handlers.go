@@ -16,13 +16,13 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var validBasketName = regexp.MustCompile(BASKET_NAME)
+var validBasketName = regexp.MustCompile(basketNamePattern)
 var defaultResponse = ResponseConfig{Status: 200, IsTemplate: false}
-var indexPage = template.Must(template.New("index").Parse(INDEX_HTML))
-var basketPage = template.Must(template.New("basket").Parse(BASKET_HTML))
+var indexPageTemplate = template.Must(template.New("index").Parse(indexPageContent))
+var basketPageTemplate = template.Must(template.New("basket").Parse(basketPageContent))
 
-// writeJson writes JSON content to HTTP response
-func writeJson(w http.ResponseWriter, status int, json []byte, err error) {
+// writeJSON writes JSON content to HTTP response
+func writeJSON(w http.ResponseWriter, status int, json []byte, err error) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
@@ -90,8 +90,8 @@ func validateBasketConfig(config *BasketConfig) error {
 	}
 
 	// validate URL
-	if len(config.ForwardUrl) > 0 {
-		if _, err := url.ParseRequestURI(config.ForwardUrl); err != nil {
+	if len(config.ForwardURL) > 0 {
+		if _, err := url.ParseRequestURI(config.ForwardURL); err != nil {
 			return err
 		}
 	}
@@ -145,11 +145,11 @@ func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		// Find names
 		max, skip := getPage(values)
 		json, err := json.Marshal(basketsDb.FindNames(query, max, skip))
-		writeJson(w, http.StatusOK, json, err)
+		writeJSON(w, http.StatusOK, json, err)
 	} else {
 		// Get basket names page
 		json, err := json.Marshal(basketsDb.GetNames(getPage(values)))
-		writeJson(w, http.StatusOK, json, err)
+		writeJSON(w, http.StatusOK, json, err)
 	}
 }
 
@@ -157,14 +157,14 @@ func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		json, err := json.Marshal(basket.Config())
-		writeJson(w, http.StatusOK, json, err)
+		writeJSON(w, http.StatusOK, json, err)
 	}
 }
 
 // CreateBasket handles HTTP request to create a new basket
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
-	if name == BASKETS_ROOT || name == WEB_ROOT {
+	if name == serviceAPIPath || name == serviceUIPath {
 		http.Error(w, "Basket name may not clash with system path: "+name, http.StatusForbidden)
 		return
 	}
@@ -184,7 +184,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 
 	// default config
-	config := BasketConfig{ForwardUrl: "", Capacity: serverConfig.InitCapacity}
+	config := BasketConfig{ForwardURL: "", Capacity: serverConfig.InitCapacity}
 	if len(body) > 0 {
 		if err = json.Unmarshal(body, &config); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -201,7 +201,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		http.Error(w, err.Error(), http.StatusConflict)
 	} else {
 		json, err := json.Marshal(auth)
-		writeJson(w, http.StatusCreated, json, err)
+		writeJSON(w, http.StatusCreated, json, err)
 	}
 }
 
@@ -257,7 +257,7 @@ func GetBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 			}
 
 			json, err := json.Marshal(response)
-			writeJson(w, http.StatusOK, json, err)
+			writeJSON(w, http.StatusOK, json, err)
 		}
 	}
 }
@@ -304,11 +304,11 @@ func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 			// Find requests
 			max, skip := getPage(values)
 			json, err := json.Marshal(basket.FindRequests(query, values.Get("in"), max, skip))
-			writeJson(w, http.StatusOK, json, err)
+			writeJSON(w, http.StatusOK, json, err)
 		} else {
 			// Get requests page
 			json, err := json.Marshal(basket.GetRequests(getPage(values)))
-			writeJson(w, http.StatusOK, json, err)
+			writeJSON(w, http.StatusOK, json, err)
 		}
 	}
 }
@@ -323,12 +323,12 @@ func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // ForwardToWeb handels HTTP forwarding to /web
 func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	http.Redirect(w, r, "/"+WEB_ROOT, http.StatusFound)
+	http.Redirect(w, r, "/"+serviceUIPath, http.StatusFound)
 }
 
 // WebIndexPage handles HTTP request to render index page
 func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	indexPage.Execute(w, "")
+	indexPageTemplate.Execute(w, "")
 }
 
 // WebBasketPage handles HTTP request to render basket details page
@@ -338,7 +338,7 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 		http.Error(w, "Basket name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 		return
 	}
-	basketPage.Execute(w, name)
+	basketPageTemplate.Execute(w, name)
 }
 
 // AcceptBasketRequests accepts and handles HTTP requests passed to different baskets
@@ -350,7 +350,7 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 		request := basket.Add(r)
 
 		// forward request in separate thread
-		if len(basket.Config().ForwardUrl) > 0 {
+		if len(basket.Config().ForwardURL) > 0 {
 			go request.Forward(basket.Config(), name)
 		}
 

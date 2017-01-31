@@ -10,11 +10,11 @@ import (
 	"time"
 )
 
-const TO_MS = int64(time.Millisecond) / int64(time.Nanosecond)
+const toMs = int64(time.Millisecond) / int64(time.Nanosecond)
 
 type BasketConfig struct {
-	ForwardUrl  string `json:"forward_url"`
-	InsecureTls bool   `json:"insecure_tls"`
+	ForwardURL  string `json:"forward_url"`
+	InsecureTLS bool   `json:"insecure_tls"`
 	ExpandPath  bool   `json:"expand_path"`
 	Capacity    int    `json:"capacity"`
 }
@@ -97,7 +97,7 @@ type BasketsDatabase interface {
 func ToRequestData(req *http.Request) *RequestData {
 	data := new(RequestData)
 
-	data.Date = time.Now().UnixNano() / TO_MS
+	data.Date = time.Now().UnixNano() / toMs
 	data.Header = make(http.Header)
 	for k, v := range req.Header {
 		data.Header[k] = v
@@ -117,26 +117,26 @@ func ToRequestData(req *http.Request) *RequestData {
 // Forward forwards request data to specified URL
 func (req *RequestData) Forward(config BasketConfig, basket string) {
 	body := strings.NewReader(req.Body)
-	forwardUrl, err := url.ParseRequestURI(config.ForwardUrl)
+	forwardURL, err := url.ParseRequestURI(config.ForwardURL)
 
 	if err != nil {
-		log.Printf("[warn] invalid forward URL: %s; basket: %s", config.ForwardUrl, basket)
+		log.Printf("[warn] invalid forward URL: %s; basket: %s", config.ForwardURL, basket)
 	} else {
 		// expand path
 		if config.ExpandPath && len(req.Path) > len(basket)+1 {
-			forwardUrl.Path = expand(forwardUrl.Path, req.Path, basket)
+			forwardURL.Path = expand(forwardURL.Path, req.Path, basket)
 		}
 
 		// append query
 		if len(req.Query) > 0 {
-			if len(forwardUrl.RawQuery) > 0 {
-				forwardUrl.RawQuery += "&" + req.Query
+			if len(forwardURL.RawQuery) > 0 {
+				forwardURL.RawQuery += "&" + req.Query
 			} else {
-				forwardUrl.RawQuery = req.Query
+				forwardURL.RawQuery = req.Query
 			}
 		}
 
-		forwardReq, err := http.NewRequest(req.Method, forwardUrl.String(), body)
+		forwardReq, err := http.NewRequest(req.Method, forwardURL.String(), body)
 		if err != nil {
 			log.Printf("[error] failed to create forward request: %s", err)
 		} else {
@@ -148,7 +148,7 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 			}
 
 			var response *http.Response
-			if config.InsecureTls {
+			if config.InsecureTLS {
 				response, err = httpInsecureClient.Do(forwardReq)
 			} else {
 				response, err = httpClient.Do(forwardReq)

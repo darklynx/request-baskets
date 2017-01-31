@@ -1,7 +1,7 @@
 package main
 
 const (
-	INDEX_HTML = `<!DOCTYPE html>
+	indexPageContent = `<!DOCTYPE html>
 <html>
 <head lang="en">
   <title>Request Baskets</title>
