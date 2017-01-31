@@ -62,15 +62,12 @@ func getPage(values url.Values) (int, int) {
 // getAndAuthBasket retrieves basket by name from HTTP request path and authorize access to the basket object
 func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, Basket) {
 	name := ps.ByName("basket")
-	basket := basketsDb.Get(name)
-	if basket != nil {
+	if basket := basketsDb.Get(name); basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
-		token := r.Header.Get("Authorization")
-		if basket.Authorize(token) || token == serverConfig.MasterToken {
+		if token := r.Header.Get("Authorization"); basket.Authorize(token) || token == serverConfig.MasterToken {
 			return name, basket
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
 		}
+		w.WriteHeader(http.StatusUnauthorized)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}

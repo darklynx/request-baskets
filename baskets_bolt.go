@@ -72,12 +72,10 @@ type boltBasket struct {
 
 func (basket *boltBasket) update(fn func(*bolt.Bucket) error) error {
 	err := basket.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(basket.name))
-		if b != nil {
+		if b := tx.Bucket([]byte(basket.name)); b != nil {
 			return fn(b)
-		} else {
-			return fmt.Errorf("failed to locate bucket by name")
 		}
+		return fmt.Errorf("failed to locate bucket by name")
 	})
 
 	if err != nil {
@@ -89,12 +87,10 @@ func (basket *boltBasket) update(fn func(*bolt.Bucket) error) error {
 
 func (basket *boltBasket) view(fn func(*bolt.Bucket) error) error {
 	err := basket.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(basket.name))
-		if b != nil {
+		if b := tx.Bucket([]byte(basket.name)); b != nil {
 			return fn(b)
-		} else {
-			return fmt.Errorf("failed to locate bucket by name")
 		}
+		return fmt.Errorf("failed to locate bucket by name")
 	})
 
 	if err != nil {
@@ -159,7 +155,7 @@ func (basket *boltBasket) Authorize(token string) bool {
 }
 
 func (basket *boltBasket) GetResponse(method string) *ResponseConfig {
-	var response *ResponseConfig = nil
+	var response *ResponseConfig
 
 	basket.view(func(b *bolt.Bucket) error {
 		if resps := b.Bucket(boltKeyResponses); resps != nil {
@@ -383,17 +379,17 @@ func (bdb *boltDatabase) Get(name string) Basket {
 	err := bdb.db.View(func(tx *bolt.Tx) error {
 		if tx.Bucket([]byte(name)) != nil {
 			return nil
-		} else {
-			return fmt.Errorf("[warn] no basket found: %s", name)
 		}
+
+		return fmt.Errorf("[warn] no basket found: %s", name)
 	})
 
 	if err != nil {
 		log.Print(err)
 		return nil
-	} else {
-		return &boltBasket{bdb.db, name}
 	}
+
+	return &boltBasket{bdb.db, name}
 }
 
 func (bdb *boltDatabase) Delete(name string) {

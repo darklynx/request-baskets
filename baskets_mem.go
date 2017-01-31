@@ -49,12 +49,10 @@ func (basket *memoryBasket) GetResponse(method string) *ResponseConfig {
 	basket.Lock()
 	defer basket.Unlock()
 
-	response, exists := basket.responses[method]
-	if exists {
+	if response, exists := basket.responses[method]; exists {
 		return response
-	} else {
-		return nil
 	}
+	return nil
 }
 
 func (basket *memoryBasket) SetResponse(method string, response ResponseConfig) {
@@ -183,13 +181,12 @@ func (db *memoryDatabase) Create(name string, config BasketConfig) (BasketAuth, 
 }
 
 func (db *memoryDatabase) Get(name string) Basket {
-	basket, exists := db.baskets[name]
-	if exists {
+	if basket, exists := db.baskets[name]; exists {
 		return basket
-	} else {
-		log.Printf("[warn] no basket found: %s", name)
-		return nil
 	}
+
+	log.Printf("[warn] no basket found: %s", name)
+	return nil
 }
 
 func (db *memoryDatabase) Delete(name string) {
