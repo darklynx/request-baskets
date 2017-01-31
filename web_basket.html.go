@@ -1,7 +1,7 @@
 package main
 
 const (
-	BASKET_HTML = `<!DOCTYPE html>
+	basketPageContent = `<!DOCTYPE html>
 <html>
 <head lang="en">
   <title>Request Basket: {{.}}</title>

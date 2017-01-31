@@ -33,7 +33,7 @@ func TestRequestData_Forward(t *testing.T) {
 	defer ts.Close()
 
 	// Config to forward requests to test HTTP server
-	config := BasketConfig{ForwardUrl: ts.URL, ExpandPath: false, Capacity: 20}
+	config := BasketConfig{ForwardURL: ts.URL, ExpandPath: false, Capacity: 20}
 	data.Forward(config, basket)
 
 	// Validate forwarded request
@@ -78,8 +78,8 @@ func TestRequestData_Forward_ComplexForwardURL(t *testing.T) {
 	defer ts.Close()
 
 	// Config to forward requests to test HTTP server (also enable expanding URL)
-	forwardUrl := ts.URL + "/captures?from=" + basket
-	config := BasketConfig{ForwardUrl: forwardUrl, ExpandPath: true, Capacity: 20}
+	forwardURL := ts.URL + "/captures?from=" + basket
+	config := BasketConfig{ForwardURL: forwardURL, ExpandPath: true, Capacity: 20}
 	data.Forward(config, basket)
 
 	// Validate forwarded path
@@ -101,7 +101,7 @@ func TestRequestData_Forward_BrokenURL(t *testing.T) {
 	data.Path = "/" + basket
 
 	// Config to forward requests to broken URL
-	config := BasketConfig{ForwardUrl: "-.'", ExpandPath: false, Capacity: 20}
+	config := BasketConfig{ForwardURL: "-.'", ExpandPath: false, Capacity: 20}
 
 	// Should not fail, warning in log is expected
 	data.Forward(config, basket)

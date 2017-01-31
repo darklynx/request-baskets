@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createTestPOSTRequest(reqUrl string, content string, contentType string) *http.Request {
+func createTestPOSTRequest(reqURL string, content string, contentType string) *http.Request {
 	request := new(http.Request)
 	request.Method = "POST"
-	request.URL, _ = url.Parse(reqUrl)
+	request.URL, _ = url.Parse(reqURL)
 	request.Body = ioutil.NopCloser(strings.NewReader(content))
 	request.ContentLength = int64(len(content))
 	request.Header = make(http.Header)

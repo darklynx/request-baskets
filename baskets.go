@@ -10,15 +10,17 @@ import (
 	"time"
 )
 
-const TO_MS = int64(time.Millisecond) / int64(time.Nanosecond)
+const toMs = int64(time.Millisecond) / int64(time.Nanosecond)
 
+// BasketConfig describes single basket configuration.
 type BasketConfig struct {
-	ForwardUrl  string `json:"forward_url"`
-	InsecureTls bool   `json:"insecure_tls"`
+	ForwardURL  string `json:"forward_url"`
+	InsecureTLS bool   `json:"insecure_tls"`
 	ExpandPath  bool   `json:"expand_path"`
 	Capacity    int    `json:"capacity"`
 }
 
+// ResponseConfig describes response that is generates by service upon HTTP request sent to a basket.
 type ResponseConfig struct {
 	Status     int         `json:"status"`
 	Headers    http.Header `json:"headers"`
@@ -26,10 +28,12 @@ type ResponseConfig struct {
 	IsTemplate bool        `json:"is_template"`
 }
 
+// BasketAuth describes basket authentication response that is sent when new basket is created.
 type BasketAuth struct {
 	Token string `json:"token"`
 }
 
+// RequestData describes collected request data.
 type RequestData struct {
 	Date          int64       `json:"date"`
 	Header        http.Header `json:"headers"`
@@ -40,6 +44,7 @@ type RequestData struct {
 	Query         string      `json:"query"`
 }
 
+// RequestsPage describes a page with collected requests.
 type RequestsPage struct {
 	Requests   []*RequestData `json:"requests"`
 	Count      int            `json:"count"`
@@ -47,17 +52,20 @@ type RequestsPage struct {
 	HasMore    bool           `json:"has_more"`
 }
 
+// RequestsQueryPage describes a page of found requests if search filter is applied.
 type RequestsQueryPage struct {
 	Requests []*RequestData `json:"requests"`
 	HasMore  bool           `json:"has_more"`
 }
 
+// BasketNamesPage describes a page with basket names managed by service.
 type BasketNamesPage struct {
 	Names   []string `json:"names"`
 	Count   int      `json:"count"`
 	HasMore bool     `json:"has_more"`
 }
 
+// BasketNamesQueryPage describes a page with found basket names if search filter is applied.
 type BasketNamesQueryPage struct {
 	Names   []string `json:"names"`
 	HasMore bool     `json:"has_more"`
@@ -97,7 +105,7 @@ type BasketsDatabase interface {
 func ToRequestData(req *http.Request) *RequestData {
 	data := new(RequestData)
 
-	data.Date = time.Now().UnixNano() / TO_MS
+	data.Date = time.Now().UnixNano() / toMs
 	data.Header = make(http.Header)
 	for k, v := range req.Header {
 		data.Header[k] = v
@@ -117,26 +125,26 @@ func ToRequestData(req *http.Request) *RequestData {
 // Forward forwards request data to specified URL
 func (req *RequestData) Forward(config BasketConfig, basket string) {
 	body := strings.NewReader(req.Body)
-	forwardUrl, err := url.ParseRequestURI(config.ForwardUrl)
+	forwardURL, err := url.ParseRequestURI(config.ForwardURL)
 
 	if err != nil {
-		log.Printf("[warn] invalid forward URL: %s; basket: %s", config.ForwardUrl, basket)
+		log.Printf("[warn] invalid forward URL: %s; basket: %s", config.ForwardURL, basket)
 	} else {
 		// expand path
 		if config.ExpandPath && len(req.Path) > len(basket)+1 {
-			forwardUrl.Path = expand(forwardUrl.Path, req.Path, basket)
+			forwardURL.Path = expand(forwardURL.Path, req.Path, basket)
 		}
 
 		// append query
 		if len(req.Query) > 0 {
-			if len(forwardUrl.RawQuery) > 0 {
-				forwardUrl.RawQuery += "&" + req.Query
+			if len(forwardURL.RawQuery) > 0 {
+				forwardURL.RawQuery += "&" + req.Query
 			} else {
-				forwardUrl.RawQuery = req.Query
+				forwardURL.RawQuery = req.Query
 			}
 		}
 
-		forwardReq, err := http.NewRequest(req.Method, forwardUrl.String(), body)
+		forwardReq, err := http.NewRequest(req.Method, forwardURL.String(), body)
 		if err != nil {
 			log.Printf("[error] failed to create forward request: %s", err)
 		} else {
@@ -148,7 +156,7 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 			}
 
 			var response *http.Response
-			if config.InsecureTls {
+			if config.InsecureTLS {
 				response, err = httpInsecureClient.Do(forwardReq)
 			} else {
 				response, err = httpClient.Do(forwardReq)
@@ -168,6 +176,7 @@ func expand(url string, original string, basket string) string {
 	return strings.TrimSuffix(url, "/") + strings.TrimPrefix(original, "/"+basket)
 }
 
+// Matches checks if RequestData matches the search criterea.
 func (req *RequestData) Matches(query string, in string) bool {
 	// detect where to search
 	inBody := false

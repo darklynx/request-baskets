@@ -12,23 +12,23 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// DB_TYPE_BOLT defines name of Bolt database storage
-const DB_TYPE_BOLT = "bolt"
+// DbTypeBolt defines name of Bolt database storage
+const DbTypeBolt = "bolt"
 
 const (
-	OPT_EXPAND_PATH = 1 << iota
-	OPT_INSECURE_TLS
+	boltOptExpandPath = 1 << iota
+	boltOptInsecureTLS
 )
 
 var (
-	KEY_TOKEN       = []byte("token")
-	KEY_FORWARD_URL = []byte("url")
-	KEY_OPTIONS     = []byte("opts")
-	KEY_CAPACITY    = []byte("capacity")
-	KEY_TOTAL_COUNT = []byte("total")
-	KEY_COUNT       = []byte("count")
-	KEY_REQUESTS    = []byte("requests")
-	KEY_RESPONSES   = []byte("responses")
+	boltKeyToken      = []byte("token")
+	boltKeyForwardURL = []byte("url")
+	boltKeyOptions    = []byte("opts")
+	boltKeyCapacity   = []byte("capacity")
+	boltKeyTotalCount = []byte("total")
+	boltKeyCount      = []byte("count")
+	boltKeyRequests   = []byte("requests")
+	boltKeyResponses  = []byte("responses")
 )
 
 func itob(i int) []byte {
@@ -44,10 +44,10 @@ func btoi(b []byte) int {
 func toOpts(config BasketConfig) []byte {
 	opts := byte(0)
 	if config.ExpandPath {
-		opts |= OPT_EXPAND_PATH
+		opts |= boltOptExpandPath
 	}
-	if config.InsecureTls {
-		opts |= OPT_INSECURE_TLS
+	if config.InsecureTLS {
+		opts |= boltOptInsecureTLS
 	}
 
 	return []byte{opts}
@@ -55,11 +55,11 @@ func toOpts(config BasketConfig) []byte {
 
 func fromOpts(opts []byte, config *BasketConfig) {
 	if len(opts) > 0 {
-		config.ExpandPath = opts[0]&OPT_EXPAND_PATH != 0
-		config.InsecureTls = opts[0]&OPT_INSECURE_TLS != 0
+		config.ExpandPath = opts[0]&boltOptExpandPath != 0
+		config.InsecureTLS = opts[0]&boltOptInsecureTLS != 0
 	} else {
 		config.ExpandPath = false
-		config.InsecureTls = false
+		config.InsecureTLS = false
 	}
 }
 
@@ -72,12 +72,10 @@ type boltBasket struct {
 
 func (basket *boltBasket) update(fn func(*bolt.Bucket) error) error {
 	err := basket.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(basket.name))
-		if b != nil {
+		if b := tx.Bucket([]byte(basket.name)); b != nil {
 			return fn(b)
-		} else {
-			return fmt.Errorf("failed to locate bucket by name")
 		}
+		return fmt.Errorf("failed to locate bucket by name")
 	})
 
 	if err != nil {
@@ -89,12 +87,10 @@ func (basket *boltBasket) update(fn func(*bolt.Bucket) error) error {
 
 func (basket *boltBasket) view(fn func(*bolt.Bucket) error) error {
 	err := basket.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(basket.name))
-		if b != nil {
+		if b := tx.Bucket([]byte(basket.name)); b != nil {
 			return fn(b)
-		} else {
-			return fmt.Errorf("failed to locate bucket by name")
 		}
+		return fmt.Errorf("failed to locate bucket by name")
 	})
 
 	if err != nil {
@@ -108,10 +104,10 @@ func (basket *boltBasket) Config() BasketConfig {
 	config := BasketConfig{}
 
 	basket.view(func(b *bolt.Bucket) error {
-		config.ForwardUrl = string(b.Get(KEY_FORWARD_URL))
-		config.Capacity = btoi(b.Get(KEY_CAPACITY))
+		config.ForwardURL = string(b.Get(boltKeyForwardURL))
+		config.Capacity = btoi(b.Get(boltKeyCapacity))
 
-		fromOpts(b.Get(KEY_OPTIONS), &config)
+		fromOpts(b.Get(boltKeyOptions), &config)
 
 		return nil
 	})
@@ -121,18 +117,18 @@ func (basket *boltBasket) Config() BasketConfig {
 
 func (basket *boltBasket) Update(config BasketConfig) {
 	basket.update(func(b *bolt.Bucket) error {
-		oldCap := btoi(b.Get(KEY_CAPACITY))
-		curCount := btoi(b.Get(KEY_COUNT))
+		oldCap := btoi(b.Get(boltKeyCapacity))
+		curCount := btoi(b.Get(boltKeyCount))
 
-		b.Put(KEY_FORWARD_URL, []byte(config.ForwardUrl))
-		b.Put(KEY_OPTIONS, toOpts(config))
-		b.Put(KEY_CAPACITY, itob(config.Capacity))
+		b.Put(boltKeyForwardURL, []byte(config.ForwardURL))
+		b.Put(boltKeyOptions, toOpts(config))
+		b.Put(boltKeyCapacity, itob(config.Capacity))
 
 		if oldCap != config.Capacity && curCount > config.Capacity {
 			// remove overflow requests
 			remCount := curCount - config.Capacity
 
-			reqsCur := b.Bucket(KEY_REQUESTS).Cursor()
+			reqsCur := b.Bucket(boltKeyRequests).Cursor()
 			reqsCur.First()
 			for i := 0; i < remCount; i++ {
 				reqsCur.Delete()
@@ -140,7 +136,7 @@ func (basket *boltBasket) Update(config BasketConfig) {
 			}
 
 			// update count
-			b.Put(KEY_COUNT, itob(config.Capacity))
+			b.Put(boltKeyCount, itob(config.Capacity))
 		}
 
 		return nil
@@ -151,7 +147,7 @@ func (basket *boltBasket) Authorize(token string) bool {
 	result := false
 
 	basket.view(func(b *bolt.Bucket) error {
-		result = string(b.Get(KEY_TOKEN)) == token
+		result = string(b.Get(boltKeyToken)) == token
 		return nil
 	})
 
@@ -159,10 +155,10 @@ func (basket *boltBasket) Authorize(token string) bool {
 }
 
 func (basket *boltBasket) GetResponse(method string) *ResponseConfig {
-	var response *ResponseConfig = nil
+	var response *ResponseConfig
 
 	basket.view(func(b *bolt.Bucket) error {
-		if resps := b.Bucket(KEY_RESPONSES); resps != nil {
+		if resps := b.Bucket(boltKeyResponses); resps != nil {
 			if resp := resps.Get([]byte(method)); resp != nil {
 				// parse response configuration
 				response = new(ResponseConfig)
@@ -185,10 +181,10 @@ func (basket *boltBasket) SetResponse(method string, response ResponseConfig) {
 			return err
 		}
 
-		resps := b.Bucket(KEY_RESPONSES)
+		resps := b.Bucket(boltKeyResponses)
 		if resps == nil {
 			// first time declaring response
-			if resps, err = b.CreateBucket(KEY_RESPONSES); err != nil {
+			if resps, err = b.CreateBucket(boltKeyResponses); err != nil {
 				return err
 			}
 		}
@@ -202,7 +198,7 @@ func (basket *boltBasket) Add(req *http.Request) *RequestData {
 	data := ToRequestData(req)
 
 	basket.update(func(b *bolt.Bucket) error {
-		reqs := b.Bucket(KEY_REQUESTS)
+		reqs := b.Bucket(boltKeyRequests)
 
 		dataj, err := json.Marshal(data)
 		if err != nil {
@@ -216,18 +212,18 @@ func (basket *boltBasket) Add(req *http.Request) *RequestData {
 		}
 
 		// update counters
-		cap := btoi(b.Get(KEY_CAPACITY))
-		count := btoi(b.Get(KEY_COUNT))
-		total := btoi(b.Get(KEY_TOTAL_COUNT))
+		cap := btoi(b.Get(boltKeyCapacity))
+		count := btoi(b.Get(boltKeyCount))
+		total := btoi(b.Get(boltKeyTotalCount))
 
 		// total count
 		total++
-		b.Put(KEY_TOTAL_COUNT, itob(total))
+		b.Put(boltKeyTotalCount, itob(total))
 
 		// current count (may not exceed capacity)
 		if count < cap {
 			count++
-			b.Put(KEY_COUNT, itob(count))
+			b.Put(boltKeyCount, itob(count))
 		} else {
 			// do not increase counter, just remove 1 entry
 			cur := reqs.Cursor()
@@ -248,14 +244,14 @@ func (basket *boltBasket) Add(req *http.Request) *RequestData {
 
 func (basket *boltBasket) Clear() {
 	basket.update(func(b *bolt.Bucket) error {
-		err := b.DeleteBucket(KEY_REQUESTS)
+		err := b.DeleteBucket(boltKeyRequests)
 		if err != nil {
 			return err
 		}
 
-		b.Put(KEY_TOTAL_COUNT, itob(0))
-		b.Put(KEY_COUNT, itob(0))
-		b.CreateBucket(KEY_REQUESTS)
+		b.Put(boltKeyTotalCount, itob(0))
+		b.Put(boltKeyCount, itob(0))
+		b.CreateBucket(boltKeyRequests)
 
 		return nil
 	})
@@ -265,7 +261,7 @@ func (basket *boltBasket) Size() int {
 	result := -1
 
 	basket.view(func(b *bolt.Bucket) error {
-		result = btoi(b.Get(KEY_COUNT))
+		result = btoi(b.Get(boltKeyCount))
 
 		return nil
 	})
@@ -278,10 +274,10 @@ func (basket *boltBasket) GetRequests(max int, skip int) RequestsPage {
 	page := RequestsPage{make([]*RequestData, 0, max), 0, 0, false}
 
 	basket.view(func(b *bolt.Bucket) error {
-		page.TotalCount = btoi(b.Get(KEY_TOTAL_COUNT))
-		page.Count = btoi(b.Get(KEY_COUNT))
+		page.TotalCount = btoi(b.Get(boltKeyTotalCount))
+		page.Count = btoi(b.Get(boltKeyCount))
 
-		cur := b.Bucket(KEY_REQUESTS).Cursor()
+		cur := b.Bucket(boltKeyRequests).Cursor()
 		index := 0
 		for key, val := cur.Last(); key != nil; key, val = cur.Prev() {
 			if index >= skip && index < last {
@@ -307,7 +303,7 @@ func (basket *boltBasket) FindRequests(query string, in string, max int, skip in
 	page := RequestsQueryPage{make([]*RequestData, 0, max), false}
 
 	basket.view(func(b *bolt.Bucket) error {
-		cur := b.Bucket(KEY_REQUESTS).Cursor()
+		cur := b.Bucket(boltKeyRequests).Cursor()
 		skipped := 0
 		for key, val := cur.Last(); key != nil; key, val = cur.Prev() {
 			request := new(RequestData)
@@ -359,13 +355,13 @@ func (bdb *boltDatabase) Create(name string, config BasketConfig) (BasketAuth, e
 		}
 
 		// initialize basket bucket (assume no issues arised)
-		b.Put(KEY_TOKEN, []byte(token))
-		b.Put(KEY_FORWARD_URL, []byte(config.ForwardUrl))
-		b.Put(KEY_OPTIONS, toOpts(config))
-		b.Put(KEY_CAPACITY, itob(config.Capacity))
-		b.Put(KEY_TOTAL_COUNT, itob(0))
-		b.Put(KEY_COUNT, itob(0))
-		b.CreateBucket(KEY_REQUESTS)
+		b.Put(boltKeyToken, []byte(token))
+		b.Put(boltKeyForwardURL, []byte(config.ForwardURL))
+		b.Put(boltKeyOptions, toOpts(config))
+		b.Put(boltKeyCapacity, itob(config.Capacity))
+		b.Put(boltKeyTotalCount, itob(0))
+		b.Put(boltKeyCount, itob(0))
+		b.CreateBucket(boltKeyRequests)
 
 		return nil
 	})
@@ -383,17 +379,17 @@ func (bdb *boltDatabase) Get(name string) Basket {
 	err := bdb.db.View(func(tx *bolt.Tx) error {
 		if tx.Bucket([]byte(name)) != nil {
 			return nil
-		} else {
-			return fmt.Errorf("[warn] no basket found: %s", name)
 		}
+
+		return fmt.Errorf("[warn] no basket found: %s", name)
 	})
 
 	if err != nil {
 		log.Print(err)
 		return nil
-	} else {
-		return &boltBasket{bdb.db, name}
 	}
+
+	return &boltBasket{bdb.db, name}
 }
 
 func (bdb *boltDatabase) Delete(name string) {

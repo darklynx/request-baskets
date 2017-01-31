@@ -37,25 +37,25 @@ func StartServer() {
 	router := httprouter.New()
 
 	// basket names
-	router.GET("/"+BASKETS_ROOT, GetBaskets)
+	router.GET("/"+serviceAPIPath, GetBaskets)
 
 	// basket management
-	router.GET("/"+BASKETS_ROOT+"/:basket", GetBasket)
-	router.POST("/"+BASKETS_ROOT+"/:basket", CreateBasket)
-	router.PUT("/"+BASKETS_ROOT+"/:basket", UpdateBasket)
-	router.DELETE("/"+BASKETS_ROOT+"/:basket", DeleteBasket)
+	router.GET("/"+serviceAPIPath+"/:basket", GetBasket)
+	router.POST("/"+serviceAPIPath+"/:basket", CreateBasket)
+	router.PUT("/"+serviceAPIPath+"/:basket", UpdateBasket)
+	router.DELETE("/"+serviceAPIPath+"/:basket", DeleteBasket)
 
-	router.GET("/"+BASKETS_ROOT+"/:basket/responses/:method", GetBasketResponse)
-	router.PUT("/"+BASKETS_ROOT+"/:basket/responses/:method", UpdateBasketResponse)
+	router.GET("/"+serviceAPIPath+"/:basket/responses/:method", GetBasketResponse)
+	router.PUT("/"+serviceAPIPath+"/:basket/responses/:method", UpdateBasketResponse)
 
 	// requests management
-	router.GET("/"+BASKETS_ROOT+"/:basket/requests", GetBasketRequests)
-	router.DELETE("/"+BASKETS_ROOT+"/:basket/requests", ClearBasket)
+	router.GET("/"+serviceAPIPath+"/:basket/requests", GetBasketRequests)
+	router.DELETE("/"+serviceAPIPath+"/:basket/requests", ClearBasket)
 
 	// web pages
 	router.GET("/", ForwardToWeb)
-	router.GET("/"+WEB_ROOT, WebIndexPage)
-	router.GET("/"+WEB_ROOT+"/:basket", WebBasketPage)
+	router.GET("/"+serviceUIPath, WebIndexPage)
+	router.GET("/"+serviceUIPath+"/:basket", WebBasketPage)
 	//router.ServeFiles("/"+WEB_ROOT+"/*filepath", http.Dir("./src/github.com/darklynx/request-baskets/web"))
 
 	// basket requests
@@ -69,9 +69,9 @@ func StartServer() {
 
 func createBasketsDatabase() BasketsDatabase {
 	switch serverConfig.DbType {
-	case DB_TYPE_MEM:
+	case DbTypeMemory:
 		return NewMemoryDatabase()
-	case DB_TYPE_BOLT:
+	case DbTypeBolt:
 		return NewBoltDatabase(serverConfig.DbFile)
 	default:
 		log.Printf("[error] unknown database type: %s", serverConfig.DbType)
