@@ -35,8 +35,7 @@ func writeJSON(w http.ResponseWriter, status int, json []byte, err error) {
 // parseInt parses integer parameter from HTTP request query
 func parseInt(value string, min int, max int, defaultValue int) int {
 	if len(value) > 0 {
-		i, err := strconv.Atoi(value)
-		if err == nil {
+		if i, err := strconv.Atoi(value); err == nil {
 			switch {
 			case i < min:
 				return min
@@ -137,8 +136,7 @@ func getValidMethod(ps httprouter.Params) (string, error) {
 // GetBaskets handles HTTP request to get registered baskets
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	values := r.URL.Query()
-	query := values.Get("q")
-	if len(query) > 0 {
+	if query := values.Get("q"); len(query) > 0 {
 		// Find names
 		max, skip := getPage(values)
 		json, err := json.Marshal(basketsDb.FindNames(query, max, skip))
@@ -296,8 +294,7 @@ func UpdateBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.
 func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
 		values := r.URL.Query()
-		query := values.Get("q")
-		if len(query) > 0 {
+		if query := values.Get("q"); len(query) > 0 {
 			// Find requests
 			max, skip := getPage(values)
 			json, err := json.Marshal(basket.FindRequests(query, values.Get("in"), max, skip))
@@ -330,20 +327,17 @@ func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 // WebBasketPage handles HTTP request to render basket details page
 func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	name := ps.ByName("basket")
-	if !validBasketName.MatchString(name) {
+	if name := ps.ByName("basket"); validBasketName.MatchString(name) {
+		basketPageTemplate.Execute(w, name)
+	} else {
 		http.Error(w, "Basket name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
-		return
 	}
-	basketPageTemplate.Execute(w, name)
 }
 
 // AcceptBasketRequests accepts and handles HTTP requests passed to different baskets
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	name := parts[1]
-	basket := basketsDb.Get(name)
-	if basket != nil {
+	name := strings.Split(r.URL.Path, "/")[1]
+	if basket := basketsDb.Get(name); basket != nil {
 		request := basket.Add(r)
 
 		// forward request in separate thread
