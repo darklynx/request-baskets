@@ -52,6 +52,7 @@ func (basket *memoryBasket) GetResponse(method string) *ResponseConfig {
 	if response, exists := basket.responses[method]; exists {
 		return response
 	}
+
 	return nil
 }
 

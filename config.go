@@ -17,6 +17,7 @@ const (
 	basketNamePattern   = `^[\w\d\-_\.]+$`
 )
 
+// ServerConfig describes server configuration.
 type ServerConfig struct {
 	ServerPort   int
 	InitCapacity int

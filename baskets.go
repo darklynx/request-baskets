@@ -12,6 +12,7 @@ import (
 
 const toMs = int64(time.Millisecond) / int64(time.Nanosecond)
 
+// BasketConfig describes single basket configuration.
 type BasketConfig struct {
 	ForwardURL  string `json:"forward_url"`
 	InsecureTLS bool   `json:"insecure_tls"`
@@ -19,6 +20,7 @@ type BasketConfig struct {
 	Capacity    int    `json:"capacity"`
 }
 
+// ResponseConfig describes response that is generates by service upon HTTP request sent to a basket.
 type ResponseConfig struct {
 	Status     int         `json:"status"`
 	Headers    http.Header `json:"headers"`
@@ -26,10 +28,12 @@ type ResponseConfig struct {
 	IsTemplate bool        `json:"is_template"`
 }
 
+// BasketAuth describes basket authentication response that is sent when new basket is created.
 type BasketAuth struct {
 	Token string `json:"token"`
 }
 
+// RequestData describes collected request data.
 type RequestData struct {
 	Date          int64       `json:"date"`
 	Header        http.Header `json:"headers"`
@@ -40,6 +44,7 @@ type RequestData struct {
 	Query         string      `json:"query"`
 }
 
+// RequestsPage describes a page with collected requests.
 type RequestsPage struct {
 	Requests   []*RequestData `json:"requests"`
 	Count      int            `json:"count"`
@@ -47,17 +52,20 @@ type RequestsPage struct {
 	HasMore    bool           `json:"has_more"`
 }
 
+// RequestsQueryPage describes a page of found requests if search filter is applied.
 type RequestsQueryPage struct {
 	Requests []*RequestData `json:"requests"`
 	HasMore  bool           `json:"has_more"`
 }
 
+// BasketNamesPage describes a page with basket names managed by service.
 type BasketNamesPage struct {
 	Names   []string `json:"names"`
 	Count   int      `json:"count"`
 	HasMore bool     `json:"has_more"`
 }
 
+// BasketNamesQueryPage describes a page with found basket names if search filter is applied.
 type BasketNamesQueryPage struct {
 	Names   []string `json:"names"`
 	HasMore bool     `json:"has_more"`
@@ -168,6 +176,7 @@ func expand(url string, original string, basket string) string {
 	return strings.TrimSuffix(url, "/") + strings.TrimPrefix(original, "/"+basket)
 }
 
+// Matches checks if RequestData matches the search criterea.
 func (req *RequestData) Matches(query string, in string) bool {
 	// detect where to search
 	inBody := false
