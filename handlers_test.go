@@ -856,6 +856,20 @@ func TestWebBasketPage(t *testing.T) {
 	}
 }
 
+func TestWebBasketsPage(t *testing.T) {
+	r, err := http.NewRequest("GET", "http://localhost:55555/web/"+serviceAPIPath, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: serviceAPIPath})
+		WebBasketPage(w, r, ps)
+
+		// validate response: 200 - OK
+		assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+		assert.Contains(t, w.Body.String(), "<title>Request Baskets - Administration</title>",
+			"HTML index page with baskets is expected")
+	}
+}
+
 func TestWebBasketPage_InvalidName(t *testing.T) {
 	basket := ">>>"
 
