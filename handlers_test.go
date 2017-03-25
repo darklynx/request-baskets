@@ -524,6 +524,7 @@ func TestGetBaskets(t *testing.T) {
 	// get names
 	r, err := http.NewRequest("GET", "http://localhost:55555/baskets", strings.NewReader(""))
 	if assert.NoError(t, err) {
+		r.Header.Add("Authorization", serverConfig.MasterToken)
 		w := httptest.NewRecorder()
 		GetBaskets(w, r, make(httprouter.Params, 0))
 		// HTTP 200 - OK
@@ -555,6 +556,7 @@ func TestGetBaskets_Query(t *testing.T) {
 	// get names
 	r, err := http.NewRequest("GET", "http://localhost:55555/baskets?q=names1", strings.NewReader(""))
 	if assert.NoError(t, err) {
+		r.Header.Add("Authorization", serverConfig.MasterToken)
 		w := httptest.NewRecorder()
 		GetBaskets(w, r, make(httprouter.Params, 0))
 		// HTTP 200 - OK
@@ -587,6 +589,7 @@ func TestGetBaskets_Page(t *testing.T) {
 	// get names
 	r, err := http.NewRequest("GET", "http://localhost:55555/baskets?max=5&skip=2", strings.NewReader(""))
 	if assert.NoError(t, err) {
+		r.Header.Add("Authorization", serverConfig.MasterToken)
 		w := httptest.NewRecorder()
 		GetBaskets(w, r, make(httprouter.Params, 0))
 		// HTTP 200 - OK

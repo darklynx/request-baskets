@@ -135,16 +135,20 @@ func getValidMethod(ps httprouter.Params) (string, error) {
 
 // GetBaskets handles HTTP request to get registered baskets
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	values := r.URL.Query()
-	if query := values.Get("q"); len(query) > 0 {
-		// Find names
-		max, skip := getPage(values)
-		json, err := json.Marshal(basketsDb.FindNames(query, max, skip))
-		writeJSON(w, http.StatusOK, json, err)
+	if r.Header.Get("Authorization") != serverConfig.MasterToken {
+		w.WriteHeader(http.StatusUnauthorized)
 	} else {
-		// Get basket names page
-		json, err := json.Marshal(basketsDb.GetNames(getPage(values)))
-		writeJSON(w, http.StatusOK, json, err)
+		values := r.URL.Query()
+		if query := values.Get("q"); len(query) > 0 {
+			// Find names
+			max, skip := getPage(values)
+			json, err := json.Marshal(basketsDb.FindNames(query, max, skip))
+			writeJSON(w, http.StatusOK, json, err)
+		} else {
+			// Get basket names page
+			json, err := json.Marshal(basketsDb.GetNames(getPage(values)))
+			writeJSON(w, http.StatusOK, json, err)
+		}
 	}
 }
 
