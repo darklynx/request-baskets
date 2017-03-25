@@ -44,7 +44,7 @@ paths:
       tags:
         - baskets
       summary: Get baskets
-      description: Fetches a list of basket names managed by service.
+      description: Fetches a list of basket names managed by service. Require master token.
       parameters:
         - name: max
           in: query
@@ -68,6 +68,10 @@ paths:
             $ref: '#/definitions/Baskets'
         204:
           description: No Content. No baskets available for specified limits
+        401:
+          description: Unauthorized. Invalid or missing master token
+      security:
+        - basket_token: []
 
   /baskets/{name}:
     post:

@@ -1,7 +1,7 @@
 package main
 
 const (
-	basketPageContent = `<!DOCTYPE html>
+	basketPageContentTemplate = `<!DOCTYPE html>
 <html>
 <head lang="en">
   <title>Request Basket: {{.}}</title>
@@ -26,7 +26,7 @@ const (
     var autoRefreshId;
 
     function getToken() {
-      var token = sessionStorage.getItem("token_{{.}}");
+      var token = localStorage.getItem("basket_{{.}}");
       if (!token) { // fall back to master token if provided
         token = sessionStorage.getItem("master_token");
       }
@@ -35,6 +35,7 @@ const (
 
     function onAjaxError(jqXHR) {
       if (jqXHR.status == 401) {
+        localStorage.removeItem("basket_{{.}}");
         enableAutoRefresh(false);
         $("#token_dialog").modal({ keyboard : false });
       } else {
@@ -116,8 +117,10 @@ const (
       $("#requests_count").html(data.count + " (" + totalCount + ")");
       if (data.count > 0) {
         $("#empty_basket").addClass("hide");
+        $("#requests_link").removeClass("hide");
       } else {
         $("#empty_basket").removeClass("hide");
+        $("#requests_link").addClass("hide");
       }
 
       if (data && data.requests) {
@@ -348,17 +351,17 @@ const (
           "Authorization" : getToken()
         }
       }).done(function(data) {
-        sessionStorage.removeItem("token_{{.}}");
+        localStorage.removeItem("basket_{{.}}");
         window.location.href = "/web";
       }).fail(onAjaxError);
     }
 
     // Initialization
     $(document).ready(function() {
-      $("#basket_uri").html(window.location.protocol + "//" + window.location.host + "/{{.}}");
+      $(".basket_uri").html(window.location.protocol + "//" + window.location.host + "/{{.}}");
       // dialogs
       $("#token_dialog").on("hidden.bs.modal", function (event) {
-        sessionStorage.setItem("token_{{.}}", $("#basket_token").val());
+        localStorage.setItem("basket_{{.}}", $("#basket_token").val());
         fetchRequests();
       });
       $("#config_form").on("submit", function(event) {
@@ -594,6 +597,7 @@ const (
     <div class="row">
       <div class="col-md-8">
         <h1>Basket: {{.}}</h1>
+        <p id="requests_link" class="hide">Requests are collected at <kbd class="basket_uri"></kbd></p>
       </div>
       <div class="col-md-3 col-md-offset-1">
         <h4><abbr title="Current requests count (Total count)">Requests</abbr>: <span id="requests_count"></span></h4>
@@ -611,7 +615,7 @@ const (
     <!-- Empty basket -->
     <div class="jumbotron text-center hide" id="empty_basket">
       <h1>Empty basket!</h1>
-      <p>This basket is empty, send requests to <kbd id="basket_uri">/{{.}}</kbd> and they will appear here.</p>
+      <p>This basket is empty, send requests to <kbd class="basket_uri"></kbd> and they will appear here.</p>
     </div>
   </div>
 

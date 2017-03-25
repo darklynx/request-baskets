@@ -56,7 +56,7 @@ func StartServer() {
 	router.GET("/", ForwardToWeb)
 	router.GET("/"+serviceUIPath, WebIndexPage)
 	router.GET("/"+serviceUIPath+"/:basket", WebBasketPage)
-	//router.ServeFiles("/"+WEB_ROOT+"/*filepath", http.Dir("./src/github.com/darklynx/request-baskets/web"))
+	//router.ServeFiles("/"+serviceUIPath+"/*filepath", http.Dir("./src/github.com/darklynx/request-baskets/web"))
 
 	// basket requests
 	router.NotFound = http.HandlerFunc(AcceptBasketRequests)

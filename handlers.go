@@ -18,8 +18,7 @@ import (
 
 var validBasketName = regexp.MustCompile(basketNamePattern)
 var defaultResponse = ResponseConfig{Status: 200, IsTemplate: false}
-var indexPageTemplate = template.Must(template.New("index").Parse(indexPageContent))
-var basketPageTemplate = template.Must(template.New("basket").Parse(basketPageContent))
+var basketPageTemplate = template.Must(template.New("basket").Parse(basketPageContentTemplate))
 
 // writeJSON writes JSON content to HTTP response
 func writeJSON(w http.ResponseWriter, status int, json []byte, err error) {
@@ -135,16 +134,20 @@ func getValidMethod(ps httprouter.Params) (string, error) {
 
 // GetBaskets handles HTTP request to get registered baskets
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	values := r.URL.Query()
-	if query := values.Get("q"); len(query) > 0 {
-		// Find names
-		max, skip := getPage(values)
-		json, err := json.Marshal(basketsDb.FindNames(query, max, skip))
-		writeJSON(w, http.StatusOK, json, err)
+	if r.Header.Get("Authorization") != serverConfig.MasterToken {
+		w.WriteHeader(http.StatusUnauthorized)
 	} else {
-		// Get basket names page
-		json, err := json.Marshal(basketsDb.GetNames(getPage(values)))
-		writeJSON(w, http.StatusOK, json, err)
+		values := r.URL.Query()
+		if query := values.Get("q"); len(query) > 0 {
+			// Find names
+			max, skip := getPage(values)
+			json, err := json.Marshal(basketsDb.FindNames(query, max, skip))
+			writeJSON(w, http.StatusOK, json, err)
+		} else {
+			// Get basket names page
+			json, err := json.Marshal(basketsDb.GetNames(getPage(values)))
+			writeJSON(w, http.StatusOK, json, err)
+		}
 	}
 }
 
@@ -322,13 +325,21 @@ func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 // WebIndexPage handles HTTP request to render index page
 func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	indexPageTemplate.Execute(w, "")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(indexPageContent)
 }
 
 // WebBasketPage handles HTTP request to render basket details page
 func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if name := ps.ByName("basket"); validBasketName.MatchString(name) {
-		basketPageTemplate.Execute(w, name)
+		switch name {
+		case serviceAPIPath:
+			// admin page to access all baskets
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(basketsPageContent)
+		default:
+			basketPageTemplate.Execute(w, name)
+		}
 	} else {
 		http.Error(w, "Basket name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 	}
