@@ -125,6 +125,11 @@ var (
         <a id="refresh" class="navbar-brand" href="#">Request Baskets</a>
       </div>
       <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="readme.html">Documentation</a></li>
+          <li><a href="api.html">REST API</a></li>
+          <li><a href="https://github.com/darklynx/request-baskets">Source Code</a></li>
+        </ul>
         <form class="navbar-form navbar-right">
           <a href="{{.Prefix}}/web/baskets" alt="Administration" title="Administration" class="btn btn-default">
             <span class="glyphicon glyphicon-cog"></span>
