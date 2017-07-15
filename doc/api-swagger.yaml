@@ -6,10 +6,19 @@ swagger: '2.0'
 info:
   version: '0.5'
   title: Request Baskets API
-  description: RESTful API of Request Baskets service
+  description: |
+      RESTful API of [Request Baskets](https://rbaskets.in) service.
+
+      Request Baskets is an open source project of a service to collect HTTP requests and inspect them via RESTful
+      API or web UI.
+
+      Check out the [project page](https://github.com/darklynx/request-baskets) for more detailed description.
   contact:
     name: darklynx
     url: https://github.com/darklynx
+  license:
+    name: MIT
+    url: https://github.com/darklynx/request-baskets/blob/master/LICENSE
 
 host: rbaskets.in
 basePath: /
