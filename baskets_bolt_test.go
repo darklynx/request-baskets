@@ -8,6 +8,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestToOpts(t *testing.T) {
+	assert.Equal(t, []byte{0}, toOpts(BasketConfig{ExpandPath: false, InsecureTLS: false}), "wrong options")
+	assert.Equal(t, []byte{1}, toOpts(BasketConfig{ExpandPath: true, InsecureTLS: false}), "wrong options")
+	assert.Equal(t, []byte{2}, toOpts(BasketConfig{ExpandPath: false, InsecureTLS: true}), "wrong options")
+	assert.Equal(t, []byte{3}, toOpts(BasketConfig{ExpandPath: true, InsecureTLS: true}), "wrong options")
+}
+
+func TestFromOpts(t *testing.T) {
+	config := BasketConfig{}
+	// default
+	fromOpts([]byte{}, &config)
+	assert.False(t, config.ExpandPath, "wrong 'ExpandPath' value")
+	assert.False(t, config.InsecureTLS, "wrong 'InsecureTLS' value")
+
+	// reset
+	fromOpts([]byte{0}, &config)
+	assert.False(t, config.ExpandPath, "wrong 'ExpandPath' value")
+	assert.False(t, config.InsecureTLS, "wrong 'InsecureTLS' value")
+
+	// toOpts => fromOpts
+	fromOpts(toOpts(BasketConfig{ExpandPath: true, InsecureTLS: false}), &config)
+	assert.True(t, config.ExpandPath, "wrong 'ExpandPath' value")
+	assert.False(t, config.InsecureTLS, "wrong 'InsecureTLS' value")
+
+	// toOpts => fromOpts
+	fromOpts(toOpts(BasketConfig{ExpandPath: false, InsecureTLS: true}), &config)
+	assert.False(t, config.ExpandPath, "wrong 'ExpandPath' value")
+	assert.True(t, config.InsecureTLS, "wrong 'InsecureTLS' value")
+}
+
 func TestBoltDatabase_Create(t *testing.T) {
 	name := "test1"
 	db := NewBoltDatabase(name + ".db")

@@ -177,7 +177,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2048))
 	r.Body.Close()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -210,7 +210,7 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2048))
 		r.Body.Close()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else if len(body) > 0 {
 			// get current config
 			config := basket.Config()
@@ -271,7 +271,7 @@ func UpdateBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.
 			body, err := ioutil.ReadAll(io.LimitReader(r.Body, 64*1024))
 			r.Body.Close()
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			} else if len(body) > 0 {
 				// get current config
 				response := ResponseConfig{Status: defaultResponse.Status, IsTemplate: false}
@@ -352,8 +352,13 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 		request := basket.Add(r)
 
 		// forward request in separate thread
-		if len(basket.Config().ForwardURL) > 0 {
-			go request.Forward(basket.Config(), name)
+		config := basket.Config()
+		if len(config.ForwardURL) > 0 {
+			if config.InsecureTLS {
+				go request.Forward(httpInsecureClient, config, name)
+			} else {
+				go request.Forward(httpClient, config, name)
+			}
 		}
 
 		// HTTP response

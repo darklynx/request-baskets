@@ -34,7 +34,7 @@ func TestRequestData_Forward(t *testing.T) {
 
 	// Config to forward requests to test HTTP server
 	config := BasketConfig{ForwardURL: ts.URL, ExpandPath: false, Capacity: 20}
-	data.Forward(config, basket)
+	data.Forward(new(http.Client), config, basket)
 
 	// Validate forwarded request
 	assert.Equal(t, data.Method, forwardedData.Method, "wrong request method")
@@ -80,7 +80,7 @@ func TestRequestData_Forward_ComplexForwardURL(t *testing.T) {
 	// Config to forward requests to test HTTP server (also enable expanding URL)
 	forwardURL := ts.URL + "/captures?from=" + basket
 	config := BasketConfig{ForwardURL: forwardURL, ExpandPath: true, Capacity: 20}
-	data.Forward(config, basket)
+	data.Forward(new(http.Client), config, basket)
 
 	// Validate forwarded path
 	assert.Equal(t, "/captures"+pathSuffix, forwardedData.Path, "wrong request path")
@@ -104,5 +104,32 @@ func TestRequestData_Forward_BrokenURL(t *testing.T) {
 	config := BasketConfig{ForwardURL: "-.'", ExpandPath: false, Capacity: 20}
 
 	// Should not fail, warning in log is expected
-	data.Forward(config, basket)
+	data.Forward(new(http.Client), config, basket)
+}
+
+func TestRequestData_Forward_UnreachableURL(t *testing.T) {
+	basket := "test"
+
+	// Test request
+	data := new(RequestData)
+	data.Header = make(http.Header)
+	data.Header.Add("Content-Type", "application/json")
+	data.Method = "GET"
+	data.Body = "{ \"name\" : \"test\", \"action\" : \"add\" }"
+	data.ContentLength = int64(len(data.Body))
+	// path contains basket name
+	data.Path = "/" + basket
+
+	// Config to forward requests to unreachable URL
+	config := BasketConfig{ForwardURL: "http://localhost:81/should/fail/to/forward", ExpandPath: false, Capacity: 20}
+
+	// Should not fail, warning in log is expected
+	data.Forward(new(http.Client), config, basket)
+}
+
+func TestExpand(t *testing.T) {
+	assert.Equal(t, "/notify/abc/123-123", expand("/notify", "/sniffer/abc/123-123", "sniffer"))
+	assert.Equal(t, "/hello/world", expand("/", "/mybasket/hello/world", "mybasket"))
+	assert.Equal(t, "/notify/hello/world", expand("/notify", "/notify/hello/world", "notify"))
+	assert.Equal(t, "/receive/notification/test/", expand("/receive/notification/", "/basket/test/", "basket"))
 }

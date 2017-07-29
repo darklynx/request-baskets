@@ -123,7 +123,7 @@ func ToRequestData(req *http.Request) *RequestData {
 }
 
 // Forward forwards request data to specified URL
-func (req *RequestData) Forward(config BasketConfig, basket string) {
+func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket string) {
 	body := strings.NewReader(req.Body)
 	forwardURL, err := url.ParseRequestURI(config.ForwardURL)
 
@@ -156,11 +156,7 @@ func (req *RequestData) Forward(config BasketConfig, basket string) {
 			}
 
 			var response *http.Response
-			if config.InsecureTLS {
-				response, err = httpInsecureClient.Do(forwardReq)
-			} else {
-				response, err = httpClient.Do(forwardReq)
-			}
+			response, err = client.Do(forwardReq)
 
 			if err != nil {
 				log.Printf("[error] failed to forward request: %s", err)
