@@ -12,21 +12,19 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var serverConfig *ServerConfig
 var basketsDb BasketsDatabase
 var httpClient *http.Client
 var httpInsecureClient *http.Client
 
-// StartServer starts Request Baskets server
-func StartServer() {
-	// read config
-	serverConfig = CreateConfig()
+// CreateServer creates an instance of Request Baskets server
+func CreateServer(config *ServerConfig) *http.Server {
 	// create database
-	basketsDb = createBasketsDatabase()
-	if basketsDb == nil {
+	db := createBasketsDatabase(config.DbType, config.DbFile)
+	if db == nil {
 		log.Print("[error] failed to create basket database")
-		return
+		return nil
 	}
+	basketsDb = db
 
 	// HTTP clients
 	httpClient = new(http.Client)
@@ -61,20 +59,21 @@ func StartServer() {
 	// basket requests
 	router.NotFound = http.HandlerFunc(AcceptBasketRequests)
 
-	go shutdownHook()
+	log.Printf("[info] HTTP server is listening on port: %d", config.ServerPort)
+	server := &http.Server{Addr: fmt.Sprintf(":%d", config.ServerPort), Handler: router}
 
-	log.Printf("[info] starting HTTP server on port: %d", serverConfig.ServerPort)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverConfig.ServerPort), router))
+	go shutdownHook()
+	return server
 }
 
-func createBasketsDatabase() BasketsDatabase {
-	switch serverConfig.DbType {
+func createBasketsDatabase(dbtype string, file string) BasketsDatabase {
+	switch dbtype {
 	case DbTypeMemory:
 		return NewMemoryDatabase()
 	case DbTypeBolt:
-		return NewBoltDatabase(serverConfig.DbFile)
+		return NewBoltDatabase(file)
 	default:
-		log.Printf("[error] unknown database type: %s", serverConfig.DbType)
+		log.Printf("[error] unknown database type: %s", dbtype)
 		return nil
 	}
 }
