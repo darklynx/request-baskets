@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/boltdb/bolt"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -428,5 +430,30 @@ func TestBoltBasket_SetResponse_Update(t *testing.T) {
 			assert.Equal(t, "welcome", response.Body, "wrong HTTP response body")
 			assert.True(t, response.IsTemplate, "template is expected")
 		}
+	}
+}
+
+func TestBoltBasket_InvalidBasket(t *testing.T) {
+	name := "test199"
+	db, _ := bolt.Open(name+".db", 0600, &bolt.Options{Timeout: 5 * time.Second})
+	defer db.Close()
+	defer os.Remove(name + ".db")
+
+	// create a basket refering non-existing name in the database file
+	basket := &boltBasket{db, name}
+	// should print error in log file during update
+	basket.Clear()
+	// should print error in log file during view and return nil
+	assert.Nil(t, basket.GetResponse("GET"), "expected to fail and return nil")
+}
+
+func TestNewBoltDatabase_Error(t *testing.T) {
+	file := "test200.db"
+	db := NewBoltDatabase(file)
+	if assert.NotNil(t, db, "Bolt database is expected with file name: %s", file) {
+		defer db.Release()
+		defer os.Remove(file)
+		// second attempt to create database with file that already opened should fail
+		assert.Nil(t, NewBoltDatabase(file), "expected to fail and return nil")
 	}
 }
