@@ -473,7 +473,7 @@ func (bdb *boltDatabase) Release() {
 	log.Print("[info] closing Bolt database")
 	err := bdb.db.Close()
 	if err != nil {
-		log.Print(err)
+		log.Printf("[error] failed to release database file: %s", err)
 	}
 }
 
@@ -481,9 +481,9 @@ func (bdb *boltDatabase) Release() {
 func NewBoltDatabase(file string) BasketsDatabase {
 	log.Print("[info] using Bolt database to store baskets")
 	log.Printf("[info] Bolt database location: %s", file)
-	db, err := bolt.Open(file, 0600, &bolt.Options{Timeout: 10 * time.Second})
+	db, err := bolt.Open(file, 0600, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("[error] failed to open Bolt database: %s - %s", file, err)
 		return nil
 	}
 
