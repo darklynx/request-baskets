@@ -6,9 +6,12 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
   <!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/flatly/bootstrap.min.css"-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
 
   <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 
   <style>
     body { padding-top: 70px; }
@@ -54,7 +57,7 @@
       return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
-    function renderRequest(id, request) {
+    function renderRequest(id, request, contentType) {
       var path = request.path;
       if (request.query) {
         path += "?";
@@ -108,8 +111,16 @@
       if (request.body) {
         html += '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
           '<a class="collapsed" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_body">Body</a></h4></div>' +
-          '<div id="' + id + '_body" class="panel-collapse collapse in">' +
-          '<div class="panel-body"><pre>' + escapeHTML(request.body) + '</pre></div></div></div>';
+          '<div id="' + id + '_body" class="panel-collapse collapse in"><div class="panel-body">';
+
+        var contentType = request.headers["Content-Type"];
+        if (/^application\/.+/i.test(contentType)) {
+          html += '<pre><code id="' + id + '_body_content" type="' + contentType + '">' + escapeHTML(request.body) + '</code></pre>' +
+            '<button id="' + id + '_body_format_btn" for="' + id + '_body_content" type="button" class="btn btn-default">Format Content</button>'
+        } else {
+          html += '<pre>' + escapeHTML(request.body) + "</pre>";
+        }
+        html += '</div></div></div>';
       }
 
       html += '</div></div></div><hr/>';
@@ -133,6 +144,9 @@
         var index;
         for (index = 0; index < data.requests.length; ++index) {
           requests.append(renderRequest("req" + fetchedCount, data.requests[index]));
+          $("#req" + fetchedCount + "_body_format_btn").on("click", function(event) {
+            formatBody(this);
+          });
           fetchedCount++;
         }
       }
@@ -144,6 +158,91 @@
         $("#more").addClass("hide");
         $("#more_count").html("");
       }
+    }
+
+    function formatBody(button) {
+      var buttonElement = $(button);
+      var content = $("#" + buttonElement.attr("for"));
+      var type = getContentType(content.attr("type"));
+      if (type !== "UNKNOWN") {
+        formatContent(content, type);
+        // highlight
+        content.addClass(getHighlightLang(type));
+        hljs.highlightBlock(content.get(0));
+      }
+      buttonElement.remove();
+    }
+
+    function getContentType(contentType) {
+      if ("application/x-www-form-urlencoded" === contentType.toLowerCase()) {
+        return "FORM";
+      }
+      if (/^application\/(json|.+\+json).*/i.test(contentType)) {
+        return "JSON";
+      }
+      if (/^application\/(xml|.+\+xml).*/i.test(contentType)) {
+        return "XML";
+      }
+      return "UNKNOWN";
+    }
+
+    function getHighlightLang(type) {
+      switch(type) {
+        case "JSON":
+        case "XML":
+          return "language-" + type.toLowerCase();
+        default:
+          return "no-highlight";
+      }
+    }
+
+    function formatContent(content, type) {
+      switch (type) {
+        case "JSON":
+          content.text(JSON.stringify(JSON.parse(content.text()), null, 2));
+          break;
+        case "XML":
+          content.text(formatXml(minifyXml(content.text()), "  "));
+          break;
+        case "FORM":
+          content.text(content.text().split("&").map(decodeURIComponent).join("\n"));
+          break;
+      }
+    }
+
+    function minifyXml(xml) {
+      return xml.replace(/(>)\s*(<)/g, "$1$2");
+    }
+
+    function formatXml(xml, tab) {
+      var formatted = '';
+      var reg = /(>)(<)(\/*)/g;
+      xml = xml.replace(reg, '$1\r\n$2$3');
+      var pad = 0;
+      $.each(xml.split('\r\n'), function(index, node) {
+        var indent = 0;
+        if (node.match( /.+<\/\w[^>]*>$/ )) {
+          indent = 0;
+        } else if (node.match( /^<\/\w/ )) {
+          if (pad != 0) {
+              pad -= 1;
+          }
+        } else if (node.match( /^<\w[^>]*[^\/]>.*$/ )) {
+          indent = 1;
+        } else {
+          indent = 0;
+        }
+
+        var padding = '';
+        for (var i = 0; i < pad; i++) {
+          padding += tab;
+        }
+
+        formatted += padding + node + '\r\n';
+        pad += indent;
+      });
+
+      return formatted;
     }
 
     function fetchRequests() {
