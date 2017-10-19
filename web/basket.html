@@ -6,9 +6,11 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
   <!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/flatly/bootstrap.min.css"-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
 
-  <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 
   <style>
     body { padding-top: 70px; }
@@ -130,9 +132,25 @@
 
       if (data && data.requests) {
         var requests = $("#requests");
-        var index;
+        var index, request;
         for (index = 0; index < data.requests.length; ++index) {
-          requests.append(renderRequest("req" + fetchedCount, data.requests[index]));
+          request = data.requests[index];
+          requestId = "req" + fetchedCount;
+          requests.append(renderRequest(requestId, request));
+
+          if (request.body) {
+            var format = getContentFormat(request.headers["Content-Type"]);
+            if (format !== "UNKNOWN") {
+              var button = $('<button id="' + requestId + '_body_format_btn" for="' + requestId +
+                '" format="' + format + '" type="button" class="btn btn-default">Format Content</button>');
+              $("#" + requestId + "_body div pre").after(button);
+
+              button.on("click", function(event) {
+                  formatBody(this);
+              });
+            }
+          }
+
           fetchedCount++;
         }
       }
@@ -144,6 +162,91 @@
         $("#more").addClass("hide");
         $("#more_count").html("");
       }
+    }
+
+    function getContentFormat(contentType) {
+      // array of header values to string
+      contentType = (contentType || []).join(",");
+      if ("application/x-www-form-urlencoded" === contentType.toLowerCase()) {
+        return "FORM";
+      } else if (/^application\/(json|.+\+json).*/i.test(contentType)) {
+        return "JSON";
+      } else if (/^application\/(xml|.+\+xml).*/i.test(contentType)) {
+        return "XML";
+      } else {
+        return "UNKNOWN";
+      }
+    }
+
+    function formatBody(btn) {
+      var button = $(btn);
+      var requestId = button.attr("for");
+      var format = button.attr("format");
+
+      var body = $("#" + requestId + "_body div pre");
+      var code = $('<code class="' + getHighlightLang(format) + '"></code>');
+      code.text(formatText(body.text(), format));
+      body.empty();
+      body.append(code);
+
+      // highlight
+      hljs.highlightBlock(code.get(0));
+
+      // avoid further formatting
+      button.remove();
+    }
+
+    function getHighlightLang(format) {
+      switch(format) {
+        case "JSON":
+        case "XML":
+          return "language-" + format.toLowerCase();
+        default:
+          return "no-highlight";
+      }
+    }
+
+    function formatText(text, format) {
+      switch (format) {
+        case "JSON":
+          return JSON.stringify(JSON.parse(text), null, 2);
+        case "XML":
+          return formatXml(text, "  ");
+        case "FORM":
+          return text.split("&").map(decodeURIComponent).join("\n");
+      }
+    }
+
+    function formatXml(xml, tab) {
+      var formatted = "";
+      // minify first
+      xml = xml.replace(/(>)\s*(<)/g, "$1$2");
+      xml = xml.replace(/(>)(<)(\/*)/g, "$1\r\n$2$3");
+      var pad = 0;
+      $.each(xml.split("\r\n"), function(index, node) {
+        var indent = 0;
+        if (node.match(/.+<\/\w[^>]*>$/)) {
+          indent = 0;
+        } else if (node.match(/^<\/\w/)) {
+          if (pad != 0) {
+              pad -= 1;
+          }
+        } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+          indent = 1;
+        } else {
+          indent = 0;
+        }
+
+        var padding = "";
+        for (var i = 0; i < pad; i++) {
+          padding += tab;
+        }
+
+        formatted += padding + node + "\r\n";
+        pad += indent;
+      });
+
+      return formatted;
     }
 
     function fetchRequests() {
