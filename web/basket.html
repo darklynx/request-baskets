@@ -56,7 +56,7 @@
       return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
-    function renderRequest(id, request, contentType) {
+    function renderRequest(id, request) {
       var path = request.path;
       if (request.query) {
         path += "?";
@@ -110,8 +110,8 @@
       if (request.body) {
         html += '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
           '<a class="collapsed" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_body">Body</a></h4></div>' +
-          '<div id="' + id + '_body" class="panel-collapse collapse in"><div class="panel-body"><pre>' + escapeHTML(request.body) +
-          '</pre></div></div></div>';
+          '<div id="' + id + '_body" class="panel-collapse collapse in">' +
+          '<div class="panel-body"><pre>' + escapeHTML(request.body) + '</pre></div></div></div>';
       }
 
       html += '</div></div></div><hr/>';
