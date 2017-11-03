@@ -169,9 +169,9 @@
       contentType = (contentType || []).join(",");
       if ("application/x-www-form-urlencoded" === contentType.toLowerCase()) {
         return "FORM";
-      } else if (/^application\/(json|.+\+json).*/i.test(contentType)) {
+      } else if (/^(application|text)\/(json|.+\+json).*/i.test(contentType)) {
         return "JSON";
-      } else if (/^application\/(xml|.+\+xml).*/i.test(contentType)) {
+      } else if (/^(application|text)\/(xml|.+\+xml).*/i.test(contentType)) {
         return "XML";
       } else {
         return "UNKNOWN";
