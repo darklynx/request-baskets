@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const pgTestConnection = "postgres://baskets:pwd@localhost/baskets?sslmode=disable"
+const pgTestConnection = "postgres://postgres:@localhost/baskets?sslmode=disable"
 
 func TestPgSQLDatabase_Create(t *testing.T) {
 	name := "test1"

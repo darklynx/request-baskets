@@ -1,4 +1,8 @@
 language: go
+services:
+  - postgresql
+before_script:
+  - psql -c 'create database baskets;' -U postgres
 go:
   - tip
 before_install:
