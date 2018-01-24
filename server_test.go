@@ -41,17 +41,27 @@ func TestCreateServer_UnknownDbType(t *testing.T) {
 }
 
 func TestCreateBasketsDatabase(t *testing.T) {
-	memdb := createBasketsDatabase(DbTypeMemory, "./mem")
+	memdb := createBasketsDatabase(DbTypeMemory, "./mem", "")
 	if assert.NotNil(t, memdb, "In-memory baskets database is expected") {
 		memdb.Release()
 	}
 
 	boltfile := "./bolt_database.db"
-	boltdb := createBasketsDatabase(DbTypeBolt, boltfile)
+	boltdb := createBasketsDatabase(DbTypeBolt, boltfile, "")
 	if assert.NotNil(t, boltdb, "Bolt baskets database is expected") {
 		boltdb.Release()
 		os.Remove(boltfile)
 	}
 
-	assert.Nil(t, createBasketsDatabase("xyz", "./xyz"), "Database of unknown type is not expected")
+	sqldb := createBasketsDatabase(DbTypeSQL, pgTestConnection, "")
+	if assert.NotNil(t, sqldb, "PostgreSQL database is expected") {
+		sqldb.Release()
+	}
+
+	sqldbconn := createBasketsDatabase(DbTypeSQL, "./baskets.db", pgTestConnection)
+	if assert.NotNil(t, sqldbconn, "PostgreSQL database is expected") {
+		sqldbconn.Release()
+	}
+
+	assert.Nil(t, createBasketsDatabase("xyz", "./xyz", ""), "Database of unknown type is not expected")
 }

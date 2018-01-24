@@ -72,17 +72,21 @@ Request Baskets service supports several command line configuration parameters. 
 $ request-baskets --help
 Usage of bin/request-baskets:
   -db string
-      Baskets storage type: mem - in-memory, bolt - Bolt DB (default "mem")
+      Baskets storage type: mem - in-memory, bolt - Bolt DB, sql - SQL database (default "mem")
   -file string
-      Database location, only applicable for file databases (default "./baskets.db")
-  -maxsize int
-      Maximum allowed basket size (max capacity) (default 2000)
+      Database location, only applicable for file or SQL databases (default "./baskets.db")
+  -conn string
+      Database connection string for SQL databases, if undefined "file" argument is considered
+  -l string
+      HTTP listen address (default "127.0.0.1")
   -p int
       HTTP service port (default 55555)
   -page int
       Default page size (default 20)
   -size int
       Initial basket size (capacity) (default 200)
+  -maxsize int
+      Maximum allowed basket size (max capacity) (default 2000)
   -token string
       Master token, random token is generated if not provided
 ```
