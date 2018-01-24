@@ -131,9 +131,11 @@ func (basket *sqlBasket) GetResponse(method string) *ResponseConfig {
 
 func (basket *sqlBasket) SetResponse(method string, response ResponseConfig) {
 	if respb, err := json.Marshal(response); err == nil {
-		resp := string(respb)
-		_, err = basket.db.Exec("INSERT INTO rb_responses (basket_name, http_method, response) VALUES ($1, $2, $3) ON CONFLICT (basket_name, http_method) DO UPDATE SET response = $4",
-			basket.name, method, resp, resp)
+		// delete existing if present
+		basket.db.Exec("DELETE FROM rb_responses WHERE basket_name = $1 AND http_method = $2", basket.name, method)
+		// insert new response (ignore concurrency)
+		_, err = basket.db.Exec("INSERT INTO rb_responses (basket_name, http_method, response) VALUES ($1, $2, $3)",
+			basket.name, method, string(respb))
 
 		if err != nil {
 			log.Printf("[error] failed to update response for HTTP %s method of basket: %s - %s", method, basket.name, err)

@@ -418,6 +418,6 @@ func TestPgSQLBasket_InvalidBasket(t *testing.T) {
 	// TODO: open connection to Postgres, enter some broken data in database, try to trigger error flows
 }
 
-func TestNewSQLDatabase_Error(t *testing.T) {
-	assert.Nil(t, NewBoltDatabase("invalid_driver://dadhjh"), "expected to fail and return nil")
+func TestPgSQLDatabase_Create_Error(t *testing.T) {
+	assert.Nil(t, NewSQLDatabase("invalid_driver://dadhjh"), "expected to fail and return nil")
 }
