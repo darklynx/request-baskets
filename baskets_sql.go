@@ -177,7 +177,7 @@ func (basket *sqlBasket) GetRequests(max int, skip int) RequestsPage {
 		basket.getInt("SELECT requests_count FROM rb_baskets WHERE basket_name = $1", 0), false}
 
 	if max > 0 {
-		requests, err := basket.db.Query("SELECT request FROM rb_requests WHERE basket_name = $1 ORDER BY created_at LIMIT $2 OFFSET $3",
+		requests, err := basket.db.Query("SELECT request FROM rb_requests WHERE basket_name = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
 			basket.name, max + 1, skip)
 		if err != nil {
 			log.Printf("[error] failed to get requests of basket: %s - %s", basket.name, err)
@@ -210,7 +210,7 @@ func (basket *sqlBasket) GetRequests(max int, skip int) RequestsPage {
 func (basket *sqlBasket) FindRequests(query string, in string, max int, skip int) RequestsQueryPage {
 	page := RequestsQueryPage{make([]*RequestData, 0, max), false}
 	if max > 0 {
-		requests, err := basket.db.Query("SELECT request FROM rb_requests WHERE basket_name = $1 ORDER BY created_at", basket.name)
+		requests, err := basket.db.Query("SELECT request FROM rb_requests WHERE basket_name = $1 ORDER BY created_at DESC", basket.name)
 		if err != nil {
 			log.Printf("[error] failed to find requests of basket: %s - %s", basket.name, err)
 			return page
@@ -332,8 +332,8 @@ func (sdb *sqlDatabase) GetNames(max int, skip int) BasketNamesPage {
 func (sdb *sqlDatabase) FindNames(query string, max int, skip int) BasketNamesQueryPage {
 	page := BasketNamesQueryPage{make([]string, 0, max), false}
 
-	names, err := sdb.db.Query("SELECT basket_name FROM rb_baskets WHERE basket_name LIKE '%' + $1 + '%' ORDER BY basket_name LIMIT $2 OFFSET $3",
-		query, max + 1, skip)
+	names, err := sdb.db.Query("SELECT basket_name FROM rb_baskets WHERE basket_name LIKE $1 ORDER BY basket_name LIMIT $2 OFFSET $3",
+		"%" + query + "%", max + 1, skip)
 	if err != nil {
 		log.Printf("[error] failed to find basket names: %s", err)
 		return page

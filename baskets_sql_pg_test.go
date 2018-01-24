@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Note: since database connection/schema is reused, these tests cannot run in parallel
 const pgTestConnection = "postgres://postgres:@localhost/baskets?sslmode=disable"
 
 func TestPgSQLDatabase_Create(t *testing.T) {
@@ -15,6 +16,8 @@ func TestPgSQLDatabase_Create(t *testing.T) {
 	defer db.Release()
 
 	auth, err := db.Create(name, BasketConfig{Capacity: 20})
+	defer db.Delete(name)
+
 	if assert.NoError(t, err) {
 		assert.NotEmpty(t, auth.Token, "basket token may not be empty")
 		assert.False(t, len(auth.Token) < 30, "weak basket token: %v", auth.Token)
@@ -27,6 +30,8 @@ func TestPgSQLDatabase_Create_NameConflict(t *testing.T) {
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
+	defer db.Delete(name)
+
 	auth, err := db.Create(name, BasketConfig{Capacity: 20})
 
 	if assert.Error(t, err) {
@@ -41,6 +46,8 @@ func TestPgSQLDatabase_Get(t *testing.T) {
 	defer db.Release()
 
 	auth, err := db.Create(name, BasketConfig{Capacity: 16})
+	defer db.Delete(name)
+
 	assert.NoError(t, err)
 
 	basket := db.Get(name)
@@ -78,15 +85,19 @@ func TestPgSQLDatabase_Delete_Multi(t *testing.T) {
 
 	config := BasketConfig{Capacity: 10}
 	for i := 0; i < 10; i++ {
-		db.Create(fmt.Sprintf("test%v", i), config)
+		bname := fmt.Sprintf("%s_%v", name, i)
+		db.Create(bname, config)
+		defer db.Delete(bname)
 	}
 
-	assert.NotNil(t, db.Get(name), "basket with name: %v is expected", name)
+	dname := name + "_5"
+
+	assert.NotNil(t, db.Get(dname), "basket with name: %v is expected", name)
 	assert.Equal(t, 10, db.Size(), "wrong database size")
 
-	db.Delete(name)
+	db.Delete(dname)
 
-	assert.Nil(t, db.Get(name), "basket with name: %v is not expected", name)
+	assert.Nil(t, db.Get(dname), "basket with name: %v is not expected", name)
 	assert.Equal(t, 9, db.Size(), "wrong database size")
 }
 
@@ -97,10 +108,12 @@ func TestPgSQLDatabase_Size(t *testing.T) {
 
 	config := BasketConfig{Capacity: 15}
 	for i := 0; i < 25; i++ {
-		db.Create(fmt.Sprintf("%s_%v", name, i), config)
+		bname := fmt.Sprintf("%s_%v", name, i)
+		db.Create(bname, config)
+		defer db.Delete(bname)
 	}
 
-	assert.True(t, db.Size() >= 25, "wrong database size, it should have at least 25 baskets")
+	assert.Equal(t, 25, db.Size(), "wrong database size")
 }
 
 func TestPgSQLDatabase_GetNames(t *testing.T) {
@@ -110,17 +123,19 @@ func TestPgSQLDatabase_GetNames(t *testing.T) {
 
 	config := BasketConfig{Capacity: 15}
 	for i := 0; i < 45; i++ {
-		db.Create(fmt.Sprintf("%s_%v", name, i), config)
+		bname := fmt.Sprintf("%s_%v", name, i)
+		db.Create(bname, config)
+		defer db.Delete(bname)
 	}
 
-	// Get and validate page 1 (test0, test1, test10, test11, ... - sorted)
+	// Get and validate page 1 (test8_0, test8_1, test8_10, test8_11, ... - sorted)
 	page1 := db.GetNames(10, 0)
 	assert.Equal(t, 45, page1.Count, "wrong baskets count")
 	assert.True(t, page1.HasMore, "expected more names")
 	assert.Len(t, page1.Names, 10, "wrong page size")
 	assert.Equal(t, "test8_10", page1.Names[2], "wrong basket name at index #2")
 
-	// Get and validate page 5 (test5, test6, test7, test8, test9)
+	// Get and validate page 5 (test8_5, test8_6, test8_7, test8_8, test8_9)
 	page5 := db.GetNames(10, 40)
 	assert.Equal(t, 45, page5.Count, "wrong baskets count")
 	assert.False(t, page5.HasMore, "no more names are expected")
@@ -139,7 +154,9 @@ func TestPgSQLDatabase_FindNames(t *testing.T) {
 
 	config := BasketConfig{Capacity: 5}
 	for i := 0; i < 35; i++ {
-		db.Create(fmt.Sprintf("%s_%v", name, i), config)
+		bname := fmt.Sprintf("%s_%v", name, i)
+		db.Create(bname, config)
+		defer db.Delete(bname)
 	}
 
 	res1 := db.FindNames("test9_2", 20, 0)
@@ -167,6 +184,7 @@ func TestPgSQLBasket_Add(t *testing.T) {
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
+	defer db.Delete(name)
 
 	basket := db.Get(name)
 	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
@@ -193,6 +211,7 @@ func TestPgSQLBasket_Add_ExceedLimit(t *testing.T) {
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 10})
+	defer db.Delete(name)
 
 	basket := db.Get(name)
 	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
@@ -211,6 +230,7 @@ func TestPgSQLBasket_Clear(t *testing.T) {
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
+	defer db.Delete(name)
 
 	basket := db.Get(name)
 	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
@@ -233,6 +253,7 @@ func TestPgSQLBasket_Update_Shrink(t *testing.T) {
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 30})
+	defer db.Delete(name)
 
 	basket := db.Get(name)
 	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
@@ -257,6 +278,7 @@ func TestPgSQLBasket_GetRequests(t *testing.T) {
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 25})
+	defer db.Delete(name)
 
 	basket := db.Get(name)
 	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
@@ -291,6 +313,7 @@ func TestPgSQLBasket_FindRequests(t *testing.T) {
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 100})
+	defer db.Delete(name)
 
 	basket := db.Get(name)
 	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
@@ -346,6 +369,7 @@ func TestPgSQLBasket_SetResponse(t *testing.T) {
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
+	defer db.Delete(name)
 
 	basket := db.Get(name)
 	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
@@ -371,6 +395,7 @@ func TestPgSQLBasket_SetResponse_Update(t *testing.T) {
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
+	defer db.Delete(name)
 
 	basket := db.Get(name)
 	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
