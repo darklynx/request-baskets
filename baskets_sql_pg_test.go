@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"testing"
 
@@ -304,6 +305,13 @@ func TestPgSQLBasket_GetRequests(t *testing.T) {
 		assert.Equal(t, 25, page3.Count, "wrong requests count")
 		assert.Equal(t, 35, page3.TotalCount, "wrong requests total count")
 		assert.Equal(t, "req15", page3.Requests[0].Body, "request #15 is expected at index #0")
+
+		// Get only collected statistics
+		page0 := basket.GetRequests(0, 0)
+		assert.True(t, page0.HasMore, "expected more requests")
+		assert.Empty(t, page0.Requests, "requests are not expected")
+		assert.Equal(t, 25, page1.Count, "wrong requests count")
+		assert.Equal(t, 35, page1.TotalCount, "wrong requests total count")
 	}
 }
 
@@ -343,6 +351,9 @@ func TestPgSQLBasket_FindRequests(t *testing.T) {
 		s2 := basket.FindRequests("req2", "any", 5, 5)
 		assert.True(t, s2.HasMore, "more results are expected")
 		assert.Len(t, s2.Requests, 5, "wrong number of found requests")
+
+		// search everywhere with max = 0
+		assert.Empty(t, basket.FindRequests("req2", "any", 0, 0).Requests, "found unexpected requests")
 
 		// search in body (positive)
 		assert.Len(t, basket.FindRequests("req3", "body", 100, 0).Requests, 2, "wrong number of found requests")
@@ -414,7 +425,33 @@ func TestPgSQLBasket_SetResponse_Update(t *testing.T) {
 }
 
 func TestPgSQLBasket_InvalidBasket(t *testing.T) {
-	// name := "test199"
+	name := "test199"
+	db := NewSQLDatabase(pgTestConnection)
+	defer db.Release()
+
+	db.Create(name, BasketConfig{Capacity: 20})
+	defer db.Delete(name)
+	basket := db.Get(name)
+
+	sqldb, _ := sql.Open("postgres", pgTestConnection)
+	defer sqldb.Close()
+
+	// corrupted GET response
+	sqldb.Exec("INSERT INTO rb_responses (basket_name, http_method, response) VALUES ($1, 'GET', '{ abc... <<<')", name)
+	assert.Nil(t, basket.GetResponse("GET"))
+
+	// corrupted request data
+	sqldb.Exec("INSERT INTO rb_requests (basket_name, request) VALUES ($1, '.... <<< data - broken json')", name)
+	assert.Equal(t, 1, basket.Size(), "wrong number of collected requests")
+	page := basket.GetRequests(10, 0)
+	assert.NotNil(t, page, "requests page is expected")
+	assert.Equal(t, 1, page.Count, "wrong Count of requests in page")
+	assert.Equal(t, 0, len(page.Requests), "wrong number of Requests in page")
+
+	findPage := basket.FindRequests("", "any", 10, 0)
+	assert.NotNil(t, findPage, "requests page is expected")
+	assert.Equal(t, 0, len(findPage.Requests), "wrong number of Requests in page")
+
 	// TODO: open connection to Postgres, enter some broken data in database, try to trigger error flows
 }
 

@@ -10,7 +10,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// DbTypeSQL defines name of SQL database storage
 const DbTypeSQL = "sql"
+
+// List of DDL statements to create database schema for baskets
 var sqlSchema = []string{
 	`CREATE TABLE rb_baskets (
 		basket_name varchar(250) PRIMARY KEY,
@@ -41,9 +44,9 @@ var sqlSchema = []string{
 
 /// Basket interface ///
 type sqlBasket struct {
-	db *sql.DB
+	db     *sql.DB
 	dbType string // postgresql, mysql, oracle, etc.
-	name string
+	name   string
 }
 
 func (basket *sqlBasket) getInt(sql string, defaultValue int) int {
@@ -51,9 +54,9 @@ func (basket *sqlBasket) getInt(sql string, defaultValue int) int {
 	if err := basket.db.QueryRow(sql, basket.name).Scan(&value); err != nil {
 		log.Printf("[error] failed to get counter info about basket: %s - %s", basket.name, err)
 		return defaultValue
-	} else {
-		return value
 	}
+
+	return value
 }
 
 func (basket *sqlBasket) applyLimit(capacity int) {
@@ -64,7 +67,7 @@ func (basket *sqlBasket) applyLimit(capacity int) {
 		// Note: 'ctid' is PostgreSQL specific
 		// see example for MySQL here: https://stackoverflow.com/questions/5170546
 		_, err := basket.db.Exec("DELETE FROM rb_requests WHERE ctid IN (SELECT ctid FROM rb_requests WHERE basket_name = $1 ORDER BY created_at LIMIT $2)",
-			basket.name, size - capacity)
+			basket.name, size-capacity)
 		if err != nil {
 			log.Printf("[error] failed to shrink collected requests: %s - %s", basket.name, err)
 		}
@@ -75,7 +78,7 @@ func (basket *sqlBasket) Config() BasketConfig {
 	config := BasketConfig{}
 
 	err := basket.db.QueryRow("SELECT capacity, forward_url, insecure_tls, expand_path FROM rb_baskets WHERE basket_name = $1",
-		basket.name).Scan(&config.Capacity, &config.ForwardURL, &config.InsecureTLS, &config.ExpandPath);
+		basket.name).Scan(&config.Capacity, &config.ForwardURL, &config.InsecureTLS, &config.ExpandPath)
 	if err != nil {
 		log.Printf("[error] failed to get basket config: %s - %s", basket.name, err)
 	}
@@ -180,7 +183,7 @@ func (basket *sqlBasket) GetRequests(max int, skip int) RequestsPage {
 
 	if max > 0 {
 		requests, err := basket.db.Query("SELECT request FROM rb_requests WHERE basket_name = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
-			basket.name, max + 1, skip)
+			basket.name, max+1, skip)
 		if err != nil {
 			log.Printf("[error] failed to get requests of basket: %s - %s", basket.name, err)
 			return page
@@ -251,7 +254,7 @@ func (basket *sqlBasket) FindRequests(query string, in string, max int, skip int
 /// BasketsDatabase interface ///
 
 type sqlDatabase struct {
-	db *sql.DB
+	db     *sql.DB
 	dbType string // postgresql, mysql, oracle, etc.
 }
 
@@ -277,8 +280,8 @@ func (sdb *sqlDatabase) Create(name string, config BasketConfig) (BasketAuth, er
 }
 
 func (sdb *sqlDatabase) Get(name string) Basket {
-	var basket_name string
-	err := sdb.db.QueryRow("SELECT basket_name FROM rb_baskets WHERE basket_name = $1", name).Scan(&basket_name)
+	var bname string
+	err := sdb.db.QueryRow("SELECT basket_name FROM rb_baskets WHERE basket_name = $1", name).Scan(&bname)
 
 	if err == sql.ErrNoRows {
 		log.Printf("[warn] no basket found: %s", name)
@@ -302,15 +305,15 @@ func (sdb *sqlDatabase) Size() int {
 	if err := sdb.db.QueryRow("SELECT COUNT(*) FROM rb_baskets").Scan(&size); err != nil {
 		log.Printf("[error] failed to get the total number of baskets: %s", err)
 		return 0
-	} else {
-		return size
 	}
+
+	return size
 }
 
 func (sdb *sqlDatabase) GetNames(max int, skip int) BasketNamesPage {
 	page := BasketNamesPage{make([]string, 0, max), sdb.Size(), false}
 
-	names, err := sdb.db.Query("SELECT basket_name FROM rb_baskets ORDER BY basket_name LIMIT $1 OFFSET $2", max + 1, skip)
+	names, err := sdb.db.Query("SELECT basket_name FROM rb_baskets ORDER BY basket_name LIMIT $1 OFFSET $2", max+1, skip)
 	if err != nil {
 		log.Printf("[error] failed to get basket names: %s", err)
 		return page
@@ -335,7 +338,7 @@ func (sdb *sqlDatabase) FindNames(query string, max int, skip int) BasketNamesQu
 	page := BasketNamesQueryPage{make([]string, 0, max), false}
 
 	names, err := sdb.db.Query("SELECT basket_name FROM rb_baskets WHERE basket_name LIKE $1 ORDER BY basket_name LIMIT $2 OFFSET $3",
-		"%" + query + "%", max + 1, skip)
+		"%"+query+"%", max+1, skip)
 	if err != nil {
 		log.Printf("[error] failed to find basket names: %s", err)
 		return page
@@ -402,9 +405,9 @@ func getSchemaVersion(db *sql.DB) int {
 	var version int
 	if err := db.QueryRow("SELECT version FROM rb_version").Scan(&version); err != nil {
 		return 0
-	} else {
-		return version
 	}
+
+	return version
 }
 
 func createSchema(db *sql.DB) error {
@@ -414,6 +417,7 @@ func createSchema(db *sql.DB) error {
 			return fmt.Errorf("error in SQL statement #%v - %s", idx, err)
 		}
 	}
+
 	log.Printf("[info] database is created, version: %v", getSchemaVersion(db))
 	return nil
 }
