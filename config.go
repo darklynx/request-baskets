@@ -14,7 +14,7 @@ const (
 	defaultDatabaseType = DbTypeMemory
 	serviceAPIPath      = "baskets"
 	serviceUIPath       = "web"
-	basketNamePattern   = `^[\w\d\-_\.]+$`
+	basketNamePattern   = `^[\w\d\-_\.]{1,250}$`
 )
 
 // ServerConfig describes server configuration.

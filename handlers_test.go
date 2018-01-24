@@ -940,8 +940,8 @@ func TestClearBasket(t *testing.T) {
 					if assert.NoError(t, err) {
 						// validate response
 						assert.Empty(t, requests.Requests, "requests are not expected")
-						assert.Equal(t, requests.Count, 0, "wrong count of requests")
-						assert.Equal(t, requests.TotalCount, 0, "wrong total count of requests")
+						assert.Equal(t, 0, requests.Count, "wrong count of requests")
+						assert.Equal(t, 25, requests.TotalCount, "wrong total count of requests")
 						assert.False(t, requests.HasMore, "no more requests are expected")
 					}
 				}

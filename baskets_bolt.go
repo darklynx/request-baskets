@@ -249,7 +249,7 @@ func (basket *boltBasket) Clear() {
 			return err
 		}
 
-		b.Put(boltKeyTotalCount, itob(0))
+		// b.Put(boltKeyTotalCount, itob(0)) // reset total stats
 		b.Put(boltKeyCount, itob(0))
 		b.CreateBucket(boltKeyRequests)
 
