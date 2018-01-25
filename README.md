@@ -16,6 +16,7 @@ It is strongly inspired by ideas and application design of the [RequestHub](http
   - [Parameters](#parameters)
 - [Usage](#usage)
   - [Persistent storage](#persistent-storage)
+  - [PostgreSQL](#postgresql)
 - [Docker](#docker)
   - [Build docker image](#build-docker-image)
   - [Run container as a service](#run-container-as-a-service)
@@ -39,6 +40,7 @@ Distinguishing features of Request Baskets service:
  * Alternative storage types for configured baskets and collected requests:
    * *In-memory* - ultra fast, but limited to available RAM and collected data is lost after service restart
    * *Bolt DB* - fast persistent storage for collected data based on embedded [Bolt](https://github.com/boltdb/bolt) database, service can be restarted without data loss and storage is not limited by available RAM
+   * *SQL database* - classical data storage, multiple instances of service can run simultaneously and collect data in shared data storage, which makes the solution more robust and scaleable ([PostgreSQL](https://www.postgresql.org/) is only supported at the moment)
    * Can be extended by custom implementations of storage interface
 
 ### Screenshots
@@ -121,7 +123,7 @@ By default Request Baskets service keeps configured baskets and collected HTTP r
 
 To start service in persistent mode simply configure the appropriate storage type, such as [Bolt database](https://github.com/boltdb/bolt/):
 
-```
+```bash
 $ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
 2016/01/08 23:15:28 [info] generated master token: abcdefgh1234567...
 2016/01/08 23:15:28 [info] using Bolt database to store baskets
@@ -131,6 +133,36 @@ $ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
 ```
 
 Any other kind of storages or databases (e.g. MySQL, MongoDb) to keep collected data can be introduced by implementing following interfaces: `BasketsDatabase` and `Basket`
+
+### PostgreSQL
+
+The first attempt to implement SQL database storage for Request Baskets service is now available for evaluation. Even though the logic to organize the data within SQL database is written in the generic SQL dialect, the code make use of parametrized queries which do not have a standard way to express [parameter placeholders](http://go-database-sql.org/prepared.html#parameter-placeholder-syntax).
+
+Current implementation is based on PostgreSQL syntax. So running Request Baskets service with [PostgreSQL database](https://www.postgresql.org/) as a storage is fully supported.
+
+To start the service with PostgreSQL database run:
+
+```bash
+$ request-baskets -db sql -conn "postgres://postgres:pwd@localhost/baskets?sslmode=disable"
+2018/01/25 01:06:25 [info] generated master token: mSEAcYvpDlg...
+2018/01/25 01:06:25 [info] using SQL database to store baskets
+2018/01/25 01:06:25 [info] SQL database type: postgres
+2018/01/25 01:06:25 [info] creating database schema
+2018/01/25 01:06:25 [info] database is created, version: 1
+2018/01/25 01:06:25 [info] HTTP server is listening on 127.0.0.1:55555
+...
+```
+
+See the [Go driver of PostgreSQL](https://godoc.org/github.com/lib/pq) documentation for detailed description of connection string and its parameters.
+
+If you do not have a configured instance of PostgreSQL server to test the Request Baskets service with you can quickly launch one using Docker with following command:
+
+```bash
+$ docker run --rm --name pg_baskets -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=pwd -e POSTGRES_DB=baskets -d -p 5432:5432 postgres
+
+# following command will stop and destroy the instance of PostgreSQL container
+$ docker stop pg_baskets
+```
 
 ## Docker
 
