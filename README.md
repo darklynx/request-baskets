@@ -158,7 +158,8 @@ See the [Go driver of PostgreSQL](https://godoc.org/github.com/lib/pq) documenta
 If you do not have a configured instance of PostgreSQL server to test the Request Baskets service with you can quickly launch one using Docker with following command:
 
 ```bash
-$ docker run --rm --name pg_baskets -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=pwd -e POSTGRES_DB=baskets -d -p 5432:5432 postgres
+$ docker run --rm --name pg_baskets -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=pwd \
+    -e POSTGRES_DB=baskets -d -p 5432:5432 postgres
 
 # following command will stop and destroy the instance of PostgreSQL container
 $ docker stop pg_baskets
