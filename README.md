@@ -17,6 +17,7 @@ It is strongly inspired by ideas and application design of the [RequestHub](http
 - [Usage](#usage)
   - [Persistent storage](#persistent-storage)
   - [PostgreSQL](#postgresql)
+  - [MySQL](#mysql)
 - [Docker](#docker)
   - [Build docker image](#build-docker-image)
   - [Run container as a service](#run-container-as-a-service)
@@ -143,7 +144,7 @@ Current implementation is based on PostgreSQL syntax. So running Request Baskets
 To start the service with PostgreSQL database run:
 
 ```bash
-$ request-baskets -db sql -conn "postgres://postgres:pwd@localhost/baskets?sslmode=disable"
+$ request-baskets -db sql -conn "postgres://rbaskets:pwd@localhost/baskets?sslmode=disable"
 2018/01/25 01:06:25 [info] generated master token: mSEAcYvpDlg...
 2018/01/25 01:06:25 [info] using SQL database to store baskets
 2018/01/25 01:06:25 [info] SQL database type: postgres
@@ -155,14 +156,43 @@ $ request-baskets -db sql -conn "postgres://postgres:pwd@localhost/baskets?sslmo
 
 See the [Go driver of PostgreSQL](https://godoc.org/github.com/lib/pq) documentation for detailed description of connection string and its parameters.
 
-If you do not have a configured instance of PostgreSQL server to test the Request Baskets service with you can quickly launch one using Docker with following command:
+If you do not have a configured instance of PostgreSQL server to test the Request Baskets service with, you can quickly launch one using Docker with following command:
 
 ```bash
-$ docker run --rm --name pg_baskets -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=pwd \
+$ docker run --rm --name pg_baskets -e POSTGRES_USER=rbaskets -e POSTGRES_PASSWORD=pwd \
     -e POSTGRES_DB=baskets -d -p 5432:5432 postgres
 
 # following command will stop and destroy the instance of PostgreSQL container
 $ docker stop pg_baskets
+```
+
+### MySQL
+
+Added driver and support within the SQL basket database for [MySQL](https://www.mysql.com) ([MariaDB](https://mariadb.org)).
+
+To start the service with MySQL database run:
+
+```bash
+$ request-baskets -db sql -conn "mysql://rbaskets:pwd@/baskets"
+2018/01/28 23:39:59 [info] generated master token: aPgyuLxw723q...
+2018/01/28 23:39:59 [info] using SQL database to store baskets
+2018/01/28 23:39:59 [info] SQL database type: mysql
+2018/01/28 23:39:59 [info] creating database schema
+2018/01/28 23:39:59 [info] database is created, version: 1
+2018/01/28 23:39:59 [info] HTTP server is listening on 127.0.0.1:55555
+...
+```
+
+See the [Go driver of MySQL](https://github.com/go-sql-driver/mysql#usage) documentation for detailed description of connection string and its parameters.
+
+If you do not have a configured instance of MySQL server to test the Request Baskets service with, you can quickly launch one using Docker with following command:
+
+```bash
+$ docker run --rm --name mysql_baskets -e MYSQL_USER=rbaskets -e MYSQL_PASSWORD=pwd \
+    -e MYSQL_DATABASE=baskets -e MYSQL_RANDOM_ROOT_PASSWORD=yes -d -p 3306:3306 mysql
+
+# following command will stop and destroy the instance of MySQL container
+$ docker stop mysql_baskets
 ```
 
 ## Docker

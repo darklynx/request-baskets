@@ -9,11 +9,11 @@ import (
 )
 
 // Note: since database connection/schema is reused, these tests cannot run in parallel
-const pgTestConnection = "postgres://rbaskets:pwd@localhost/baskets?sslmode=disable"
+const mysqlTestConnection = "mysql://rbaskets:pwd@/baskets"
 
-func TestPgSQLDatabase_Create(t *testing.T) {
+func TestMySQLDatabase_Create(t *testing.T) {
 	name := "test1"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	auth, err := db.Create(name, BasketConfig{Capacity: 20})
@@ -25,9 +25,9 @@ func TestPgSQLDatabase_Create(t *testing.T) {
 	}
 }
 
-func TestPgSQLDatabase_Create_NameConflict(t *testing.T) {
+func TestMySQLDatabase_Create_NameConflict(t *testing.T) {
 	name := "test2"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
@@ -41,9 +41,9 @@ func TestPgSQLDatabase_Create_NameConflict(t *testing.T) {
 	}
 }
 
-func TestPgSQLDatabase_Get(t *testing.T) {
+func TestMySQLDatabase_Get(t *testing.T) {
 	name := "test3"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	auth, err := db.Create(name, BasketConfig{Capacity: 16})
@@ -58,18 +58,18 @@ func TestPgSQLDatabase_Get(t *testing.T) {
 	}
 }
 
-func TestPgSQLDatabase_Get_NotFound(t *testing.T) {
+func TestMySQLDatabase_Get_NotFound(t *testing.T) {
 	name := "test4"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	basket := db.Get(name)
 	assert.Nil(t, basket, "basket with name: %v is not expected", name)
 }
 
-func TestPgSQLDatabase_Delete(t *testing.T) {
+func TestMySQLDatabase_Delete(t *testing.T) {
 	name := "test5"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 10})
@@ -79,9 +79,9 @@ func TestPgSQLDatabase_Delete(t *testing.T) {
 	assert.Nil(t, db.Get(name), "basket with name: %v is not expected", name)
 }
 
-func TestPgSQLDatabase_Delete_Multi(t *testing.T) {
+func TestMySQLDatabase_Delete_Multi(t *testing.T) {
 	name := "test6"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	config := BasketConfig{Capacity: 10}
@@ -102,9 +102,9 @@ func TestPgSQLDatabase_Delete_Multi(t *testing.T) {
 	assert.Equal(t, 9, db.Size(), "wrong database size")
 }
 
-func TestPgSQLDatabase_Size(t *testing.T) {
+func TestMySQLDatabase_Size(t *testing.T) {
 	name := "test7"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	config := BasketConfig{Capacity: 15}
@@ -117,9 +117,9 @@ func TestPgSQLDatabase_Size(t *testing.T) {
 	assert.Equal(t, 25, db.Size(), "wrong database size")
 }
 
-func TestPgSQLDatabase_GetNames(t *testing.T) {
+func TestMySQLDatabase_GetNames(t *testing.T) {
 	name := "test8"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	config := BasketConfig{Capacity: 15}
@@ -148,9 +148,9 @@ func TestPgSQLDatabase_GetNames(t *testing.T) {
 	assert.False(t, db.GetNames(5, 40).HasMore, "no more names are expected")
 }
 
-func TestPgSQLDatabase_FindNames(t *testing.T) {
+func TestMySQLDatabase_FindNames(t *testing.T) {
 	name := "test9"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	config := BasketConfig{Capacity: 5}
@@ -179,9 +179,9 @@ func TestPgSQLDatabase_FindNames(t *testing.T) {
 	assert.Empty(t, db.FindNames("xyz", 5, 0).Names, "names are not expected")
 }
 
-func TestPgSQLBasket_Add(t *testing.T) {
+func TestMySQLBasket_Add(t *testing.T) {
 	name := "test101"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
@@ -206,9 +206,9 @@ func TestPgSQLBasket_Add(t *testing.T) {
 	}
 }
 
-func TestPgSQLBasket_Add_ExceedLimit(t *testing.T) {
+func TestMySQLBasket_Add_ExceedLimit(t *testing.T) {
 	name := "test102"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 10})
@@ -225,9 +225,9 @@ func TestPgSQLBasket_Add_ExceedLimit(t *testing.T) {
 	}
 }
 
-func TestPgSQLBasket_Clear(t *testing.T) {
+func TestMySQLBasket_Clear(t *testing.T) {
 	name := "test103"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
@@ -248,9 +248,9 @@ func TestPgSQLBasket_Clear(t *testing.T) {
 	}
 }
 
-func TestPgSQLBasket_Update_Shrink(t *testing.T) {
+func TestMySQLBasket_Update_Shrink(t *testing.T) {
 	name := "test104"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 30})
@@ -273,9 +273,9 @@ func TestPgSQLBasket_Update_Shrink(t *testing.T) {
 	}
 }
 
-func TestPgSQLBasket_GetRequests(t *testing.T) {
+func TestMySQLBasket_GetRequests(t *testing.T) {
 	name := "test105"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 25})
@@ -315,9 +315,9 @@ func TestPgSQLBasket_GetRequests(t *testing.T) {
 	}
 }
 
-func TestPgSQLBasket_FindRequests(t *testing.T) {
+func TestMySQLBasket_FindRequests(t *testing.T) {
 	name := "test106"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 100})
@@ -373,10 +373,10 @@ func TestPgSQLBasket_FindRequests(t *testing.T) {
 	}
 }
 
-func TestPgSQLBasket_SetResponse(t *testing.T) {
+func TestMySQLBasket_SetResponse(t *testing.T) {
 	name := "test107"
 	method := "POST"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
@@ -399,10 +399,10 @@ func TestPgSQLBasket_SetResponse(t *testing.T) {
 	}
 }
 
-func TestPgSQLBasket_SetResponse_Update(t *testing.T) {
+func TestMySQLBasket_SetResponse_Update(t *testing.T) {
 	name := "test108"
 	method := "GET"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
@@ -424,24 +424,24 @@ func TestPgSQLBasket_SetResponse_Update(t *testing.T) {
 	}
 }
 
-func TestPgSQLBasket_InvalidBasket(t *testing.T) {
+func TestMySQLBasket_InvalidBasket(t *testing.T) {
 	name := "test199"
-	db := NewSQLDatabase(pgTestConnection)
+	db := NewSQLDatabase(mysqlTestConnection)
 	defer db.Release()
 
 	db.Create(name, BasketConfig{Capacity: 20})
 	defer db.Delete(name)
 	basket := db.Get(name)
 
-	sqldb, _ := sql.Open("postgres", pgTestConnection)
+	sqldb, _ := sql.Open(parseConnection(mysqlTestConnection))
 	defer sqldb.Close()
 
 	// corrupted GET response
-	sqldb.Exec("INSERT INTO rb_responses (basket_name, http_method, response) VALUES ($1, 'GET', '{ abc... <<<')", name)
+	sqldb.Exec("INSERT INTO rb_responses (basket_name, http_method, response) VALUES (?, 'GET', '{ abc... <<<')", name)
 	assert.Nil(t, basket.GetResponse("GET"))
 
 	// corrupted request data
-	sqldb.Exec("INSERT INTO rb_requests (basket_name, request) VALUES ($1, '.... <<< data - broken json')", name)
+	sqldb.Exec("INSERT INTO rb_requests (basket_name, request) VALUES (?, '.... <<< data - broken json')", name)
 	assert.Equal(t, 1, basket.Size(), "wrong number of collected requests")
 	page := basket.GetRequests(10, 0)
 	assert.NotNil(t, page, "requests page is expected")
@@ -455,6 +455,6 @@ func TestPgSQLBasket_InvalidBasket(t *testing.T) {
 	// TODO: open connection to Postgres, enter some broken data in database, try to trigger error flows
 }
 
-func TestPgSQLDatabase_Create_Error(t *testing.T) {
+func TestMySQLDatabase_Create_Error(t *testing.T) {
 	assert.Nil(t, NewSQLDatabase("invalid_driver://dadhjh"), "expected to fail and return nil")
 }
