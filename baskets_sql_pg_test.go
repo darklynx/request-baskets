@@ -424,6 +424,47 @@ func TestPgSQLBasket_SetResponse_Update(t *testing.T) {
 	}
 }
 
+func TestPgSQLBasket_Config_Error(t *testing.T) {
+	name := "test120"
+	db := NewSQLDatabase(pgTestConnection)
+	defer db.Release()
+
+	db.Create(name, BasketConfig{Capacity: 30, ForwardURL: "http://localhost:8080"})
+	basket := db.Get(name)
+	// delete basket
+	db.Delete(name)
+
+	// try to get configuration of deleted basket
+	config := basket.Config()
+	if assert.NotNil(t, config, "configuration is expected") {
+		// empty config is expected
+		assert.Equal(t, 0, config.Capacity, "Capacity is not expected")
+		assert.Empty(t, config.ForwardURL, "ForwardURL is not expected")
+	}
+}
+
+func TestPgSQLBasket_SetResponse_Error(t *testing.T) {
+	name := "test121"
+	method := "POSTVERYVERYVERYVERYLONGNAME"
+	db := NewSQLDatabase(pgTestConnection)
+	defer db.Release()
+
+	db.Create(name, BasketConfig{Capacity: 20})
+	defer db.Delete(name)
+
+	basket := db.Get(name)
+	if assert.NotNil(t, basket, "basket with name: %v is expected", name) {
+		// Ensure no response
+		assert.Nil(t, basket.GetResponse(method))
+
+		// Set response
+		basket.SetResponse(method, ResponseConfig{Status: 201, Body: "{ 'message' : 'created' }"})
+
+		// Ensure no response
+		assert.Nil(t, basket.GetResponse(method), "Response for very long method name is not expected")
+	}
+}
+
 func TestPgSQLBasket_InvalidBasket(t *testing.T) {
 	name := "test199"
 	db := NewSQLDatabase(pgTestConnection)
@@ -451,8 +492,6 @@ func TestPgSQLBasket_InvalidBasket(t *testing.T) {
 	findPage := basket.FindRequests("", "any", 10, 0)
 	assert.NotNil(t, findPage, "requests page is expected")
 	assert.Equal(t, 0, len(findPage.Requests), "wrong number of Requests in page")
-
-	// TODO: open connection to Postgres, enter some broken data in database, try to trigger error flows
 }
 
 func TestPgSQLDatabase_Create_Error(t *testing.T) {
