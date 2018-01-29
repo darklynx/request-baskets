@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"testing"
 
@@ -463,37 +462,4 @@ func TestMySQLBasket_SetResponse_Error(t *testing.T) {
 		// Ensure no response
 		assert.Nil(t, basket.GetResponse(method), "Response for very long method name is not expected")
 	}
-}
-
-func TestMySQLBasket_InvalidBasket(t *testing.T) {
-	name := "test199"
-	db := NewSQLDatabase(mysqlTestConnection)
-	defer db.Release()
-
-	db.Create(name, BasketConfig{Capacity: 20})
-	defer db.Delete(name)
-	basket := db.Get(name)
-
-	sqldb, _ := sql.Open(parseConnection(mysqlTestConnection))
-	defer sqldb.Close()
-
-	// corrupted GET response
-	sqldb.Exec("INSERT INTO rb_responses (basket_name, http_method, response) VALUES (?, 'GET', '{ abc... <<<')", name)
-	assert.Nil(t, basket.GetResponse("GET"))
-
-	// corrupted request data
-	sqldb.Exec("INSERT INTO rb_requests (basket_name, request) VALUES (?, '.... <<< data - broken json')", name)
-	assert.Equal(t, 1, basket.Size(), "wrong number of collected requests")
-	page := basket.GetRequests(10, 0)
-	assert.NotNil(t, page, "requests page is expected")
-	assert.Equal(t, 1, page.Count, "wrong Count of requests in page")
-	assert.Equal(t, 0, len(page.Requests), "wrong number of Requests in page")
-
-	findPage := basket.FindRequests("", "any", 10, 0)
-	assert.NotNil(t, findPage, "requests page is expected")
-	assert.Equal(t, 0, len(findPage.Requests), "wrong number of Requests in page")
-}
-
-func TestMySQLDatabase_Create_Error(t *testing.T) {
-	assert.Nil(t, NewSQLDatabase("invalid_driver://dadhjh"), "expected to fail and return nil")
 }

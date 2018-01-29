@@ -15,9 +15,9 @@ It is strongly inspired by ideas and application design of the [RequestHub](http
 - [Configuration](#configuration)
   - [Parameters](#parameters)
 - [Usage](#usage)
-  - [Persistent storage](#persistent-storage)
-  - [PostgreSQL](#postgresql)
-  - [MySQL](#mysql)
+  - [Bolt database](#bolt-database)
+  - [PostgreSQL database](#postgresql-database)
+  - [MySQL database](#mysql-database)
 - [Docker](#docker)
   - [Build docker image](#build-docker-image)
   - [Run container as a service](#run-container-as-a-service)
@@ -41,7 +41,7 @@ Distinguishing features of Request Baskets service:
  * Alternative storage types for configured baskets and collected requests:
    * *In-memory* - ultra fast, but limited to available RAM and collected data is lost after service restart
    * *Bolt DB* - fast persistent storage for collected data based on embedded [Bolt](https://github.com/boltdb/bolt) database, service can be restarted without data loss and storage is not limited by available RAM
-   * *SQL database* - classical data storage, multiple instances of service can run simultaneously and collect data in shared data storage, which makes the solution more robust and scaleable ([PostgreSQL](https://www.postgresql.org/) is only supported at the moment)
+   * *SQL database* - classical data storage, multiple instances of service can run simultaneously and collect data in shared data storage, which makes the solution more robust and scaleable ([PostgreSQL](https://www.postgresql.org) and [MySQL](https://www.mysql.com) are only supported at the moment)
    * Can be extended by custom implementations of storage interface
 
 ### Screenshots
@@ -101,7 +101,7 @@ Usage of bin/request-baskets:
  * `-size` *size* - default new basket capacity, applied if basket capacity is not provided during creation
  * `-maxsize` *size* - maximum allowed basket capacity, basket capacity greater than this number will be rejected by service
  * `-token` *token* - master token to gain control over all baskets, if not defined a random token will be generated when service is launched and printed to *stdout*
- * `-db` *type* - defines baskets storage type: `mem` - in-memory storage, `bolt` - [Bolt](https://github.com/boltdb/bolt/) database
+ * `-db` *type* - defines baskets storage type: `mem` - in-memory storage, `bolt` - [Bolt](https://github.com/boltdb/bolt) database
  * `-file` *location* - location of Bolt database file, only relevant if appropriate storage type is chosen
 
 ## Usage
@@ -118,11 +118,11 @@ To view collected requests and manage basket:
 
 It is possible to forward all incoming HTTP requests to arbitrary URL by configuring basket via web UI or RESTful API.
 
-### Persistent storage
+### Bolt database
 
 By default Request Baskets service keeps configured baskets and collected HTTP requests in memory. This data is lost after service or server restart. However a service can be configured to store collected data on file system. In this case the service can be restarted without loosing created baskets and collected data.
 
-To start service in persistent mode simply configure the appropriate storage type, such as [Bolt database](https://github.com/boltdb/bolt/):
+To start service in persistent mode simply configure the appropriate storage type, such as [Bolt database](https://github.com/boltdb/bolt):
 
 ```bash
 $ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
@@ -135,13 +135,13 @@ $ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
 
 Any other kind of storages or databases (e.g. MySQL, MongoDb) to keep collected data can be introduced by implementing following interfaces: `BasketsDatabase` and `Basket`
 
-### PostgreSQL
+### PostgreSQL database
 
-The first attempt to implement SQL database storage for Request Baskets service is now available for evaluation. Even though the logic to organize the data within SQL database is written in the generic SQL dialect, the code make use of parametrized queries which do not have a standard way to express [parameter placeholders](http://go-database-sql.org/prepared.html#parameter-placeholder-syntax).
+The first attempt to implement SQL database storage for Request Baskets service is now available for evaluation. Even though the logic to organize the data within SQL database is written in the generic SQL dialect, the code make use of parametrized SQL queries that unfortunately do not have standard to express [parameter placeholders](http://go-database-sql.org/prepared.html#parameter-placeholder-syntax) across different databases.
 
-Current implementation is based on PostgreSQL syntax. So running Request Baskets service with [PostgreSQL database](https://www.postgresql.org/) as a storage is fully supported.
+Current implementation is based on PostgreSQL syntax. So running Request Baskets service with [PostgreSQL database](https://www.postgresql.org) as a storage is fully supported.
 
-To start the service with PostgreSQL database run:
+Use following example to start the Request Baskets service with PostgreSQL database:
 
 ```bash
 $ request-baskets -db sql -conn "postgres://rbaskets:pwd@localhost/baskets?sslmode=disable"
@@ -154,9 +154,9 @@ $ request-baskets -db sql -conn "postgres://rbaskets:pwd@localhost/baskets?sslmo
 ...
 ```
 
-See the [Go driver of PostgreSQL](https://godoc.org/github.com/lib/pq) documentation for detailed description of connection string and its parameters.
+The documentation of [Go driver for PostgreSQL](https://godoc.org/github.com/lib/pq) provides detailed description of connection string and its parameters.
 
-If you do not have a configured instance of PostgreSQL server to test the Request Baskets service with, you can quickly launch one using Docker with following command:
+If no configured instance of PostgreSQL server is available to test the Request Baskets service with, there is a quick way to launch one using Docker with following command:
 
 ```bash
 $ docker run --rm --name pg_baskets -e POSTGRES_USER=rbaskets -e POSTGRES_PASSWORD=pwd \
@@ -166,11 +166,11 @@ $ docker run --rm --name pg_baskets -e POSTGRES_USER=rbaskets -e POSTGRES_PASSWO
 $ docker stop pg_baskets
 ```
 
-### MySQL
+### MySQL database
 
-Added driver and support within the SQL basket database for [MySQL](https://www.mysql.com) ([MariaDB](https://mariadb.org)).
+Added driver and application support within the SQL basket database for [MySQL](https://www.mysql.com) (or [MariaDB](https://mariadb.org)) database.
 
-To start the service with MySQL database run:
+Use following example to start the Request Baskets service with MySQL database:
 
 ```bash
 $ request-baskets -db sql -conn "mysql://rbaskets:pwd@/baskets"
@@ -183,9 +183,9 @@ $ request-baskets -db sql -conn "mysql://rbaskets:pwd@/baskets"
 ...
 ```
 
-See the [Go driver of MySQL](https://github.com/go-sql-driver/mysql#usage) documentation for detailed description of connection string and its parameters.
+The documentation of [Go driver for MySQL](https://github.com/go-sql-driver/mysql#usage) provides detailed description of connection string and its parameters.
 
-If you do not have a configured instance of MySQL server to test the Request Baskets service with, you can quickly launch one using Docker with following command:
+If no configured instance of MySQL server is available to test the Request Baskets service with, there is a quick way to launch one using Docker with following command:
 
 ```bash
 $ docker run --rm --name mysql_baskets -e MYSQL_USER=rbaskets -e MYSQL_PASSWORD=pwd \
