@@ -85,7 +85,7 @@ func (basket *memoryBasket) Clear() {
 
 	// reset collected requests and total counter
 	basket.requests = make([]*RequestData, 0, basket.config.Capacity)
-	basket.totalCount = 0
+	// basket.totalCount = 0 // reset total stats
 }
 
 func (basket *memoryBasket) Size() int {

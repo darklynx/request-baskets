@@ -19,7 +19,7 @@ var httpInsecureClient *http.Client
 // CreateServer creates an instance of Request Baskets server
 func CreateServer(config *ServerConfig) *http.Server {
 	// create database
-	db := createBasketsDatabase(config.DbType, config.DbFile)
+	db := createBasketsDatabase(config.DbType, config.DbFile, config.DbConnection)
 	if db == nil {
 		log.Print("[error] failed to create basket database")
 		return nil
@@ -59,19 +59,24 @@ func CreateServer(config *ServerConfig) *http.Server {
 	// basket requests
 	router.NotFound = http.HandlerFunc(AcceptBasketRequests)
 
-	log.Printf("[info] HTTP server is listening on port: %d", config.ServerPort)
-	server := &http.Server{Addr: fmt.Sprintf(":%d", config.ServerPort), Handler: router}
+	log.Printf("[info] HTTP server is listening on %s:%d", serverConfig.ServerAddr, serverConfig.ServerPort)
+	server := &http.Server{Addr: fmt.Sprintf("%s:%d", serverConfig.ServerAddr, serverConfig.ServerPort), Handler: router}
 
 	go shutdownHook()
 	return server
 }
 
-func createBasketsDatabase(dbtype string, file string) BasketsDatabase {
+func createBasketsDatabase(dbtype string, file string, conn string) BasketsDatabase {
 	switch dbtype {
 	case DbTypeMemory:
 		return NewMemoryDatabase()
 	case DbTypeBolt:
 		return NewBoltDatabase(file)
+	case DbTypeSQL:
+		if len(conn) > 0 {
+			return NewSQLDatabase(conn)
+		}
+		return NewSQLDatabase(file)
 	default:
 		log.Printf("[error] unknown database type: %s", dbtype)
 		return nil
