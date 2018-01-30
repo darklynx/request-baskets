@@ -14,9 +14,11 @@ request-baskets     alpine     7991c7cec214        6 minutes ago       15.2 MB
 
 ## Docker with "golang"
 
+:warning: `ONBUILD` image variants are [deprecated](https://github.com/docker-library/official-images/issues/2076), and their use is discouraged.
+
 This is an example of how to use a great [golang:onbuild](https://github.com/docker-library/docs/tree/master/golang) image from official Docker library for Go language.
 
-Building an image that is based on `golang:ongoing` image should be triggered from the root folder of Go application. The source code from the current folder is copied into container and compiled inside. The result of compilation is packed into a new image with a command that launches the application. The content of [Dockerfile](./golang/Dockerfile) in this case is minimal.
+Building an image that is based on `golang:onbuild` image should be triggered from the root folder of Go application. The source code from the current folder is copied into container and compiled inside. The result of compilation is packed into a new image with a command that launches the application. The content of [Dockerfile](./golang/Dockerfile) in this case is minimal.
 
 Usage example (should be started from source code root directory):
 ```bash
@@ -28,7 +30,7 @@ Now you can visit [http://localhost:55555](http://localhost:55555) in your brows
 
 To stop the service simply hit `Ctrl+C` - this will stop and delete the running container (note `--rm` flag).
 
-Use of `golang:ongoing` image allows you to build and run Go applications without Go SDK being installed on your computer. However the Go SDK with all dependencies remains in the final image of built application, which results in really big image size (see above).
+Use of `golang:onbuild` image allows you to build and run Go applications without Go SDK being installed on your computer. However the Go SDK with all dependencies remains in the final image of built application, which results in really big image size (see above).
 
 ## Docker with "ubuntu"
 
