@@ -15,4 +15,4 @@ COPY request-baskets /usr/local/bin/
 # Expose ports
 EXPOSE 55555
 
-CMD request-baskets -db bolt -file /var/lib/rbaskets/baskets.db
+CMD request-baskets -l 0.0.0.0 -db bolt -file /var/lib/rbaskets/baskets.db

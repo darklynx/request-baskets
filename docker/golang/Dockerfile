@@ -8,3 +8,6 @@ MAINTAINER Vladimir L, vladimir_l@gmx.net
 
 # Expose ports
 EXPOSE 55555
+
+# We need to change default binding ip
+CMD ["go-wrapper", "run", "-l", "0.0.0.0"]
