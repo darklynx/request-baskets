@@ -49,11 +49,11 @@ var (
           basketRowId = "basket_row_" + basketsCount;
 
           if (showDetails) {
-            baskets.append("<tr id='" + basketRowId + "'><td><a href='/web/basket.html?name=" + name + "' title='" + name + "'>" +
+            baskets.append("<tr id='" + basketRowId + "'><td><a href='/web/" + name + "' title='" + name + "'>" +
               displayName + "</a></td></tr>");
             fetchBasketDetails(name, basketRowId);
           } else {
-            baskets.append("<li><a href='/web/basket.html?name=" + name + "' title='" + name + "'>" + displayName + "</a></li>");
+            baskets.append("<li><a href='/web/" + name + "' title='" + name + "'>" + displayName + "</a></li>");
           }
 
           basketsCount++;
