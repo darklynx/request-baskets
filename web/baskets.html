@@ -19,12 +19,13 @@
     h1 { margin-top: 2px; }
     #more { margin-left: 60px; padding-bottom: 10px; }
     #all_baskets ul { width: 100%; }
-    #all_baskets li { padding: 0 0 5px 20px; float: left; display: inline; position: relative; width: 50%; }
+    #all_baskets li { padding: 0 0 5px 20px; float: left; display: inline; position: relative; width: 25%; }
     #all_baskets li:before { content: "\f291"; font-family: "FontAwesome"; position: absolute; left: 0px; top:0px; }
   </style>
 
   <script>
   (function($) {
+    var showDetails = false;
     var basketsCount = 0;
 
     function onAjaxError(jqXHR) {
@@ -39,11 +40,22 @@
 
     function addBaskets(data) {
       if (data && data.names) {
-        var baskets = $("#all_baskets");
-        var index, name;
+        var baskets = (showDetails) ? $("#all_baskets_details tbody") : $("#all_baskets");
+        var index, name, displayName, basketRowId;
+
         for (index = 0; index < data.names.length; ++index) {
           name = data.names[index];
-          baskets.append("<li><a href='/web/basket.html?name=" + name + "'>" + name + "</a></li>");
+          displayName = (name.length < 25) ? name : name.substring(0, 25) + "...";
+          basketRowId = "basket_row_" + basketsCount;
+
+          if (showDetails) {
+            baskets.append("<tr id='" + basketRowId + "'><td><a href='/web/basket.html?name=" + name + "' title='" + name + "'>" +
+              displayName + "</a></td></tr>");
+            fetchBasketDetails(name, basketRowId);
+          } else {
+            baskets.append("<li><a href='/web/basket.html?name=" + name + "' title='" + name + "'>" + displayName + "</a></li>");
+          }
+
           basketsCount++;
         }
 
@@ -67,6 +79,44 @@
       }).fail(onAjaxError);
     }
 
+    function fetchBasketDetails(name, basketRowId) {
+      $.ajax({
+        method: "GET",
+        url: "/baskets/" + name + "/requests?max=0",
+        headers: {
+          "Authorization" : sessionStorage.getItem("master_token")
+        }
+      }).done(function(requests) {
+        $.ajax({
+          method: "GET",
+          url: "/baskets/" + name,
+          headers: {
+            "Authorization" : sessionStorage.getItem("master_token")
+          }
+        }).done(function(config) {
+          updateBasketDetails(basketRowId, requests, config);
+        }).fail(onAjaxError);
+      }).fail(onAjaxError);
+    }
+
+    function updateBasketDetails(basketRowId, requests, config) {
+      var basketRow = $("#" + basketRowId);
+      if (requests) {
+        basketRow.append("<td>" + requests.count + " (" + requests.total_count + ")</td>");
+      } else {
+        basketRow.append("<td>failed to retrieve!</td>");
+      }
+      if (config) {
+        var details = "Max capacity: " + config.capacity;
+        if (config.forward_url) {
+          details += "; Forward URL: " + config.forward_url;
+        }
+        basketRow.append("<td>" + details + "</td>");
+      } else {
+        basketRow.append("<td>failed to retrieve!</td>");
+      }
+    }
+
     function saveMasterToken() {
       var token = $("#master_token").val();
       $("#master_token").val("");
@@ -87,6 +137,16 @@
       $("#fetch_more").on("click", function(event) {
         fetchBaskets();
       });
+      $("#list_quick").on("change", function(event) {
+        location.reload();
+      });
+      $("#list_details").on("change", function(event) {
+        $("#all_baskets").html("");
+        $("#all_baskets_details").removeClass("hide");
+        basketsCount = 0;
+        showDetails = true;
+        fetchBaskets();
+      });
 
       fetchBaskets();
     });
@@ -99,6 +159,22 @@
     <div class="container">
       <div class="navbar-header">
         <a class="navbar-brand" href="/web">Request Baskets</a>
+      </div>
+      <div class="collapse navbar-collapse">
+        <form class="navbar-form navbar-right">
+          <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-default active">
+              <input type="radio" name="options" id="list_quick" autocomplete="off" checked>
+                <span class="glyphicon glyphicon-th" aria-hidden="true"></span>
+              </input>
+            </label>
+            <label class="btn btn-default">
+              <input type="radio" name="options" id="list_details" autocomplete="off">
+                <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
+              </input>
+            </label>
+          </div>
+        </form>
       </div>
     </div>
   </nav>
@@ -155,6 +231,17 @@
     <div class="row">
       <ul id="all_baskets">
       </ul>
+      <table id="all_baskets_details" class="table hide">
+        <thead>
+          <tr>
+            <th>Basket</th>
+            <th>Requests</th>
+            <th width="70%">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
       <div id="more" class="hide">
         <a id="fetch_more" class="btn btn-default btn-s">more...</a>
       </div>
