@@ -353,7 +353,7 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 
 		// forward request in separate thread
 		config := basket.Config()
-		if len(config.ForwardURL) > 0 {
+		if len(config.ForwardURL) > 0 && r.Header.Get(DoNotForwardHeader) != "1" {
 			if config.InsecureTLS {
 				go request.Forward(httpInsecureClient, config, name)
 			} else {

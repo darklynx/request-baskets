@@ -12,6 +12,9 @@ import (
 
 const toMs = int64(time.Millisecond) / int64(time.Nanosecond)
 
+// DoNotForwardHeader indicates whether request can (0) or cannot (1) be forwarded
+const DoNotForwardHeader = "X-Do-Not-Forward"
+
 // BasketConfig describes single basket configuration.
 type BasketConfig struct {
 	ForwardURL  string `json:"forward_url"`
@@ -154,6 +157,8 @@ func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket
 					forwardReq.Header.Add(header, val)
 				}
 			}
+			// set do not forward header
+			forwardReq.Header.Set(DoNotForwardHeader, "1")
 
 			var response *http.Response
 			response, err = client.Do(forwardReq)
