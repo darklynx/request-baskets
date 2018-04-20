@@ -217,7 +217,7 @@ func TestBoltBasket_Add(t *testing.T) {
 
 		// detailed http.Request to RequestData tests should be covered by test of ToRequestData function
 		assert.Equal(t, content, data.Body, "wrong body")
-		assert.Equal(t, int64(len(content)), data.ContentLength, "wrong content lenght")
+		assert.Equal(t, int64(len(content)), data.ContentLength, "wrong content length")
 
 		// add 2nd HTTP request
 		basket.Add(createTestPOSTRequest(fmt.Sprintf("http://localhost/%v/demo", name), "Hellow world", "text/plain"))
@@ -439,7 +439,7 @@ func TestBoltBasket_InvalidBasket(t *testing.T) {
 	defer db.Close()
 	defer os.Remove(name + ".db")
 
-	// create a basket refering non-existing name in the database file
+	// create a basket referring non-existing name in the database file
 	basket := &boltBasket{db, name}
 	// should print error in log file during update
 	basket.Clear()

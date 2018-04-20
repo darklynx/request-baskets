@@ -197,7 +197,7 @@ func TestPgSQLBasket_Add(t *testing.T) {
 
 		// detailed http.Request to RequestData tests should be covered by test of ToRequestData function
 		assert.Equal(t, content, data.Body, "wrong body")
-		assert.Equal(t, int64(len(content)), data.ContentLength, "wrong content lenght")
+		assert.Equal(t, int64(len(content)), data.ContentLength, "wrong content length")
 
 		// add 2nd HTTP request
 		basket.Add(createTestPOSTRequest(fmt.Sprintf("http://localhost/%v/demo", name), "Hellow world", "text/plain"))

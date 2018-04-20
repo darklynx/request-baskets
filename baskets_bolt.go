@@ -354,7 +354,7 @@ func (bdb *boltDatabase) Create(name string, config BasketConfig) (BasketAuth, e
 			return fmt.Errorf("Failed to create basket: %s - %s", name, cerr)
 		}
 
-		// initialize basket bucket (assume no issues arised)
+		// initialize basket bucket (assuming that no issues arose)
 		b.Put(boltKeyToken, []byte(token))
 		b.Put(boltKeyForwardURL, []byte(config.ForwardURL))
 		b.Put(boltKeyOptions, toOpts(config))
