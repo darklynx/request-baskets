@@ -225,7 +225,7 @@ func TestCreateBasket_BrokenJson(t *testing.T) {
 func TestCreateBasket_ConfigOutOfLimit(t *testing.T) {
 	basket := "create08"
 
-	// only first 2048 bytes of config are read, bigger ammount is truncated; this leads to an invalid JSON
+	// only first 2048 bytes of config are read, bigger amount is truncated; this leads to an invalid JSON
 	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
 		strings.NewReader("{\"capacity\": 300, \"forward_url\": \"http://localhost:8080/1234567890/1234567890/1234567890/"+
 			"1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/"+
