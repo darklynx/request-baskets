@@ -82,7 +82,7 @@
     function fetchBasketDetails(name, basketRowId) {
       $.ajax({
         method: "GET",
-        url: "/baskets/" + name + "/requests?max=0",
+        url: "/baskets/" + name + "/requests?max=1",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -108,6 +108,9 @@
       }
       if (config) {
         var details = "Max capacity: " + config.capacity;
+        if (requests.requests && requests.requests.length > 0) {
+          details += "; Last Req.: " + new Date(requests.requests[0].date).toISOString();
+        }
         if (config.forward_url) {
           details += "; Forward URL: " + config.forward_url;
         }
