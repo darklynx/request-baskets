@@ -27,8 +27,17 @@ const (
     var autoRefresh = false;
     var autoRefreshId;
 
+    function getParam(name) {
+      var params = new RegExp("[\\?&]" + name + "=([^&#]*)").exec(window.location.search);
+      return (params && params.length) ? params[1] : null;
+    }
+
+    function getBasketToken() {
+      return localStorage.getItem("basket_{{.}}");
+    }
+
     function getToken() {
-      var token = localStorage.getItem("basket_{{.}}");
+      var token = getBasketToken();
       if (!token) { // fall back to master token if provided
         token = sessionStorage.getItem("master_token");
       }
@@ -459,6 +468,53 @@ const (
       }).fail(onAjaxError);
     }
 
+    function copyToClipboard(text) {
+      var textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.insertBefore(textArea, document.body.firstChild);
+      textArea.focus();
+      textArea.select();
+
+      var copied;
+      try {
+        copied = document.execCommand("copy");
+      } catch (err) {
+        copied = false;
+      }
+
+      document.body.removeChild(textArea);
+      return copied;
+    }
+
+    function shareBasket() {
+      var token = getBasketToken();
+      if (token && copyToClipboard(window.location + "?token=" + token)) {
+        alert("A link to share this basket was copied to your clipboard.");
+      }
+    }
+
+    function acceptSharedBasket() {
+      var token = getParam("token");
+      if (token) {
+        var currentToken = getBasketToken();
+        if (!currentToken) {
+          // remember basket token
+          localStorage.setItem("basket_{{.}}", token);
+        } else if (currentToken !== token) {
+          if (confirm("The access token for the '{{.}}' basket \n" +
+              "from query parameter is different to the token that is \n" +
+              "already stored in your browser.\n\n" +
+              "If you trust this link choose 'OK' and existing token will be \n" +
+              "replaced with the new one, otherwise choose 'Cancel'.\n\n" +
+              "Do you want to replace the access token of this basket?")) {
+            localStorage.setItem("basket_{{.}}", token);
+          }
+        }
+        // remove token from location URL
+        window.location.href = "/web/{{.}}";
+      }
+    }
+
     // Initialization
     $(document).ready(function() {
       $(".basket_uri").html(window.location.protocol + "//" + window.location.host + "/{{.}}");
@@ -485,6 +541,9 @@ const (
       $("#responses").on("click", function(event) {
         responses();
       });
+      $("#share").on("click", function(event) {
+        shareBasket();
+      });
       $("#delete").on("click", function(event) {
         deleteRequests();
       });
@@ -503,6 +562,12 @@ const (
       $("#update_response").on("click", function(event) {
         updateResponse();
       });
+      // shared basket link
+      acceptSharedBasket();
+      // hide share basket button
+      if (!getBasketToken()) {
+        $("#share").hide();
+      }
       // autorefresh and initial fetch
       if (getToken()) {
         enableAutoRefresh(true);
@@ -535,6 +600,10 @@ const (
           <button id="responses" type="button" title="Responses" class="btn btn-default">
             <!-- glyphicon-tags | glyphicon-transfer -->
             <span class="glyphicon glyphicon-transfer"></span>
+          </button>
+          &nbsp;
+          <button id="share" type="button" title="Share Basket" class="btn btn-default">
+            <span class="glyphicon glyphicon-link"></span>
           </button>
           &nbsp;
           <button id="delete" type="button" title="Delete Requests" class="btn btn-warning">
