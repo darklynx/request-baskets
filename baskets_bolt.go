@@ -18,6 +18,7 @@ const DbTypeBolt = "bolt"
 const (
 	boltOptExpandPath = 1 << iota
 	boltOptInsecureTLS
+	boltOptProxyResponse
 )
 
 var (
@@ -49,6 +50,9 @@ func toOpts(config BasketConfig) []byte {
 	if config.InsecureTLS {
 		opts |= boltOptInsecureTLS
 	}
+	if config.ProxyResponse {
+		opts |= boltOptProxyResponse
+	}
 
 	return []byte{opts}
 }
@@ -57,9 +61,11 @@ func fromOpts(opts []byte, config *BasketConfig) {
 	if len(opts) > 0 {
 		config.ExpandPath = opts[0]&boltOptExpandPath != 0
 		config.InsecureTLS = opts[0]&boltOptInsecureTLS != 0
+		config.ProxyResponse = opts[0]&boltOptProxyResponse != 0
 	} else {
 		config.ExpandPath = false
 		config.InsecureTLS = false
+		config.ProxyResponse = false
 	}
 }
 

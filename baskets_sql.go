@@ -23,6 +23,7 @@ var sqlSchema = []string{
 		token varchar(100) NOT NULL,
 		capacity integer NOT NULL,
 		forward_url text NOT NULL,
+		proxy_response boolean NOT NULL,
 		insecure_tls boolean NOT NULL,
 		expand_path boolean NOT NULL,
 		requests_count integer NOT NULL DEFAULT 0,
@@ -90,8 +91,8 @@ func (basket *sqlBasket) Config() BasketConfig {
 	config := BasketConfig{}
 
 	err := basket.db.QueryRow(
-		unifySQL(basket.dbType, "SELECT capacity, forward_url, insecure_tls, expand_path FROM rb_baskets WHERE basket_name = $1"),
-		basket.name).Scan(&config.Capacity, &config.ForwardURL, &config.InsecureTLS, &config.ExpandPath)
+		unifySQL(basket.dbType, "SELECT capacity, forward_url, proxy_response, insecure_tls, expand_path FROM rb_baskets WHERE basket_name = $1"),
+		basket.name).Scan(&config.Capacity, &config.ForwardURL, &config.ProxyResponse, &config.InsecureTLS, &config.ExpandPath)
 	if err != nil {
 		log.Printf("[error] failed to get basket config: %s - %s", basket.name, err)
 	}
@@ -101,8 +102,8 @@ func (basket *sqlBasket) Config() BasketConfig {
 
 func (basket *sqlBasket) Update(config BasketConfig) {
 	_, err := basket.db.Exec(
-		unifySQL(basket.dbType, "UPDATE rb_baskets SET capacity = $1, forward_url = $2, insecure_tls = $3, expand_path = $4 WHERE basket_name = $5"),
-		config.Capacity, config.ForwardURL, config.InsecureTLS, config.ExpandPath, basket.name)
+		unifySQL(basket.dbType, "UPDATE rb_baskets SET capacity = $1, forward_url = $2, proxy_response = $3, insecure_tls = $4, expand_path = $5 WHERE basket_name = $6"),
+		config.Capacity, config.ForwardURL, config.ProxyResponse, config.InsecureTLS, config.ExpandPath, basket.name)
 	if err != nil {
 		log.Printf("[error] failed to update basket config: %s - %s", basket.name, err)
 	} else {
@@ -287,8 +288,8 @@ func (sdb *sqlDatabase) Create(name string, config BasketConfig) (BasketAuth, er
 	}
 
 	basket, err := sdb.db.Exec(
-		unifySQL(sdb.dbType, "INSERT INTO rb_baskets (basket_name, token, capacity, forward_url, insecure_tls, expand_path) VALUES($1, $2, $3, $4, $5, $6)"),
-		name, token, config.Capacity, config.ForwardURL, config.InsecureTLS, config.ExpandPath)
+		unifySQL(sdb.dbType, "INSERT INTO rb_baskets (basket_name, token, capacity, forward_url, proxy_response, insecure_tls, expand_path) VALUES($1, $2, $3, $4, $5, $6, $7)"),
+		name, token, config.Capacity, config.ForwardURL, config.ProxyResponse, config.InsecureTLS, config.ExpandPath)
 	if err != nil {
 		return auth, fmt.Errorf("Failed to create basket: %s - %s", name, err)
 	}
@@ -422,7 +423,7 @@ func unifySQL(dbType string, sql string) string {
 	case "mysql", "sqlite3":
 		// replace $n with ?
 		return pgParams.ReplaceAllString(sql, "?")
-	// case "postgres", "sqlserver":
+		// case "postgres", "sqlserver":
 	default:
 		// statements are already designed to work with postgresql
 		return sql

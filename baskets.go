@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,10 +16,11 @@ const DoNotForwardHeader = "X-Do-Not-Forward"
 
 // BasketConfig describes single basket configuration.
 type BasketConfig struct {
-	ForwardURL  string `json:"forward_url"`
-	InsecureTLS bool   `json:"insecure_tls"`
-	ExpandPath  bool   `json:"expand_path"`
-	Capacity    int    `json:"capacity"`
+	ForwardURL    string `json:"forward_url"`
+	ProxyResponse bool   `json:"proxy_response"`
+	InsecureTLS   bool   `json:"insecure_tls"`
+	ExpandPath    bool   `json:"expand_path"`
+	Capacity      int    `json:"capacity"`
 }
 
 // ResponseConfig describes response that is generates by service upon HTTP request sent to a basket.
@@ -126,7 +126,7 @@ func ToRequestData(req *http.Request) *RequestData {
 }
 
 // Forward forwards request data to specified URL
-func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket string) {
+func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket string) *http.Response {
 	body := strings.NewReader(req.Body)
 	forwardURL, err := url.ParseRequestURI(config.ForwardURL)
 
@@ -165,12 +165,13 @@ func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket
 
 			if err != nil {
 				log.Printf("[error] failed to forward request: %s", err)
-			} else {
-				io.Copy(ioutil.Discard, response.Body)
-				response.Body.Close()
+				return &http.Response{}
 			}
+
+			return response
 		}
 	}
+	return &http.Response{}
 }
 
 func expand(url string, original string, basket string) string {

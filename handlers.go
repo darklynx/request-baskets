@@ -17,7 +17,7 @@ import (
 )
 
 var validBasketName = regexp.MustCompile(basketNamePattern)
-var defaultResponse = ResponseConfig{Status: 200, IsTemplate: false}
+var defaultResponse = ResponseConfig{Status: 200, Headers: http.Header{}, IsTemplate: false}
 var basketPageTemplate = template.Must(template.New("basket").Parse(basketPageContentTemplate))
 
 // writeJSON writes JSON content to HTTP response
@@ -351,44 +351,58 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	if basket := basketsDb.Get(name); basket != nil {
 		request := basket.Add(r)
 
+		responseConfig := basket.GetResponse(r.Method)
+		if responseConfig == nil {
+			responseConfig = &defaultResponse
+		}
+
 		// forward request in separate thread
 		config := basket.Config()
 		if len(config.ForwardURL) > 0 && r.Header.Get(DoNotForwardHeader) != "1" {
+			client := httpClient
 			if config.InsecureTLS {
-				go request.Forward(httpInsecureClient, config, name)
+				client = httpInsecureClient
+			}
+
+			if config.ProxyResponse {
+				response := request.Forward(client, config, name)
+				defer response.Body.Close()
+
+				body, err := ioutil.ReadAll(response.Body)
+				if err != nil {
+					http.Error(w, "Error in "+err.Error(), http.StatusInternalServerError)
+				}
+
+				responseConfig.Headers = response.Header
+				responseConfig.Status = response.StatusCode
+				responseConfig.Body = string(body)
 			} else {
-				go request.Forward(httpClient, config, name)
+				go request.Forward(client, config, name)
 			}
 		}
 
-		// HTTP response
-		response := basket.GetResponse(r.Method)
-		if response == nil {
-			response = &defaultResponse
-		}
-
 		// headers
-		for k, v := range response.Headers {
+		for k, v := range responseConfig.Headers {
 			w.Header()[k] = v
 		}
 		// body
-		if response.IsTemplate && len(response.Body) > 0 {
+		if responseConfig.IsTemplate && len(responseConfig.Body) > 0 {
 			// template
-			t, err := template.New(name + "-" + r.Method).Parse(response.Body)
+			t, err := template.New(name + "-" + r.Method).Parse(responseConfig.Body)
 			if err != nil {
 				// invalid template
 				http.Error(w, "Error in "+err.Error(), http.StatusInternalServerError)
 			} else {
 				// status
-				w.WriteHeader(response.Status)
+				w.WriteHeader(responseConfig.Status)
 				// templated body
 				t.Execute(w, r.URL.Query())
 			}
 		} else {
 			// status
-			w.WriteHeader(response.Status)
+			w.WriteHeader(responseConfig.Status)
 			// plain body
-			w.Write([]byte(response.Body))
+			w.Write([]byte(responseConfig.Body))
 		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)

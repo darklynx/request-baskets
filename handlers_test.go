@@ -12,6 +12,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 )
 
 func TestWriteJSON(t *testing.T) {
@@ -69,7 +70,7 @@ func TestCreateBasket_CustomConfig(t *testing.T) {
 	basket := "create02"
 
 	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(
-		"{\"capacity\":30,\"insecure_tls\":true,\"expand_path\":true,\"forward_url\": \"http://localhost:12345/test\"}"))
+		"{\"capacity\":30,\"insecure_tls\":true,\"expand_path\":true,\"forward_url\": \"http://localhost:12345/test\",\"proxy_response\":true}"))
 
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
@@ -88,6 +89,7 @@ func TestCreateBasket_CustomConfig(t *testing.T) {
 			assert.Equal(t, 30, config.Capacity, "wrong basket capacity")
 			assert.True(t, config.InsecureTLS, "wrong value of Insecure TLS flag")
 			assert.True(t, config.ExpandPath, "wrong value of Expand Path flag")
+			assert.True(t, config.ProxyResponse, "wrong value of Proxy Response flag")
 			assert.Equal(t, "http://localhost:12345/test", config.ForwardURL, "wrong Forward URL")
 		}
 	}
@@ -392,7 +394,7 @@ func TestUpdateBasket(t *testing.T) {
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
 			r, err = http.NewRequest("PUT", "http://localhost:55555/baskets/"+basket,
-				strings.NewReader("{\"capacity\":50, \"expand_path\":true, \"forward_url\":\"http://test.server/forward\"}"))
+				strings.NewReader("{\"capacity\":50, \"expand_path\":true, \"forward_url\":\"http://test.server/forward\",\"proxy_response\":true}"))
 
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
@@ -407,6 +409,7 @@ func TestUpdateBasket(t *testing.T) {
 				assert.Equal(t, 50, config.Capacity, "wrong basket capacity")
 				assert.False(t, config.InsecureTLS, "wrong value of Insecure TLS flag")
 				assert.True(t, config.ExpandPath, "wrong value of Expand Path flag")
+				assert.True(t, config.ProxyResponse, "wrong value of Proxy Response flag")
 				assert.Equal(t, "http://test.server/forward", config.ForwardURL, "wrong Forward URL")
 			}
 		}
@@ -1577,6 +1580,49 @@ func TestAcceptBasketRequests_WithForwardExpand(t *testing.T) {
 			assert.Equal(t, "", forwardedData.Body, "wrong request body")
 			assert.Equal(t, method, forwardedData.Method, "wrong request method")
 			assert.Equal(t, "Java/1.8", forwardedData.Header.Get("X-Client"), "wrong request header")
+		}
+	}
+}
+
+func TestAcceptBasketRequests_WithProxyRequest(t *testing.T) {
+	basket := "accept07"
+	method := "DELETE"
+
+	// Test HTTP server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusAccepted)
+		w.Write([]byte("test"))
+	}))
+	defer ts.Close()
+
+	// Config to forward requests to test HTTP server (also enable expanding URL)
+	forwardURL := ts.URL + "/service?from=" + basket
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+		strings.NewReader("{\"forward_url\":\""+forwardURL+"\",\"expand_path\":true,\"capacity\":200,\"proxy_response\":true}"))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		r, err = http.NewRequest(method, "http://localhost:55555/"+basket+"/articles/123?sig=abcdge3276542",
+			strings.NewReader(""))
+		r.Header.Add("X-Client", "Java/1.8")
+
+		if assert.NoError(t, err) {
+			w = httptest.NewRecorder()
+			AcceptBasketRequests(w, r)
+
+			// read response body
+			responseBody, err := ioutil.ReadAll(w.Body)
+			assert.NoError(t, err)
+
+			// validate expected response
+			assert.Equal(t, 202, w.Code, "wrong HTTP response code")
+			assert.Equal(t, "test", string(responseBody), "wrong response body")
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }
