@@ -370,11 +370,13 @@ const (
     function updateConfig() {
       if (currentConfig && (
         currentConfig.forward_url != $("#basket_forward_url").val() ||
+        currentConfig.proxy_response != $("#basket_proxy_response").prop("checked") ||
         currentConfig.expand_path != $("#basket_expand_path").prop("checked") ||
         currentConfig.insecure_tls != $("#basket_insecure_tls").prop("checked") ||
         currentConfig.capacity != $("#basket_capacity").val()
       )) {
         currentConfig.forward_url = $("#basket_forward_url").val();
+        currentConfig.proxy_response = $("#basket_proxy_response").prop("checked");
         currentConfig.expand_path = $("#basket_expand_path").prop("checked");
         currentConfig.insecure_tls = $("#basket_insecure_tls").prop("checked");
         currentConfig.capacity = parseInt($("#basket_capacity").val());
@@ -428,6 +430,7 @@ const (
         if (data) {
           currentConfig = data;
           $("#basket_forward_url").val(currentConfig.forward_url);
+          $("#basket_proxy_response").prop("checked", currentConfig.proxy_response);
           $("#basket_expand_path").prop("checked", currentConfig.expand_path);
           $("#basket_insecure_tls").prop("checked", currentConfig.insecure_tls);
           $("#basket_capacity").val(currentConfig.capacity);
@@ -659,6 +662,11 @@ const (
             <label><input type="checkbox" id="basket_insecure_tls">
               <abbr class="text-danger" title="Warning! Enabling this feature will bypass certificate verification">Insecure TLS</abbr>
               only affects forwarding to URLs like <kbd>https://...</kbd>
+            </label>
+          </div>
+          <div class="checkbox">
+            <label><input type="checkbox" id="basket_proxy_response">
+              <abbr title="Proxies the response from the forward URL back to the client">Proxy Response</abbr>
             </label>
           </div>
           <div class="checkbox">
