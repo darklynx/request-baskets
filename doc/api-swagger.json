@@ -2,7 +2,7 @@
   "swagger" : "2.0",
   "info" : {
     "description" : "RESTful API of [Request Baskets](https://rbaskets.in) service.\n\nRequest Baskets is an open source project of a service to collect HTTP requests and inspect them via RESTful\nAPI or web UI.\n\nCheck out the [project page](https://github.com/darklynx/request-baskets) for more detailed description.\n",
-    "version" : "0.5",
+    "version" : "0.8",
     "title" : "Request Baskets API",
     "contact" : {
       "name" : "darklynx",
