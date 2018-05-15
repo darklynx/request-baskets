@@ -101,10 +101,13 @@ func TestRequestData_Forward_BrokenURL(t *testing.T) {
 	data.Path = "/" + basket
 
 	// Config to forward requests to broken URL
-	config := BasketConfig{ForwardURL: "-.'", ExpandPath: false, Capacity: 20}
+	config := BasketConfig{ForwardURL: "abc", ExpandPath: false, Capacity: 20}
 
 	// Should not fail, warning in log is expected
-	data.Forward(new(http.Client), config, basket)
+	r, e := data.Forward(new(http.Client), config, basket)
+	assert.Nil(t, r, "response is not expected")
+	assert.NotNil(t, e, "error is expected")
+	assert.EqualError(t, e, "Invalid forward URL: abc - parse abc: invalid URI for request", "wrong error")
 }
 
 func TestRequestData_Forward_UnreachableURL(t *testing.T) {
@@ -124,12 +127,15 @@ func TestRequestData_Forward_UnreachableURL(t *testing.T) {
 	config := BasketConfig{ForwardURL: "http://localhost:81/should/fail/to/forward", ExpandPath: false, Capacity: 20}
 
 	// Should not fail, warning in log is expected
-	data.Forward(new(http.Client), config, basket)
+	r, e := data.Forward(new(http.Client), config, basket)
+	assert.Nil(t, e, "error is not expected")
+	assert.NotNil(t, r, "response is expected")
+	assert.Equal(t, 502, r.StatusCode, "wrong status code")
 }
 
-func TestExpand(t *testing.T) {
-	assert.Equal(t, "/notify/abc/123-123", expand("/notify", "/sniffer/abc/123-123", "sniffer"))
-	assert.Equal(t, "/hello/world", expand("/", "/mybasket/hello/world", "mybasket"))
-	assert.Equal(t, "/notify/hello/world", expand("/notify", "/notify/hello/world", "notify"))
-	assert.Equal(t, "/receive/notification/test/", expand("/receive/notification/", "/basket/test/", "basket"))
+func TestExpandURL(t *testing.T) {
+	assert.Equal(t, "/notify/abc/123-123", expandURL("/notify", "/sniffer/abc/123-123", "sniffer"))
+	assert.Equal(t, "/hello/world", expandURL("/", "/mybasket/hello/world", "mybasket"))
+	assert.Equal(t, "/notify/hello/world", expandURL("/notify", "/notify/hello/world", "notify"))
+	assert.Equal(t, "/receive/notification/test/", expandURL("/receive/notification/", "/basket/test/", "basket"))
 }

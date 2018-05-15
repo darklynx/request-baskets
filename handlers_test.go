@@ -10,9 +10,10 @@ import (
 	"testing/iotest"
 	"time"
 
+	"io/ioutil"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 )
 
 func TestWriteJSON(t *testing.T) {
@@ -1584,14 +1585,14 @@ func TestAcceptBasketRequests_WithForwardExpand(t *testing.T) {
 	}
 }
 
-func TestAcceptBasketRequests_WithProxyRequest(t *testing.T) {
+func TestAcceptBasketRequests_WithProxyResponse(t *testing.T) {
 	basket := "accept07"
 	method := "DELETE"
 
 	// Test HTTP server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("test"))
+		w.Write([]byte("server test response"))
 	}))
 	defer ts.Close()
 
@@ -1621,8 +1622,127 @@ func TestAcceptBasketRequests_WithProxyRequest(t *testing.T) {
 
 			// validate expected response
 			assert.Equal(t, 202, w.Code, "wrong HTTP response code")
-			assert.Equal(t, "test", string(responseBody), "wrong response body")
+			assert.Equal(t, "server test response", string(responseBody), "wrong response body")
 			time.Sleep(100 * time.Millisecond)
+		}
+	}
+}
+
+func TestAcceptBasketRequests_WithForward_BadGateway(t *testing.T) {
+	basket := "accept08"
+	method := "GET"
+
+	// assuming that nothing is running at port 55556
+	forwardURL := "http://localhost:55556/notify"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+		strings.NewReader("{\"forward_url\":\""+forwardURL+"\",\"capacity\":200}"))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// send request and validate forwarding
+		r, err = http.NewRequest(method, "http://localhost:55555/"+basket+"/faile_to_forward", strings.NewReader(""))
+		if assert.NoError(t, err) {
+			w = httptest.NewRecorder()
+			AcceptBasketRequests(w, r)
+
+			// validate expected response: forwarding errors are not exposed unless ForwardResponse is enabled
+			assert.Equal(t, 200, w.Code, "wrong HTTP response code")
+			assert.Equal(t, "", w.Body.String(), "wrong HTTP response body")
+		}
+	}
+}
+
+func TestAcceptBasketRequests_WithProxyResponse_BadGateway(t *testing.T) {
+	basket := "accept09"
+	method := "POST"
+
+	// assuming that nothing is running at port 55556
+	forwardURL := "http://localhost:55556/notify"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+		strings.NewReader("{\"forward_url\":\""+forwardURL+"\",\"proxy_response\":true,\"capacity\":20}"))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// send request and validate forwarding
+		r, err = http.NewRequest(method, "http://localhost:55555/"+basket+"/faile_to_forward", strings.NewReader(""))
+		if assert.NoError(t, err) {
+			w = httptest.NewRecorder()
+			AcceptBasketRequests(w, r)
+
+			// validate expected response
+			assert.Equal(t, 502, w.Code, "wrong HTTP response code")
+			assert.Contains(t, w.Body.String(), "Failed to forward request", "wrong HTTP response body")
+			assert.Contains(t, w.Body.String(), forwardURL, "wrong HTTP response body")
+			assert.Contains(t, w.Body.String(), "connection refused", "wrong HTTP response body")
+		}
+	}
+}
+
+func TestAcceptBasketRequests_WithForward_InternalServerError(t *testing.T) {
+	basket := "accept10"
+	method := "PUT"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// set invalid forward URL directly
+		b := basketsDb.Get(basket)
+		b.Update(BasketConfig{Capacity: 20, ForwardURL: "qwert"})
+
+		// send request and validate forwarding
+		r, err = http.NewRequest(method, "http://localhost:55555/"+basket+"/internal_error", strings.NewReader("abc"))
+		if assert.NoError(t, err) {
+			w = httptest.NewRecorder()
+			AcceptBasketRequests(w, r)
+
+			// validate expected response: forwarding errors are not exposed unless ForwardResponse is enabled
+			assert.Equal(t, 200, w.Code, "wrong HTTP response code")
+			assert.Equal(t, "", w.Body.String(), "wrong HTTP response body")
+		}
+	}
+}
+
+func TestAcceptBasketRequests_WithProxyResponse_InternalServerError(t *testing.T) {
+	basket := "accept11"
+	method := "PATCH"
+
+	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		w := httptest.NewRecorder()
+
+		CreateBasket(w, r, ps)
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// set invalid forward URL directly
+		b := basketsDb.Get(basket)
+		b.Update(BasketConfig{Capacity: 20, ForwardURL: "qwert", ProxyResponse: true})
+
+		// send request and validate forwarding
+		r, err = http.NewRequest(method, "http://localhost:55555/"+basket+"/internal_error", strings.NewReader("abc"))
+		if assert.NoError(t, err) {
+			w = httptest.NewRecorder()
+			AcceptBasketRequests(w, r)
+
+			// validate expected response
+			assert.Equal(t, 500, w.Code, "wrong HTTP response code")
+			assert.Contains(t, w.Body.String(), "Invalid forward URL: qwert", "wrong HTTP response body")
+			assert.Contains(t, w.Body.String(), "invalid URI for request", "wrong HTTP response body")
 		}
 	}
 }
