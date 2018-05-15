@@ -4,7 +4,7 @@
 swagger: '2.0'
 
 info:
-  version: '0.5'
+  version: '0.8'
   title: Request Baskets API
   description: |
       RESTful API of [Request Baskets](https://rbaskets.in) service.
