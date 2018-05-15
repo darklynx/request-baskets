@@ -417,6 +417,10 @@
           "type" : "string",
           "description" : "URL to forward all incoming requests of the basket, `empty` value disables forwarding"
         },
+        "proxy_response" : {
+          "type" : "boolean",
+          "description" : "If set to `true` this basket behaves as a full proxy: responses from underlying service configured in `forward_url`\nare passed back to clients of original requests. The configuration of basket responses is ignored in this case.\n"
+        },
         "insecure_tls" : {
           "type" : "boolean",
           "description" : "If set to `true` the certificate verification will be disabled if forward URL indicates HTTPS scheme.\n**Warning:** enabling this feature has known security implications.\n"

@@ -17,7 +17,7 @@ import (
 )
 
 var validBasketName = regexp.MustCompile(basketNamePattern)
-var defaultResponse = ResponseConfig{Status: 200, Headers: http.Header{}, IsTemplate: false}
+var defaultResponse = ResponseConfig{Status: http.StatusOK, Headers: http.Header{}, IsTemplate: false}
 var basketPageTemplate = template.Must(template.New("basket").Parse(basketPageContentTemplate))
 
 // writeJSON writes JSON content to HTTP response
@@ -351,60 +351,86 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	if basket := basketsDb.Get(name); basket != nil {
 		request := basket.Add(r)
 
-		responseConfig := basket.GetResponse(r.Method)
-		if responseConfig == nil {
-			responseConfig = &defaultResponse
-		}
-
-		// forward request in separate thread
+		// forward request if configured and it's a first forwarding
 		config := basket.Config()
 		if len(config.ForwardURL) > 0 && r.Header.Get(DoNotForwardHeader) != "1" {
-			client := httpClient
-			if config.InsecureTLS {
-				client = httpInsecureClient
-			}
-
 			if config.ProxyResponse {
-				response := request.Forward(client, config, name)
-				defer response.Body.Close()
-
-				body, err := ioutil.ReadAll(response.Body)
-				if err != nil {
-					http.Error(w, "Error in "+err.Error(), http.StatusInternalServerError)
-				}
-
-				responseConfig.Headers = response.Header
-				responseConfig.Status = response.StatusCode
-				responseConfig.Body = string(body)
-			} else {
-				go request.Forward(client, config, name)
+				forwardAndProxyResponse(w, request, config, name)
+				return
 			}
+
+			go forwardAndForget(request, config, name)
 		}
 
-		// headers
-		for k, v := range responseConfig.Headers {
-			w.Header()[k] = v
-		}
-		// body
-		if responseConfig.IsTemplate && len(responseConfig.Body) > 0 {
-			// template
-			t, err := template.New(name + "-" + r.Method).Parse(responseConfig.Body)
-			if err != nil {
-				// invalid template
-				http.Error(w, "Error in "+err.Error(), http.StatusInternalServerError)
-			} else {
-				// status
-				w.WriteHeader(responseConfig.Status)
-				// templated body
-				t.Execute(w, r.URL.Query())
-			}
-		} else {
-			// status
-			w.WriteHeader(responseConfig.Status)
-			// plain body
-			w.Write([]byte(responseConfig.Body))
-		}
+		writeBasketResponse(w, r, name, basket)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func forwardAndForget(request *RequestData, config BasketConfig, name string) {
+	// forward request and discard the response
+	response, err := request.Forward(getHTTPClient(config.InsecureTLS), config, name)
+	if err != nil {
+		log.Printf("[warn] failed to forward request for basket: %s - %s", name, err)
+	} else {
+		io.Copy(ioutil.Discard, response.Body)
+		response.Body.Close()
+	}
+}
+
+func forwardAndProxyResponse(w http.ResponseWriter, request *RequestData, config BasketConfig, name string) {
+	// forward request in a full proxy mode
+	response, err := request.Forward(getHTTPClient(config.InsecureTLS), config, name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		// headers
+		for k, v := range response.Header {
+			w.Header()[k] = v
+		}
+
+		// status
+		w.WriteHeader(response.StatusCode)
+
+		// body
+		_, err := io.Copy(w, response.Body)
+		if err != nil {
+			log.Printf("[warn] failed to proxy response body for basket: %s - %s", name, err)
+			io.Copy(ioutil.Discard, response.Body)
+		}
+		response.Body.Close()
+	}
+}
+
+func writeBasketResponse(w http.ResponseWriter, r *http.Request, name string, basket Basket) {
+	response := basket.GetResponse(r.Method)
+	if response == nil {
+		response = &defaultResponse
+	}
+
+	// headers
+	for k, v := range response.Headers {
+		w.Header()[k] = v
+	}
+
+	// body
+	if response.IsTemplate && len(response.Body) > 0 {
+		// template
+		t, err := template.New(name + "-" + r.Method).Parse(response.Body)
+		if err != nil {
+			// invalid template
+			http.Error(w, "Error in "+err.Error(), http.StatusInternalServerError)
+		} else {
+			// status
+			w.WriteHeader(response.Status)
+			// templated body
+			t.Execute(w, r.URL.Query())
+		}
+	} else {
+		// status
+		w.WriteHeader(response.Status)
+		// plain body
+		w.Write([]byte(response.Body))
 	}
 }

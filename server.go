@@ -99,3 +99,10 @@ func shutdownHook() {
 	log.Printf("[info] terminating server")
 	os.Exit(0)
 }
+
+func getHTTPClient(insecure bool) *http.Client {
+	if insecure {
+		return httpInsecureClient
+	}
+	return httpClient
+}

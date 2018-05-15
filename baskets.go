@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -126,55 +127,58 @@ func ToRequestData(req *http.Request) *RequestData {
 }
 
 // Forward forwards request data to specified URL
-func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket string) *http.Response {
-	body := strings.NewReader(req.Body)
+func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket string) (*http.Response, error) {
 	forwardURL, err := url.ParseRequestURI(config.ForwardURL)
-
 	if err != nil {
-		log.Printf("[warn] invalid forward URL: %s; basket: %s", config.ForwardURL, basket)
-	} else {
-		// expand path
-		if config.ExpandPath && len(req.Path) > len(basket)+1 {
-			forwardURL.Path = expand(forwardURL.Path, req.Path, basket)
-		}
+		return nil, fmt.Errorf("Invalid forward URL: %s - %s", config.ForwardURL, err)
+	}
 
-		// append query
-		if len(req.Query) > 0 {
-			if len(forwardURL.RawQuery) > 0 {
-				forwardURL.RawQuery += "&" + req.Query
-			} else {
-				forwardURL.RawQuery = req.Query
-			}
-		}
+	// expand path
+	if config.ExpandPath && len(req.Path) > len(basket)+1 {
+		forwardURL.Path = expandURL(forwardURL.Path, req.Path, basket)
+	}
 
-		forwardReq, err := http.NewRequest(req.Method, forwardURL.String(), body)
-		if err != nil {
-			log.Printf("[error] failed to create forward request: %s", err)
+	// append query
+	if len(req.Query) > 0 {
+		if len(forwardURL.RawQuery) > 0 {
+			forwardURL.RawQuery += "&" + req.Query
 		} else {
-			// copy headers
-			for header, vals := range req.Header {
-				for _, val := range vals {
-					forwardReq.Header.Add(header, val)
-				}
-			}
-			// set do not forward header
-			forwardReq.Header.Set(DoNotForwardHeader, "1")
-
-			var response *http.Response
-			response, err = client.Do(forwardReq)
-
-			if err != nil {
-				log.Printf("[error] failed to forward request: %s", err)
-				return &http.Response{}
-			}
-
-			return response
+			forwardURL.RawQuery = req.Query
 		}
 	}
-	return &http.Response{}
+
+	forwardReq, err := http.NewRequest(req.Method, forwardURL.String(), strings.NewReader(req.Body))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create forward request: %s", err)
+	}
+
+	// copy headers
+	for header, vals := range req.Header {
+		for _, val := range vals {
+			forwardReq.Header.Add(header, val)
+		}
+	}
+	// set do not forward header
+	forwardReq.Header.Set(DoNotForwardHeader, "1")
+
+	// forward request
+	response, err := client.Do(forwardReq)
+	if err != nil {
+		// HTTP issue during forwarding - HTTP 502 Bad Gateway
+		log.Printf("[warn] failed to forward request for basket: %s - %s", basket, err)
+		badGatewayResp := &http.Response{
+			StatusCode: http.StatusBadGateway,
+			Header:     http.Header{},
+			Body:       ioutil.NopCloser(strings.NewReader(fmt.Sprintf("Failed to forward request: %s", err)))}
+		badGatewayResp.Header.Set("Content-Type", "text/plain")
+
+		return badGatewayResp, nil
+	}
+
+	return response, nil
 }
 
-func expand(url string, original string, basket string) string {
+func expandURL(url string, original string, basket string) string {
 	return strings.TrimSuffix(url, "/") + strings.TrimPrefix(original, "/"+basket)
 }
 
