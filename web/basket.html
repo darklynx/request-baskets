@@ -172,7 +172,7 @@
     function getContentFormat(contentType) {
       // array of header values to string
       contentType = (contentType || []).join(",");
-      if ("application/x-www-form-urlencoded" === contentType.toLowerCase()) {
+      if (/^application\/x-www-form-urlencoded.*/i.test(contentType)) {
         return "FORM";
       } else if (/^(application|text)\/(json|.+\+json).*/i.test(contentType)) {
         return "JSON";
