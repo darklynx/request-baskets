@@ -158,6 +158,8 @@ func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket
 			forwardReq.Header.Add(header, val)
 		}
 	}
+	// headers cleanup
+	forwardHeadersCleanup(forwardReq)
 	// set do not forward header
 	forwardReq.Header.Set(DoNotForwardHeader, "1")
 
@@ -176,6 +178,16 @@ func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket
 	}
 
 	return response, nil
+}
+
+// forwardHeadersCleanup removes headers that may corrupt the underlying connection when forwarding request
+func forwardHeadersCleanup(req *http.Request) {
+	// Must not be used in HTTP/2
+	req.Header.Del("Connection")
+	req.Header.Del("Upgrade")
+	req.Header.Del("TE") // only "trailers" supported in HTTP/2
+
+	// TODO: find out what else may break or corrupt the forwarding
 }
 
 func expandURL(url string, original string, basket string) string {
