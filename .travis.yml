@@ -6,6 +6,8 @@ before_script:
   - psql -c "CREATE DATABASE baskets;" -U postgres
   - psql -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
 go:
+  - "1.9"
+  - "1.10"
   - tip
 before_install:
   - mysql -e "CREATE DATABASE IF NOT EXISTS baskets ;"
