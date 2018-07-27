@@ -1,1 +1,1 @@
-docker/golang/Dockerfile
+docker/multistage/Dockerfile
