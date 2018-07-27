@@ -11,7 +11,7 @@ It is strongly inspired by ideas and application design of the [RequestHub](http
   - [Screenshots](#screenshots)
 - [Install](#install)
   - [Build from source](#build-from-source)
-  - [Run](#run)
+  - [Run docker container](#run-docker-container)
 - [Configuration](#configuration)
   - [Parameters](#parameters)
 - [Usage](#usage)
@@ -56,15 +56,24 @@ Configuration of basket responses:
 
 ### Build from source
 
+Build latest:
+
 ```bash
 $ go get github.com/darklynx/request-baskets
 ```
 
-### Run
+Run:
 
 ```bash
 $ export PATH=$PATH:$GOPATH/bin
 $ request-baskets
+```
+
+### Run docker container
+
+```
+$ docker pull darklynx/request-baskets
+$ docker run -p 55555:55555 darklynx/request-baskets
 ```
 
 ## Configuration
@@ -203,16 +212,11 @@ $ docker stop mysql_baskets
 $ docker build -t request-baskets .
 ```
 
-This will create a docker image based on `golang:onbuild` image with compiled version of request baskets service
-ready to test. Size of built image is ~750 Mb.
+This will create a docker image using [multi-stage docker builds](https://docs.docker.com/develop/develop-images/multistage-build/) approach with 2 stages: compiling the service and packaging the result to a tiny alpine container. The resulting size of built image is ~12 Mb.
 
-To build minimalistic image based on `alpine` image (final size is ~15 Mb) simply run:
+Note: since the first stage is using `golang:latest` container to build the service executable, there is no need to have Go lang SDK installed on the machine where process of building the container is taking place.
 
-```bash
-$ ./docker/minimal/build.sh
-```
-
-See [docker folder](./docker) for alternative docker builds.
+See [docker folder](./docker) for alternative docker builds with detailed explanation of the process for every variant.
 
 ### Run container as a service
 
