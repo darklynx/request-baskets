@@ -57,8 +57,8 @@ func getPage(values url.Values) (int, int) {
 	return max, skip
 }
 
-// getAndAuthBasket retrieves basket by name from HTTP request path and authorize access to the basket object
-func getAndAuthBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, Basket) {
+// getAuthenticatedBasket fetches basket details by name and authenticates the access to this basket, returns nil in case of failure
+func getAuthenticatedBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, Basket) {
 	name := ps.ByName("basket")
 	if basket := basketsDb.Get(name); basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
@@ -153,7 +153,7 @@ func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // GetBasket handles HTTP request to get basket configuration
 func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
 		json, err := json.Marshal(basket.Config())
 		writeJSON(w, http.StatusOK, json, err)
 	}
@@ -205,7 +205,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 // UpdateBasket handles HTTP request to update basket configuration
 func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
 		// read config (max 2 kB)
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2048))
 		r.Body.Close()
@@ -234,7 +234,7 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 // DeleteBasket handles HTTP request to delete basket
 func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if name, basket := getAndAuthBasket(w, r, ps); basket != nil {
+	if name, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
 		log.Printf("[info] deleting basket: %s", name)
 
 		basketsDb.Delete(name)
@@ -244,7 +244,7 @@ func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 // GetBasketResponse handles HTTP request to get basket response configuration
 func GetBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
 		method, errm := getValidMethod(ps)
 		if errm != nil {
 			http.Error(w, errm.Error(), http.StatusBadRequest)
@@ -262,7 +262,7 @@ func GetBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 
 // UpdateBasketResponse handles HTTP request to update basket response configuration
 func UpdateBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
 		method, errm := getValidMethod(ps)
 		if errm != nil {
 			http.Error(w, errm.Error(), http.StatusBadRequest)
@@ -295,7 +295,7 @@ func UpdateBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 // GetBasketRequests handles HTTP request to get requests collected by basket
 func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
 		values := r.URL.Query()
 		if query := values.Get("q"); len(query) > 0 {
 			// Find requests
@@ -312,7 +312,7 @@ func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 
 // ClearBasket handles HTTP request to delete all requests collected by basket
 func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAndAuthBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
 		basket.Clear()
 		w.WriteHeader(http.StatusNoContent)
 	}
