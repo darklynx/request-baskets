@@ -60,7 +60,9 @@ func getPage(values url.Values) (int, int) {
 // getAuthenticatedBasket fetches basket details by name and authenticates the access to this basket, returns nil in case of failure
 func getAuthenticatedBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, Basket) {
 	name := ps.ByName("basket")
-	if basket := basketsDb.Get(name); basket != nil {
+	if !validBasketName.MatchString(name) {
+		http.Error(w, "Invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+	} else if basket := basketsDb.Get(name); basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
 		if token := r.Header.Get("Authorization"); basket.Authorize(token) || token == serverConfig.MasterToken {
 			return name, basket
@@ -163,11 +165,11 @@ func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
 	if name == serviceAPIPath || name == serviceUIPath {
-		http.Error(w, "Basket name may not clash with system path: "+name, http.StatusForbidden)
+		http.Error(w, "This basket name conflicts with reserved system path: "+name, http.StatusForbidden)
 		return
 	}
 	if !validBasketName.MatchString(name) {
-		http.Error(w, "Basket name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+		http.Error(w, "Invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 		return
 	}
 
@@ -348,7 +350,10 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 // AcceptBasketRequests accepts and handles HTTP requests passed to different baskets
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	name := strings.Split(r.URL.Path, "/")[1]
-	if basket := basketsDb.Get(name); basket != nil {
+
+	if !validBasketName.MatchString(name) {
+		http.Error(w, "Invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+	} else if basket := basketsDb.Get(name); basket != nil {
 		request := basket.Add(r)
 
 		// forward request if configured and it's a first forwarding
