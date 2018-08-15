@@ -107,7 +107,7 @@ func TestCreateBasket_Forbidden(t *testing.T) {
 
 		// validate response: 403 - forbidden
 		assert.Equal(t, 403, w.Code, "wrong HTTP result code")
-		assert.Equal(t, "Basket name may not clash with system path: "+basket+"\n", w.Body.String(), "wrong error message")
+		assert.Equal(t, "This basket name conflicts with reserved system path: "+basket+"\n", w.Body.String(), "wrong error message")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
 	}
@@ -124,7 +124,7 @@ func TestCreateBasket_InvalidName(t *testing.T) {
 
 		// validate response: 400 - Bad Request
 		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
-		assert.Equal(t, "Basket name does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+		assert.Equal(t, "Invalid basket name; ["+basket+"] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
 			"wrong error message")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
@@ -376,6 +376,23 @@ func TestGetBasket_NotFound(t *testing.T) {
 
 		// validate response: 404 - not found
 		assert.Equal(t, 404, w.Code, "wrong HTTP result code")
+	}
+}
+
+func TestGetBasket_BadRequest(t *testing.T) {
+	basket := "get05~"
+
+	r, err := http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		r.Header.Add("Authorization", "abcd12345")
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		GetBasket(w, r, ps)
+
+		// validate response: 400 - Bad Request
+		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
+		assert.Equal(t, "Invalid basket name; ["+basket+"] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+			"wrong error message")
 	}
 }
 
@@ -961,6 +978,17 @@ func TestAcceptBasketRequests_NotFound(t *testing.T) {
 	AcceptBasketRequests(w, req)
 	// HTTP 404 - not found
 	assert.Equal(t, 404, w.Code, "wrong HTTP result code")
+}
+
+func TestAcceptBasketRequests_BadRequest(t *testing.T) {
+	basket := "accept03%20"
+	req := createTestPOSTRequest("http://localhost:55555/"+basket, "my data", "text/plain")
+	w := httptest.NewRecorder()
+	AcceptBasketRequests(w, req)
+	// HTTP 400 - Bad Request
+	assert.Equal(t, 400, w.Code, "wrong HTTP result code")
+	assert.Equal(t, "Invalid basket name; [accept03 ] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+		"wrong error message")
 }
 
 func TestForwardToWeb(t *testing.T) {
