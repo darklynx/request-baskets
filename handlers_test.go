@@ -380,7 +380,7 @@ func TestGetBasket_NotFound(t *testing.T) {
 }
 
 func TestGetBasket_BadRequest(t *testing.T) {
-	basket := "get05%20"
+	basket := "get05~"
 
 	r, err := http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
@@ -391,7 +391,7 @@ func TestGetBasket_BadRequest(t *testing.T) {
 
 		// validate response: 400 - Bad Request
 		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
-		assert.Equal(t, "Invalid basket name; [get05 ] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+		assert.Equal(t, "Invalid basket name; ["+basket+"] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
 			"wrong error message")
 	}
 }
