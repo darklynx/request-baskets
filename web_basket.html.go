@@ -304,10 +304,10 @@ const (
       for (header in response.headers) {
         row = $('<div class="row"></div>');
         row.append('<div class="col-md-3"><input type="input" class="form-control" id="header_name_' + index +
-          '" value="' + header + '" placeholder="name"></div>');
+          '" value="' + escapeHTML(header) + '" placeholder="name"></div>');
         // multi-value headers are not supported, simply join values through comma
         row.append('<div class="col-md-7"><input type="input" class="form-control" id="header_value_' + index +
-          '" value="' + response.headers[header].join(",") + '" placeholder="value"></div>');
+          '" value="' + escapeHTML(response.headers[header].join(',')) + '" placeholder="value"></div>');
         row.appendTo($("#response_headers"));
         index++;
       }
