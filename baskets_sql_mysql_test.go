@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -286,6 +287,7 @@ func TestMySQLBasket_GetRequests(t *testing.T) {
 		for i := 1; i <= 35; i++ {
 			basket.Add(createTestPOSTRequest(
 				fmt.Sprintf("http://localhost/%v/demo?id=%v", name, i), fmt.Sprintf("req%v", i), "text/plain"))
+			time.Sleep(20 * time.Millisecond)
 		}
 		assert.Equal(t, 25, basket.Size(), "wrong basket size")
 
