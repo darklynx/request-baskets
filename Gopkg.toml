@@ -34,8 +34,8 @@
   version = "1.4.0"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/julienschmidt/httprouter"
+  version = "1.2.0"
 
 [[constraint]]
   branch = "master"
