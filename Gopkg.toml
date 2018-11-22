@@ -24,6 +24,7 @@
 #   go-tests = true
 #   unused-packages = true
 
+ignored = ["golang.org/x/sys/*"]
 
 [[constraint]]
   name = "github.com/boltdb/bolt"
