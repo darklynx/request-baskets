@@ -24,6 +24,7 @@
 #   go-tests = true
 #   unused-packages = true
 
+ignored = ["golang.org/x/sys/*"]
 
 [[constraint]]
   name = "github.com/boltdb/bolt"
@@ -34,12 +35,12 @@
   version = "1.4.0"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/julienschmidt/httprouter"
+  version = "1.2.0"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/lib/pq"
+  version = "1.0.0"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
