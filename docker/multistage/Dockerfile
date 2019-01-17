@@ -1,12 +1,11 @@
 # Builds Request Baskets service using multi-stage builds
-# Version 1.1
+# Version 1.2
 
 # Stage 1. Building service
 FROM golang:latest as builder
 WORKDIR /go/src/rbaskets
 COPY . .
-RUN set -e \
-  && GIT_VERSION="$(git describe)" \
+RUN GIT_VERSION="$(git describe || git symbolic-ref -q --short HEAD)" \
   && GIT_COMMIT="$(git rev-parse HEAD)" \
   && GIT_COMMIT_SHORT="$(git rev-parse --short HEAD)" \
   && set -x \
