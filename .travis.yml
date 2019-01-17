@@ -8,7 +8,7 @@ before_script:
 go:
   - "1.9"
   - "1.10"
-  - tip
+  - "1.11"
 before_install:
   - mysql -e "CREATE DATABASE IF NOT EXISTS baskets ;"
   - mysql -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"

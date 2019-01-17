@@ -15,9 +15,13 @@ import (
 var basketsDb BasketsDatabase
 var httpClient *http.Client
 var httpInsecureClient *http.Client
+var version *Version
 
 // CreateServer creates an instance of Request Baskets server
 func CreateServer(config *ServerConfig) *http.Server {
+	version = &Version{Version: GitVersion, Commit: GitCommit, CommitShort: GitCommitShort}
+
+	log.Printf("[info] service version: %s from commit: %s (%s)", version.Version, version.CommitShort, version.Commit)
 	// create database
 	db := createBasketsDatabase(config.DbType, config.DbFile, config.DbConnection)
 	if db == nil {
