@@ -1,7 +1,7 @@
 package main
 
 var (
-	indexPageContent = []byte(`<!DOCTYPE html>
+	indexPageContentTemplate = `<!DOCTYPE html>
 <html>
 <head lang="en">
   <title>Request Baskets</title>
@@ -172,9 +172,14 @@ var (
 
   <footer class="footer">
     <div class="container">
-      <p class="text-muted"><small>Powered by <a href="https://github.com/darklynx/request-baskets">request-baskets</a></small></p>
+      <p class="text-muted">
+        <small>
+          Powered by <a href="https://github.com/darklynx/request-baskets">request-baskets</a> |
+          Version: <abbr title="From commit: {{.CommitShort}} ({{.Commit}})">{{.Version}}</abbr>
+        </small>
+      </p>
     </div>
   </footer>
 </body>
-</html>`)
+</html>`
 )

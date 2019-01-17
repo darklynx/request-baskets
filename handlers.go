@@ -18,7 +18,9 @@ import (
 
 var validBasketName = regexp.MustCompile(basketNamePattern)
 var defaultResponse = ResponseConfig{Status: http.StatusOK, Headers: http.Header{}, IsTemplate: false}
+var indexPageTemplate = template.Must(template.New("index").Parse(indexPageContentTemplate))
 var basketPageTemplate = template.Must(template.New("basket").Parse(basketPageContentTemplate))
+var basketsPageTemplate = template.Must(template.New("baskets").Parse(basketsPageContentTemplate))
 
 // writeJSON writes JSON content to HTTP response
 func writeJSON(w http.ResponseWriter, status int, json []byte, err error) {
@@ -328,7 +330,7 @@ func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 // WebIndexPage handles HTTP request to render index page
 func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(indexPageContent)
+	indexPageTemplate.Execute(w, version)
 }
 
 // WebBasketPage handles HTTP request to render basket details page
@@ -338,7 +340,7 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 		case serviceAPIPath:
 			// admin page to access all baskets
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.Write(basketsPageContent)
+			basketsPageTemplate.Execute(w, version)
 		default:
 			basketPageTemplate.Execute(w, name)
 		}
