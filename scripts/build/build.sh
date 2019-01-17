@@ -5,6 +5,7 @@ set -e
 
 # change current dir to the script dir
 cd "$(dirname "$0")"
+cd ../..
 
 GIT_VERSION="$(git describe)"
 GIT_COMMIT="$(git rev-parse HEAD)"
