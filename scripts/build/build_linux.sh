@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 cd ../..
 
 # collect git version information
-GIT_VERSION="$(git describe)"
+GIT_VERSION="$(git describe --dirty='*')"
 GIT_COMMIT="$(git rev-parse HEAD)"
 GIT_COMMIT_SHORT="$(git rev-parse --short HEAD)"
 
