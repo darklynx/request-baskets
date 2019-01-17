@@ -1,5 +1,5 @@
 # Builds Request Baskets service using multi-stage builds
-# Version 1.1
+# Version 1.2
 
 # Stage 1. Building service
 FROM golang:latest as builder

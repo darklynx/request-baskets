@@ -1,10 +1,8 @@
 #!/bin/sh
 
-# exit if any step fails
-set -e
-
-# change current dir to the script dir
+# change current dir to the script dir and then switch to project root
 cd "$(dirname "$0")"
 cd ../..
 
-docker build -f docker/multistage/Dockerfile -t request-baskets .
+# build docker container from project root
+docker build -t request-baskets .
