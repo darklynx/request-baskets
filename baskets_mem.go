@@ -256,6 +256,39 @@ func (db *memoryDatabase) FindNames(query string, max int, skip int) BasketNames
 	return BasketNamesQueryPage{Names: result, HasMore: false}
 }
 
+func (db *memoryDatabase) GetStats() DatabaseStats {
+	db.RLock()
+	defer db.RUnlock()
+
+	var basketsCount, emptyBasketsCount, requestsCount, requestsTotalCount, maxBasketSize, avgBasketSize int
+
+	for _, name := range db.names {
+		if basket, exists := db.baskets[name]; exists {
+			basketsCount++
+			if basket.totalCount == 0 {
+				emptyBasketsCount++
+			}
+			requestsCount += basket.Size()
+			requestsTotalCount += basket.totalCount
+			if basket.totalCount > maxBasketSize {
+				maxBasketSize = basket.totalCount
+			}
+		}
+	}
+
+	if basketsCount > emptyBasketsCount {
+		avgBasketSize = requestsTotalCount / (basketsCount - emptyBasketsCount)
+	}
+
+	return DatabaseStats{
+		BasketsCount:       basketsCount,
+		EmptyBasketsCount:  emptyBasketsCount,
+		RequestsCount:      requestsCount,
+		RequestsTotalCount: requestsTotalCount,
+		MaxBasketSize:      maxBasketSize,
+		AvgBasketSize:      avgBasketSize}
+}
+
 func (db *memoryDatabase) Release() {
 	log.Print("[info] releasing in-memory database resources")
 }

@@ -14,6 +14,7 @@ const (
 	maxBasketCapacity   = 2000
 	defaultDatabaseType = DbTypeMemory
 	serviceAPIPath      = "baskets"
+	serviceStatsPath    = "stats"
 	serviceUIPath       = "web"
 	basketNamePattern   = `^[\w\d\-_\.]{1,250}$`
 )

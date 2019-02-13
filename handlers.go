@@ -155,6 +155,17 @@ func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+// GetStats handles HTTP request to get database statistics
+func GetStats(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if r.Header.Get("Authorization") != serverConfig.MasterToken {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
+		// Get database stats
+		json, err := json.Marshal(basketsDb.GetStats())
+		writeJSON(w, http.StatusOK, json, err)
+	}
+}
+
 // GetBasket handles HTTP request to get basket configuration
 func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
@@ -166,7 +177,7 @@ func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 // CreateBasket handles HTTP request to create a new basket
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
-	if name == serviceAPIPath || name == serviceUIPath {
+	if name == serviceAPIPath || name == serviceStatsPath || name == serviceUIPath {
 		http.Error(w, "This basket name conflicts with reserved system path: "+name, http.StatusForbidden)
 		return
 	}

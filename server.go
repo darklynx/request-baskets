@@ -40,6 +40,7 @@ func CreateServer(config *ServerConfig) *http.Server {
 
 	// basket names
 	router.GET("/"+serviceAPIPath, GetBaskets)
+	router.GET("/"+serviceStatsPath, GetStats)
 
 	// basket management
 	router.GET("/"+serviceAPIPath+"/:basket", GetBasket)

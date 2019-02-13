@@ -75,6 +75,26 @@ type BasketNamesQueryPage struct {
 	HasMore bool     `json:"has_more"`
 }
 
+// DatabaseStats describes collected statistics of a baskets database
+type DatabaseStats struct {
+	BasketsCount       int           `json:"baskets_count"`
+	EmptyBasketsCount  int           `json:"empty_baskets_count"`
+	RequestsCount      int           `json:"requests_count"`
+	RequestsTotalCount int           `json:"requests_total_count"`
+	MaxBasketSize      int           `json:"max_basket_size"`
+	AvgBasketSize      int           `json:"avg_basket_size"`
+	TopBasketsBySize   []*BasketInfo `json:"top_baskets_size"`
+	TopBasketsByDate   []*BasketInfo `json:"top_baskets_recent"`
+}
+
+// BasketInfo describes shorlty a basket for database statistics
+type BasketInfo struct {
+	Name               string `json:"name"`
+	RequestsCount      int    `json:"requests_count"`
+	RequestsTotalCount int    `json:"requests_total_count"`
+	LastRequestDate    int64  `json:"last_request_date"`
+}
+
 // Basket is an interface that represent request basket entity to collects HTTP requests
 type Basket interface {
 	Config() BasketConfig
@@ -101,6 +121,8 @@ type BasketsDatabase interface {
 	Size() int
 	GetNames(max int, skip int) BasketNamesPage
 	FindNames(query string, max int, skip int) BasketNamesQueryPage
+
+	GetStats() DatabaseStats
 
 	Release()
 }

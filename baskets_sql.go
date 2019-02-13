@@ -280,6 +280,16 @@ type sqlDatabase struct {
 	dbType string // postgresql, mysql, oracle, etc.
 }
 
+func (sdb *sqlDatabase) getInt(sql string, defaultValue int) int {
+	var value int
+	if err := sdb.db.QueryRow(unifySQL(sdb.dbType, sql)).Scan(&value); err != nil {
+		log.Printf("[error] failed to query for int result: %s", err)
+		return defaultValue
+	}
+
+	return value
+}
+
 func (sdb *sqlDatabase) Create(name string, config BasketConfig) (BasketAuth, error) {
 	auth := BasketAuth{}
 	token, err := GenerateToken()
@@ -324,13 +334,7 @@ func (sdb *sqlDatabase) Delete(name string) {
 }
 
 func (sdb *sqlDatabase) Size() int {
-	var size int
-	if err := sdb.db.QueryRow("SELECT COUNT(*) FROM rb_baskets").Scan(&size); err != nil {
-		log.Printf("[error] failed to get the total number of baskets: %s", err)
-		return 0
-	}
-
-	return size
+	return sdb.getInt("SELECT COUNT(*) FROM rb_baskets", 0)
 }
 
 func (sdb *sqlDatabase) GetNames(max int, skip int) BasketNamesPage {
@@ -381,6 +385,28 @@ func (sdb *sqlDatabase) FindNames(query string, max int, skip int) BasketNamesQu
 	page.HasMore = names.Next()
 
 	return page
+}
+
+func (sdb *sqlDatabase) GetStats() DatabaseStats {
+	var basketsCount, emptyBasketsCount, requestsCount, requestsTotalCount, maxBasketSize, avgBasketSize int
+
+	basketsCount = sdb.getInt("SELECT COUNT(*) FROM rb_baskets", 0)
+	emptyBasketsCount = sdb.getInt("SELECT COUNT(*) FROM rb_baskets WHERE requests_count = 0", 0)
+	requestsCount = sdb.getInt("SELECT COUNT(*) FROM rb_requests", 0)
+	requestsTotalCount = sdb.getInt("SELECT SUM(requests_count) FROM rb_baskets", 0)
+	maxBasketSize = sdb.getInt("SELECT MAX(requests_count) FROM rb_baskets", 0)
+
+	if basketsCount > emptyBasketsCount {
+		avgBasketSize = requestsTotalCount / (basketsCount - emptyBasketsCount)
+	}
+
+	return DatabaseStats{
+		BasketsCount:       basketsCount,
+		EmptyBasketsCount:  emptyBasketsCount,
+		RequestsCount:      requestsCount,
+		RequestsTotalCount: requestsTotalCount,
+		MaxBasketSize:      maxBasketSize,
+		AvgBasketSize:      avgBasketSize}
 }
 
 func (sdb *sqlDatabase) Release() {
