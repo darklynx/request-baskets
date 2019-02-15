@@ -256,37 +256,29 @@ func (db *memoryDatabase) FindNames(query string, max int, skip int) BasketNames
 	return BasketNamesQueryPage{Names: result, HasMore: false}
 }
 
-func (db *memoryDatabase) GetStats() DatabaseStats {
+func (db *memoryDatabase) GetStats(max int) DatabaseStats {
 	db.RLock()
 	defer db.RUnlock()
 
-	var basketsCount, emptyBasketsCount, requestsCount, requestsTotalCount, maxBasketSize, avgBasketSize int
+	stats := DatabaseStats{}
 
 	for _, name := range db.names {
 		if basket, exists := db.baskets[name]; exists {
-			basketsCount++
-			if basket.totalCount == 0 {
-				emptyBasketsCount++
+			var lastRequestDate int64
+			if basket.Size() > 0 {
+				lastRequestDate = basket.GetRequests(1, 0).Requests[0].Date
 			}
-			requestsCount += basket.Size()
-			requestsTotalCount += basket.totalCount
-			if basket.totalCount > maxBasketSize {
-				maxBasketSize = basket.totalCount
-			}
+
+			stats.Collect(&BasketInfo{
+				Name:               name,
+				RequestsCount:      basket.Size(),
+				RequestsTotalCount: basket.totalCount,
+				LastRequestDate:    lastRequestDate}, max)
 		}
 	}
 
-	if basketsCount > emptyBasketsCount {
-		avgBasketSize = requestsTotalCount / (basketsCount - emptyBasketsCount)
-	}
-
-	return DatabaseStats{
-		BasketsCount:       basketsCount,
-		EmptyBasketsCount:  emptyBasketsCount,
-		RequestsCount:      requestsCount,
-		RequestsTotalCount: requestsTotalCount,
-		MaxBasketSize:      maxBasketSize,
-		AvgBasketSize:      avgBasketSize}
+	stats.UpdateAvarage()
+	return stats
 }
 
 func (db *memoryDatabase) Release() {

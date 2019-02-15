@@ -122,7 +122,7 @@ type BasketsDatabase interface {
 	GetNames(max int, skip int) BasketNamesPage
 	FindNames(query string, max int, skip int) BasketNamesQueryPage
 
-	GetStats() DatabaseStats
+	GetStats(max int) DatabaseStats
 
 	Release()
 }
@@ -254,4 +254,64 @@ func (req *RequestData) Matches(query string, in string) bool {
 	}
 
 	return false
+}
+
+// Collect collects information about basket and updates statistics
+func (stats *DatabaseStats) Collect(basket *BasketInfo, max int) {
+	stats.BasketsCount++
+	if basket.RequestsTotalCount == 0 {
+		stats.EmptyBasketsCount++
+	}
+
+	stats.RequestsCount += basket.RequestsCount
+	stats.RequestsTotalCount += basket.RequestsTotalCount
+	if basket.RequestsTotalCount > stats.MaxBasketSize {
+		stats.MaxBasketSize = basket.RequestsTotalCount
+	}
+
+	// top baskets by size
+	stats.TopBasketsBySize = collectConditionally(stats.TopBasketsBySize, basket, max,
+		func(b1 *BasketInfo, b2 *BasketInfo) bool {
+			return b1.RequestsTotalCount > b2.RequestsTotalCount
+		})
+
+	// top baskets by recent activity
+	stats.TopBasketsByDate = collectConditionally(stats.TopBasketsByDate, basket, max,
+		func(b1 *BasketInfo, b2 *BasketInfo) bool {
+			return b1.LastRequestDate > b2.LastRequestDate
+		})
+}
+
+func collectConditionally(col []*BasketInfo, basket *BasketInfo, size int,
+	greater func(*BasketInfo, *BasketInfo) bool) []*BasketInfo {
+	if col == nil {
+		col = make([]*BasketInfo, 0, size)
+		return append(col, basket)
+	}
+
+	for i, b := range col {
+		if greater(basket, b) {
+			if len(col) < size {
+				col = append(col, nil)
+			}
+			copy(col[i+1:], col[i:])
+			col[i] = basket
+			return col
+		}
+	}
+
+	if len(col) < size {
+		return append(col, basket)
+	}
+
+	return col
+}
+
+// UpdateAvarage updates avarage statistics counters.
+func (stats *DatabaseStats) UpdateAvarage() {
+	if stats.BasketsCount > stats.EmptyBasketsCount {
+		stats.AvgBasketSize = stats.RequestsTotalCount / (stats.BasketsCount - stats.EmptyBasketsCount)
+	} else {
+		stats.AvgBasketSize = 0
+	}
 }

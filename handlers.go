@@ -143,12 +143,12 @@ func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	} else {
 		values := r.URL.Query()
 		if query := values.Get("q"); len(query) > 0 {
-			// Find names
+			// find names
 			max, skip := getPage(values)
 			json, err := json.Marshal(basketsDb.FindNames(query, max, skip))
 			writeJSON(w, http.StatusOK, json, err)
 		} else {
-			// Get basket names page
+			// get basket names page
 			json, err := json.Marshal(basketsDb.GetNames(getPage(values)))
 			writeJSON(w, http.StatusOK, json, err)
 		}
@@ -160,8 +160,9 @@ func GetStats(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if r.Header.Get("Authorization") != serverConfig.MasterToken {
 		w.WriteHeader(http.StatusUnauthorized)
 	} else {
-		// Get database stats
-		json, err := json.Marshal(basketsDb.GetStats())
+		// get database stats
+		max := parseInt(r.URL.Query().Get("max"), 1, 100, 5)
+		json, err := json.Marshal(basketsDb.GetStats(max))
 		writeJSON(w, http.StatusOK, json, err)
 	}
 }
@@ -313,12 +314,12 @@ func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
 		values := r.URL.Query()
 		if query := values.Get("q"); len(query) > 0 {
-			// Find requests
+			// find requests
 			max, skip := getPage(values)
 			json, err := json.Marshal(basket.FindRequests(query, values.Get("in"), max, skip))
 			writeJSON(w, http.StatusOK, json, err)
 		} else {
-			// Get requests page
+			// get requests page
 			json, err := json.Marshal(basket.GetRequests(getPage(values)))
 			writeJSON(w, http.StatusOK, json, err)
 		}
