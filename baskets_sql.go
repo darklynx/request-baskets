@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -85,6 +86,21 @@ func (basket *sqlBasket) applyLimit(capacity int) {
 			log.Printf("[error] failed to shrink collected requests: %s - %s", basket.name, err)
 		}
 	}
+}
+
+func (basket *sqlBasket) getTotalRequestsCount() int {
+	return basket.getInt("SELECT requests_count FROM rb_baskets WHERE basket_name = $1", 0)
+}
+
+func (basket *sqlBasket) getLastRequestDate() int64 {
+	var value time.Time
+	if err := basket.db.QueryRow(unifySQL(basket.dbType,
+		"SELECT MAX(created_at) FROM rb_requests WHERE basket_name = $1"), basket.name).Scan(&value); err != nil {
+		log.Printf("[error] failed to get last request date of basket: %s - %s", basket.name, err)
+		return 0
+	}
+
+	return value.UnixNano() / toMs
 }
 
 func (basket *sqlBasket) Config() BasketConfig {
@@ -198,8 +214,7 @@ func (basket *sqlBasket) Size() int {
 }
 
 func (basket *sqlBasket) GetRequests(max int, skip int) RequestsPage {
-	page := RequestsPage{make([]*RequestData, 0, max), basket.Size(),
-		basket.getInt("SELECT requests_count FROM rb_baskets WHERE basket_name = $1", 0), false}
+	page := RequestsPage{make([]*RequestData, 0, max), basket.Size(), basket.getTotalRequestsCount(), false}
 
 	if max > 0 {
 		requests, err := basket.db.Query(
@@ -213,9 +228,7 @@ func (basket *sqlBasket) GetRequests(max int, skip int) RequestsPage {
 
 		var req string
 		for len(page.Requests) < max && requests.Next() {
-			if err = requests.Scan(&req); err != nil {
-				log.Printf("[error] failed to get request of basket: %s - %s", basket.name, err)
-			} else {
+			if err = requests.Scan(&req); err == nil {
 				request := new(RequestData)
 				if err = json.Unmarshal([]byte(req), request); err != nil {
 					log.Printf("[error] failed to parse HTTP request data in basket: %s - %s", basket.name, err)
@@ -247,9 +260,7 @@ func (basket *sqlBasket) FindRequests(query string, in string, max int, skip int
 		skipped := 0
 		var req string
 		for len(page.Requests) < max && requests.Next() {
-			if err = requests.Scan(&req); err != nil {
-				log.Printf("[error] failed to get request of basket: %s - %s", basket.name, err)
-			} else {
+			if err = requests.Scan(&req); err == nil {
 				request := new(RequestData)
 				if err = json.Unmarshal([]byte(req), request); err != nil {
 					log.Printf("[error] failed to parse HTTP request data in basket: %s - %s", basket.name, err)
@@ -282,12 +293,43 @@ type sqlDatabase struct {
 
 func (sdb *sqlDatabase) getInt(sql string, defaultValue int) int {
 	var value int
-	if err := sdb.db.QueryRow(unifySQL(sdb.dbType, sql)).Scan(&value); err != nil {
-		log.Printf("[error] failed to query for int result: %s", err)
+	if err := sdb.db.QueryRow(sql).Scan(&value); err != nil {
+		log.Printf("[error] failed to query for int result, query: %s - %s", sql, err)
 		return defaultValue
 	}
 
 	return value
+}
+
+func (sdb *sqlDatabase) getTopBaskets(sql string, max int) []*BasketInfo {
+	top := make([]*BasketInfo, 0, max)
+	names, err := sdb.db.Query(unifySQL(sdb.dbType, sql), max)
+	if err != nil {
+		log.Printf("[error] failed to find top baskets: %s", err)
+		return top
+	}
+	defer names.Close()
+
+	var name string
+	for names.Next() {
+		if err = names.Scan(&name); err == nil {
+			basket := &sqlBasket{sdb.db, sdb.dbType, name}
+			reqCount := basket.Size()
+
+			var lastRequestDate int64
+			if reqCount > 0 {
+				lastRequestDate = basket.getLastRequestDate()
+			}
+
+			top = append(top, &BasketInfo{
+				Name:               name,
+				RequestsCount:      reqCount,
+				RequestsTotalCount: basket.getTotalRequestsCount(),
+				LastRequestDate:    lastRequestDate})
+		}
+	}
+
+	return top
 }
 
 func (sdb *sqlDatabase) Create(name string, config BasketConfig) (BasketAuth, error) {
@@ -349,9 +391,7 @@ func (sdb *sqlDatabase) GetNames(max int, skip int) BasketNamesPage {
 
 	var name string
 	for len(page.Names) < max && names.Next() {
-		if err = names.Scan(&name); err != nil {
-			log.Printf("[error] failed to get basket name: %s", err)
-		} else {
+		if err = names.Scan(&name); err == nil {
 			page.Names = append(page.Names, name)
 		}
 	}
@@ -375,9 +415,7 @@ func (sdb *sqlDatabase) FindNames(query string, max int, skip int) BasketNamesQu
 
 	var name string
 	for len(page.Names) < max && names.Next() {
-		if err = names.Scan(&name); err != nil {
-			log.Printf("[error] failed to get basket name: %s", err)
-		} else {
+		if err = names.Scan(&name); err == nil {
 			page.Names = append(page.Names, name)
 		}
 	}
@@ -393,8 +431,11 @@ func (sdb *sqlDatabase) GetStats(max int) DatabaseStats {
 	stats.BasketsCount = sdb.getInt("SELECT COUNT(*) FROM rb_baskets", 0)
 	stats.EmptyBasketsCount = sdb.getInt("SELECT COUNT(*) FROM rb_baskets WHERE requests_count = 0", 0)
 	stats.RequestsCount = sdb.getInt("SELECT COUNT(*) FROM rb_requests", 0)
-	stats.RequestsTotalCount = sdb.getInt("SELECT SUM(requests_count) FROM rb_baskets", 0)
-	stats.MaxBasketSize = sdb.getInt("SELECT MAX(requests_count) FROM rb_baskets", 0)
+	stats.RequestsTotalCount = sdb.getInt("SELECT COALESCE(SUM(requests_count), 0) FROM rb_baskets", 0)
+	stats.MaxBasketSize = sdb.getInt("SELECT COALESCE(MAX(requests_count), 0) FROM rb_baskets", 0)
+
+	stats.TopBasketsBySize = sdb.getTopBaskets("SELECT basket_name FROM rb_baskets ORDER BY requests_count DESC LIMIT $1", max)
+	stats.TopBasketsByDate = sdb.getTopBaskets("SELECT basket_name FROM rb_requests GROUP BY basket_name ORDER BY MAX(created_at) DESC LIMIT $1", max)
 
 	stats.UpdateAvarage()
 	return stats
