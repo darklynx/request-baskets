@@ -139,3 +139,50 @@ func TestExpandURL(t *testing.T) {
 	assert.Equal(t, "/notify/hello/world", expandURL("/notify", "/notify/hello/world", "notify"))
 	assert.Equal(t, "/receive/notification/test/", expandURL("/receive/notification/", "/basket/test/", "basket"))
 }
+
+func TestDatabaseStats_Collect(t *testing.T) {
+	stats := new(DatabaseStats)
+	stats.Collect(&BasketInfo{"a", 5, 10, 100}, 3)
+	stats.Collect(&BasketInfo{"b", 5, 30, 200}, 3)
+	stats.Collect(&BasketInfo{"c", 5, 5, 300}, 3)
+	stats.Collect(&BasketInfo{"d", 0, 0, 400}, 3)
+	stats.Collect(&BasketInfo{"e", 5, 20, 500}, 3)
+	stats.Collect(&BasketInfo{"f", 10, 40, 600}, 3)
+	stats.Collect(&BasketInfo{"g", 0, 0, 700}, 3)
+	stats.Collect(&BasketInfo{"h", 5, 5, 800}, 3)
+
+	assert.Equal(t, 8, stats.BasketsCount, "wrong BasketsCount")
+	assert.Equal(t, 2, stats.EmptyBasketsCount, "wrong EmptyBasketsCount")
+	assert.Equal(t, 40, stats.MaxBasketSize, "wrong MaxBasketSize")
+	assert.Equal(t, 35, stats.RequestsCount, "wrong RequestsCount")
+	assert.Equal(t, 110, stats.RequestsTotalCount, "wrong RequestsTotalCount")
+
+	assert.Equal(t, 3, len(stats.TopBasketsByDate), "wrong number of TopBasketsByDate")
+	assert.Equal(t, "h", stats.TopBasketsByDate[0].Name)
+	assert.Equal(t, "g", stats.TopBasketsByDate[1].Name)
+	assert.Equal(t, "f", stats.TopBasketsByDate[2].Name)
+
+	assert.Equal(t, 3, len(stats.TopBasketsBySize), "wrong number of TopBasketsBySize")
+	assert.Equal(t, "f", stats.TopBasketsBySize[0].Name)
+	assert.Equal(t, "b", stats.TopBasketsBySize[1].Name)
+	assert.Equal(t, "e", stats.TopBasketsBySize[2].Name)
+
+	// we do not expect avarage basket size, it is not updated automatically
+	assert.Equal(t, 0, stats.AvgBasketSize, "unexpected AvgBasketSize")
+}
+
+func TestDatabaseStats_UpdateAvarage(t *testing.T) {
+	stats := new(DatabaseStats)
+	stats.Collect(&BasketInfo{"a", 5, 10, 100}, 3)
+	stats.Collect(&BasketInfo{"b", 5, 20, 200}, 3)
+	stats.Collect(&BasketInfo{"c", 5, 30, 300}, 3)
+
+	stats.UpdateAvarage()
+	assert.Equal(t, 20, stats.AvgBasketSize, "wrong AvgBasketSize")
+}
+
+func TestDatabaseStats_UpdateAvarage_Empty(t *testing.T) {
+	stats := new(DatabaseStats)
+	stats.UpdateAvarage()
+	assert.Equal(t, 0, stats.AvgBasketSize, "wrong AvgBasketSize")
+}
