@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -397,6 +398,53 @@ func TestMemoryBasket_SetResponse_Update(t *testing.T) {
 			assert.Equal(t, 200, response.Status, "wrong HTTP response status")
 			assert.Equal(t, "welcome", response.Body, "wrong HTTP response body")
 			assert.True(t, response.IsTemplate, "template is expected")
+		}
+	}
+}
+
+func TestMemoryDatabase_GetStats(t *testing.T) {
+	name := "test130"
+	db := NewMemoryDatabase()
+	defer db.Release()
+
+	config := BasketConfig{Capacity: 5}
+	for i := 0; i < 10; i++ {
+		bname := fmt.Sprintf("%s_%v", name, i)
+		db.Create(bname, config)
+
+		// fill basket
+		basket := db.Get(bname)
+		for j := 0; j < 9-i; j++ {
+			basket.Add(createTestPOSTRequest(
+				fmt.Sprintf("http://localhost/%v?id=%v", bname, j), fmt.Sprintf("req%v", j), "text/plain"))
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+
+	// get stats
+	stats := db.GetStats(3)
+	if assert.NotNil(t, stats, "database statistics is expected") {
+		assert.Equal(t, 10, stats.BasketsCount, "wrong BasketsCount stats")
+		assert.Equal(t, 1, stats.EmptyBasketsCount, "wrong EmptyBasketsCount stats")
+		assert.Equal(t, 9, stats.MaxBasketSize, "wrong MaxBasketSize stats")
+		assert.Equal(t, 35, stats.RequestsCount, "wrong RequestsCount stats")
+		assert.Equal(t, 45, stats.RequestsTotalCount, "wrong RequestsTotalCount stats")
+		assert.Equal(t, 5, stats.AvgBasketSize, "wrong AvgBasketSize stats")
+
+		// top 3 by date
+		if assert.NotNil(t, stats.TopBasketsByDate, "top baskets by date are expected") {
+			assert.Equal(t, 3, len(stats.TopBasketsByDate), "unexpected number of top baskets")
+			assert.Equal(t, fmt.Sprintf("%s_%v", name, 8), stats.TopBasketsByDate[0].Name)
+			assert.Equal(t, fmt.Sprintf("%s_%v", name, 7), stats.TopBasketsByDate[1].Name)
+			assert.Equal(t, fmt.Sprintf("%s_%v", name, 6), stats.TopBasketsByDate[2].Name)
+		}
+
+		// top 3 by size
+		if assert.NotNil(t, stats.TopBasketsBySize, "top baskets by size are expected") {
+			assert.Equal(t, 3, len(stats.TopBasketsBySize), "unexpected number of top baskets")
+			assert.Equal(t, fmt.Sprintf("%s_%v", name, 0), stats.TopBasketsBySize[0].Name)
+			assert.Equal(t, fmt.Sprintf("%s_%v", name, 1), stats.TopBasketsBySize[1].Name)
+			assert.Equal(t, fmt.Sprintf("%s_%v", name, 2), stats.TopBasketsBySize[2].Name)
 		}
 	}
 }
