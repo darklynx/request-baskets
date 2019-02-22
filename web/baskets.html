@@ -102,7 +102,7 @@
     function fetchBaskets() {
       $.ajax({
         method: "GET",
-        url: "/baskets?skip=" + basketsCount,
+        url: "/api/baskets?skip=" + basketsCount,
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -114,7 +114,7 @@
     function fetchStats() {
       $.ajax({
         method: "GET",
-        url: "/stats",
+        url: "/api/stats",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -127,14 +127,14 @@
     function fetchBasketDetails(name, basketRowId) {
       $.ajax({
         method: "GET",
-        url: "/baskets/" + name + "/requests?max=1",
+        url: "/api/baskets/" + name + "/requests?max=1",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
       }).done(function(requests) {
         $.ajax({
           method: "GET",
-          url: "/baskets/" + name,
+          url: "/api/baskets/" + name,
           headers: {
             "Authorization" : sessionStorage.getItem("master_token")
           }

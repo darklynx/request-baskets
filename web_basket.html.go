@@ -256,7 +256,7 @@ const (
     function fetchRequests() {
       $.ajax({
         method: "GET",
-        url: "/baskets/{{.}}/requests?skip=" + fetchedCount,
+        url: "/api/baskets/{{.}}/requests?skip=" + fetchedCount,
         headers: {
           "Authorization" : getToken()
         }
@@ -266,7 +266,7 @@ const (
     function fetchTotalCount() {
       $.ajax({
         method: "GET",
-        url: "/baskets/{{.}}/requests?max=0",
+        url: "/api/baskets/{{.}}/requests?max=0",
         headers: {
           "Authorization" : getToken()
         }
@@ -282,7 +282,7 @@ const (
       $("#response_method").val(method);
       $.ajax({
         method: "GET",
-        url: "/baskets/{{.}}/responses/" + method,
+        url: "/api/baskets/{{.}}/responses/" + method,
         headers: {
           "Authorization" : getToken()
         }
@@ -356,7 +356,7 @@ const (
 
       $.ajax({
         method: "PUT",
-        url: "/baskets/{{.}}/responses/" + method,
+        url: "/api/baskets/{{.}}/responses/" + method,
         dataType: "json",
         data: JSON.stringify(response),
         headers: {
@@ -383,7 +383,7 @@ const (
 
         $.ajax({
           method: "PUT",
-          url: "/baskets/{{.}}",
+          url: "/api/baskets/{{.}}",
           dataType: "json",
           data: JSON.stringify(currentConfig),
           headers: {
@@ -422,7 +422,7 @@ const (
     function config() {
       $.ajax({
         method: "GET",
-        url: "/baskets/{{.}}",
+        url: "/api/baskets/{{.}}",
         headers: {
           "Authorization" : getToken()
         }
@@ -446,7 +446,7 @@ const (
     function deleteRequests() {
       $.ajax({
         method: "DELETE",
-        url: "/baskets/{{.}}/requests",
+        url: "/api/baskets/{{.}}/requests",
         headers: {
           "Authorization" : getToken()
         }
@@ -461,7 +461,7 @@ const (
 
       $.ajax({
         method: "DELETE",
-        url: "/baskets/{{.}}",
+        url: "/api/baskets/{{.}}",
         headers: {
           "Authorization" : getToken()
         }

@@ -53,7 +53,7 @@ var (
     function createBasket() {
       var basket = $.trim($("#basket_name").val());
       if (basket) {
-        $.post("/baskets/" + basket, function(data) {
+        $.post("/api/baskets/" + basket, function(data) {
           localStorage.setItem("basket_" + basket, data.token);
           $("#created_message_text").html("<p>Basket '" + basket +
             "' is successfully created!</p><p>Your token is: <mark>" + data.token + "</mark></p>");
@@ -174,7 +174,7 @@ var (
     <div class="container">
       <p class="text-muted">
         <small>
-          Powered by <a href="https://github.com/darklynx/request-baskets">request-baskets</a> |
+          Powered by <a href="{{.SourceCode}}">{{.Name}}</a> |
           Version: <abbr title="From commit: {{.CommitShort}} ({{.Commit}})">{{.Version}}</abbr>
         </small>
       </p>

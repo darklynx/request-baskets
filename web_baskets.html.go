@@ -102,7 +102,7 @@ var (
     function fetchBaskets() {
       $.ajax({
         method: "GET",
-        url: "/baskets?skip=" + basketsCount,
+        url: "/api/baskets?skip=" + basketsCount,
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -114,7 +114,7 @@ var (
     function fetchStats() {
       $.ajax({
         method: "GET",
-        url: "/stats",
+        url: "/api/stats",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -127,14 +127,14 @@ var (
     function fetchBasketDetails(name, basketRowId) {
       $.ajax({
         method: "GET",
-        url: "/baskets/" + name + "/requests?max=1",
+        url: "/api/baskets/" + name + "/requests?max=1",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
       }).done(function(requests) {
         $.ajax({
           method: "GET",
-          url: "/baskets/" + name,
+          url: "/api/baskets/" + name,
           headers: {
             "Authorization" : sessionStorage.getItem("master_token")
           }
@@ -353,7 +353,7 @@ var (
     <div class="container">
       <p class="text-muted">
         <small>
-          Powered by <a href="https://github.com/darklynx/request-baskets">request-baskets</a> |
+          Powered by <a href="{{.SourceCode}}">{{.Name}}</a> |
           Version: <abbr title="From commit: {{.CommitShort}} ({{.Commit}})">{{.Version}}</abbr>
         </small>
       </p>
