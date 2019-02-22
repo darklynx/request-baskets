@@ -167,6 +167,13 @@ func GetStats(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+// GetVersion handles HTTP request to get service version details
+func GetVersion(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// get database stats
+	json, err := json.Marshal(version)
+	writeJSON(w, http.StatusOK, json, err)
+}
+
 // GetBasket handles HTTP request to get basket configuration
 func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
@@ -178,7 +185,7 @@ func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 // CreateBasket handles HTTP request to create a new basket
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
-	if name == serviceAPIPath || name == serviceStatsPath || name == serviceUIPath {
+	if name == serviceOldAPIPath || name == serviceAPIPath || name == serviceUIPath {
 		http.Error(w, "This basket name conflicts with reserved system path: "+name, http.StatusForbidden)
 		return
 	}
@@ -349,7 +356,7 @@ func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if name := ps.ByName("basket"); validBasketName.MatchString(name) {
 		switch name {
-		case serviceAPIPath:
+		case serviceOldAPIPath:
 			// admin page to access all baskets
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			basketsPageTemplate.Execute(w, version)

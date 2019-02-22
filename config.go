@@ -13,10 +13,12 @@ const (
 	initBasketCapacity  = 200
 	maxBasketCapacity   = 2000
 	defaultDatabaseType = DbTypeMemory
-	serviceAPIPath      = "baskets"
-	serviceStatsPath    = "stats"
+	serviceOldAPIPath   = "baskets"
+	serviceAPIPath      = "api"
 	serviceUIPath       = "web"
+	serviceName         = "request-baskets"
 	basketNamePattern   = `^[\w\d\-_\.]{1,250}$`
+	sourceCodeURL       = "https://github.com/darklynx/request-baskets"
 )
 
 // ServerConfig describes server configuration.

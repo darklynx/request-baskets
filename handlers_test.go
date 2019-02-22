@@ -718,7 +718,7 @@ func TestGetStats(t *testing.T) {
 	}
 
 	// get stats
-	r, err := http.NewRequest("GET", "http://localhost:55555/stats", strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/stats", strings.NewReader(""))
 	if assert.NoError(t, err) {
 		r.Header.Add("Authorization", serverConfig.MasterToken)
 		w := httptest.NewRecorder()
@@ -739,7 +739,7 @@ func TestGetStats(t *testing.T) {
 }
 
 func TestGetStats_Unauthorized(t *testing.T) {
-	r, err := http.NewRequest("GET", "http://localhost:55555/stats", strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/stats", strings.NewReader(""))
 	if assert.NoError(t, err) {
 		// no authorization at all: 401 - unauthorized
 		w := httptest.NewRecorder()
@@ -751,6 +751,28 @@ func TestGetStats_Unauthorized(t *testing.T) {
 		w = httptest.NewRecorder()
 		GetStats(w, r, make(httprouter.Params, 0))
 		assert.Equal(t, 401, w.Code, "wrong HTTP result code")
+	}
+}
+
+func TestGetVersion(t *testing.T) {
+	// get version
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/version", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		GetVersion(w, r, make(httprouter.Params, 0))
+		// HTTP 200 - OK
+		assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+
+		ver := new(Version)
+		err = json.Unmarshal(w.Body.Bytes(), ver)
+		if assert.NoError(t, err) {
+			// validate response
+			assert.Equal(t, serviceName, ver.Name)
+			assert.Equal(t, sourceCodeURL, ver.SourceCode)
+			assert.NotEmpty(t, ver.Version, "version is expected")
+			assert.NotEmpty(t, ver.Commit, "commit is expected")
+			assert.NotEmpty(t, ver.CommitShort, "commit short is expected")
+		}
 	}
 }
 
@@ -1082,10 +1104,10 @@ func TestWebBasketPage(t *testing.T) {
 }
 
 func TestWebBasketsPage(t *testing.T) {
-	r, err := http.NewRequest("GET", "http://localhost:55555/web/"+serviceAPIPath, strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/web/"+serviceOldAPIPath, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
-		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: serviceAPIPath})
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: serviceOldAPIPath})
 		WebBasketPage(w, r, ps)
 
 		// validate response: 200 - OK
