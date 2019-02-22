@@ -704,6 +704,78 @@ func TestGetBaskets_Unauthorized(t *testing.T) {
 	}
 }
 
+func TestGetStats(t *testing.T) {
+	// create 3 baskets
+	for i := 0; i < 3; i++ {
+		basket := fmt.Sprintf("forstats0%v", i)
+		r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		if assert.NoError(t, err) {
+			w := httptest.NewRecorder()
+			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+			CreateBasket(w, r, ps)
+			assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+		}
+	}
+
+	// get stats
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/stats", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		r.Header.Add("Authorization", serverConfig.MasterToken)
+		w := httptest.NewRecorder()
+		GetStats(w, r, make(httprouter.Params, 0))
+		// HTTP 200 - OK
+		assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+
+		stats := new(DatabaseStats)
+		err = json.Unmarshal(w.Body.Bytes(), stats)
+		if assert.NoError(t, err) {
+			// validate response
+			assert.NotEmpty(t, stats.TopBasketsByDate, "top baskets are expected")
+			assert.NotEmpty(t, stats.TopBasketsBySize, "top baskets are expected")
+			assert.True(t, stats.BasketsCount > 0, "baskets count should be greater than 0")
+			assert.True(t, stats.EmptyBasketsCount > 0, "empty baskets count should be greater than 0")
+		}
+	}
+}
+
+func TestGetStats_Unauthorized(t *testing.T) {
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/stats", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		// no authorization at all: 401 - unauthorized
+		w := httptest.NewRecorder()
+		GetStats(w, r, make(httprouter.Params, 0))
+		assert.Equal(t, 401, w.Code, "wrong HTTP result code")
+
+		// invalid master token: 401 - unauthorized
+		r.Header.Add("Authorization", "123-wrong-token")
+		w = httptest.NewRecorder()
+		GetStats(w, r, make(httprouter.Params, 0))
+		assert.Equal(t, 401, w.Code, "wrong HTTP result code")
+	}
+}
+
+func TestGetVersion(t *testing.T) {
+	// get version
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/version", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		GetVersion(w, r, make(httprouter.Params, 0))
+		// HTTP 200 - OK
+		assert.Equal(t, 200, w.Code, "wrong HTTP result code")
+
+		ver := new(Version)
+		err = json.Unmarshal(w.Body.Bytes(), ver)
+		if assert.NoError(t, err) {
+			// validate response
+			assert.Equal(t, serviceName, ver.Name)
+			assert.Equal(t, sourceCodeURL, ver.SourceCode)
+			assert.NotEmpty(t, ver.Version, "version is expected")
+			assert.NotEmpty(t, ver.Commit, "commit is expected")
+			assert.NotEmpty(t, ver.CommitShort, "commit short is expected")
+		}
+	}
+}
+
 func TestGetBaskets_Query(t *testing.T) {
 	// create 10 baskets
 	for i := 0; i < 10; i++ {
@@ -1032,10 +1104,10 @@ func TestWebBasketPage(t *testing.T) {
 }
 
 func TestWebBasketsPage(t *testing.T) {
-	r, err := http.NewRequest("GET", "http://localhost:55555/web/"+serviceAPIPath, strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/web/"+serviceOldAPIPath, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
-		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: serviceAPIPath})
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: serviceOldAPIPath})
 		WebBasketPage(w, r, ps)
 
 		// validate response: 200 - OK

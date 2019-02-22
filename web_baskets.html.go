@@ -19,8 +19,9 @@ var (
     h1 { margin-top: 2px; }
     #more { margin-left: 60px; padding-bottom: 10px; }
     #all_baskets ul { width: 100%; }
-    #all_baskets li { padding: 0 0 5px 20px; float: left; display: inline; position: relative; width: 25%; }
-    #all_baskets li:before { content: "\f291"; font-family: "FontAwesome"; position: absolute; left: 0px; top:0px; }
+    #all_baskets li { float: left; display: inline; position: relative; width: 25%; }
+    .baskets li { padding: 0 0 5px 20px; }
+    .baskets li:before { content: "\f291"; font-family: "FontAwesome"; position: absolute; left: 0px; top:0px; }
   </style>
 
   <script>
@@ -45,15 +46,14 @@ var (
 
         for (index = 0; index < data.names.length; ++index) {
           name = data.names[index];
-          displayName = (name.length < 25) ? name : name.substring(0, 25) + "...";
           basketRowId = "basket_row_" + basketsCount;
 
           if (showDetails) {
             baskets.append("<tr id='" + basketRowId + "'><td><a href='/web/" + name + "' title='" + name + "'>" +
-              displayName + "</a></td></tr>");
+              toDisplayName(name) + "</a></td></tr>");
             fetchBasketDetails(name, basketRowId);
           } else {
-            baskets.append("<li><a href='/web/" + name + "' title='" + name + "'>" + displayName + "</a></li>");
+            baskets.append("<li><a href='/web/" + name + "' title='" + name + "'>" + toDisplayName(name) + "</a></li>");
           }
 
           basketsCount++;
@@ -67,10 +67,42 @@ var (
       }
     }
 
+    function showStats(stats) {
+      $("#stats_baskets_count").html(toDisplayInt(stats.baskets_count));
+      $("#stats_empty_baskets_count").html(toDisplayInt(stats.empty_baskets_count));
+      $("#stats_requests_count").html(toDisplayInt(stats.requests_count));
+      $("#stats_requests_total_count").html(toDisplayInt(stats.requests_total_count));
+      $("#stats_max_basket_size").html(toDisplayInt(stats.max_basket_size));
+      $("#stats_avg_basket_size").html(toDisplayInt(stats.avg_basket_size));
+      showTopBaskets($("#top_baskets_size"), stats.top_baskets_size);
+      showTopBaskets($("#top_baskets_recent"), stats.top_baskets_recent);
+    }
+
+    function showTopBaskets(basketsList, baskets) {
+      if (basketsList && baskets && baskets.length) {
+        var index, basket;
+        for (index = 0; index < baskets.length; ++index) {
+          basket = baskets[index];
+          basketsList.append("<li class='list-group-item'><a href='/web/" + basket.name
+            + "' title='" + basket.name + "'>" + toDisplayName(basket.name) + "</a> - " + basket.requests_count
+            + " (" + toDisplayInt(basket.requests_total_count) + ")<br>Last Request: "
+            + new Date(basket.last_request_date).toISOString() + "</li>");
+        }
+      }
+    }
+
+    function toDisplayName(name) {
+      return (name.length < 25) ? name : name.substring(0, 25) + "...";
+    }
+
+    function toDisplayInt(value) {
+      return value.toString().replace(/\d(?=(\d{3})+$)/g, "$& ");
+    }
+
     function fetchBaskets() {
       $.ajax({
         method: "GET",
-        url: "/baskets?skip=" + basketsCount,
+        url: "/api/baskets?skip=" + basketsCount,
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -79,17 +111,30 @@ var (
       }).fail(onAjaxError);
     }
 
+    function fetchStats() {
+      $.ajax({
+        method: "GET",
+        url: "/api/stats",
+        headers: {
+          "Authorization" : sessionStorage.getItem("master_token")
+        }
+      }).done(function(stats) {
+        showStats(stats);
+        fetchBaskets();
+      }).fail(onAjaxError);
+    }
+
     function fetchBasketDetails(name, basketRowId) {
       $.ajax({
         method: "GET",
-        url: "/baskets/" + name + "/requests?max=1",
+        url: "/api/baskets/" + name + "/requests?max=1",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
       }).done(function(requests) {
         $.ajax({
           method: "GET",
-          url: "/baskets/" + name,
+          url: "/api/baskets/" + name,
           headers: {
             "Authorization" : sessionStorage.getItem("master_token")
           }
@@ -102,7 +147,7 @@ var (
     function updateBasketDetails(basketRowId, requests, config) {
       var basketRow = $("#" + basketRowId);
       if (requests) {
-        basketRow.append("<td>" + requests.count + " (" + requests.total_count + ")</td>");
+        basketRow.append("<td>" + requests.count + " (" + toDisplayInt(requests.total_count) + ")</td>");
       } else {
         basketRow.append("<td>failed to retrieve!</td>");
       }
@@ -129,7 +174,7 @@ var (
       } else {
         sessionStorage.removeItem("master_token");
       }
-      fetchBaskets();
+      fetchStats();
     }
 
     // Initialization
@@ -151,7 +196,7 @@ var (
         fetchBaskets();
       });
 
-      fetchBaskets();
+      fetchStats();
     });
   })(jQuery);
   </script>
@@ -227,12 +272,65 @@ var (
   <div class="container">
     <div class="row">
       <div class="col-md-4">
-        <h1>All Baskets</h1>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Basic Statistics</h3>
+          </div>
+          <ul class="panel-body list-group">
+            <li class="list-group-item">
+              <span id="stats_baskets_count" class="badge">?</span>
+              <b>Total baskets</b>
+            </li>
+            <li class="list-group-item">
+              <span id="stats_empty_baskets_count" class="badge">?</span>
+              Empty baskets
+            </li>
+            <li class="list-group-item">
+              <span id="stats_requests_total_count" class="badge">?</span>
+              <b>Total requests</b>
+            </li>
+            <li class="list-group-item">
+              <span id="stats_requests_count" class="badge">?</span>
+              Current requests
+            </li>
+            <li class="list-group-item">
+              <span id="stats_max_basket_size" class="badge">?</span>
+              Max. basket size
+            </li>
+            <li class="list-group-item">
+              <span id="stats_avg_basket_size" class="badge">?</span>
+              Avg. basket size
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Top Baskets: by size</h3>
+          </div>
+          <ul id="top_baskets_size" class="panel-body list-group baskets">
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Top Baskets: recently active</h3>
+          </div>
+          <ul id="top_baskets_recent" class="panel-body list-group baskets">
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <h3>All Baskets</h3>
       </div>
     </div>
     <hr/>
     <div class="row">
-      <ul id="all_baskets">
+      <ul id="all_baskets" class="baskets">
       </ul>
       <table id="all_baskets_details" class="table hide">
         <thead>
@@ -255,7 +353,7 @@ var (
     <div class="container">
       <p class="text-muted">
         <small>
-          Powered by <a href="https://github.com/darklynx/request-baskets">request-baskets</a> |
+          Powered by <a href="{{.SourceCode}}">{{.Name}}</a> |
           Version: <abbr title="From commit: {{.CommitShort}} ({{.Commit}})">{{.Version}}</abbr>
         </small>
       </p>

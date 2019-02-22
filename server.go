@@ -19,7 +19,12 @@ var version *Version
 
 // CreateServer creates an instance of Request Baskets server
 func CreateServer(config *ServerConfig) *http.Server {
-	version = &Version{Version: GitVersion, Commit: GitCommit, CommitShort: GitCommitShort}
+	version = &Version{
+		Name:        serviceName,
+		Version:     GitVersion,
+		Commit:      GitCommit,
+		CommitShort: GitCommitShort,
+		SourceCode:  sourceCodeURL}
 
 	log.Printf("[info] service version: %s from commit: %s (%s)", version.Version, version.CommitShort, version.Commit)
 	// create database
@@ -38,21 +43,36 @@ func CreateServer(config *ServerConfig) *http.Server {
 	// configure service HTTP router
 	router := httprouter.New()
 
+	//// Old API mapping ////
 	// basket names
-	router.GET("/"+serviceAPIPath, GetBaskets)
-
+	router.GET("/"+serviceOldAPIPath, GetBaskets)
 	// basket management
-	router.GET("/"+serviceAPIPath+"/:basket", GetBasket)
-	router.POST("/"+serviceAPIPath+"/:basket", CreateBasket)
-	router.PUT("/"+serviceAPIPath+"/:basket", UpdateBasket)
-	router.DELETE("/"+serviceAPIPath+"/:basket", DeleteBasket)
-
-	router.GET("/"+serviceAPIPath+"/:basket/responses/:method", GetBasketResponse)
-	router.PUT("/"+serviceAPIPath+"/:basket/responses/:method", UpdateBasketResponse)
-
+	router.GET("/"+serviceOldAPIPath+"/:basket", GetBasket)
+	router.POST("/"+serviceOldAPIPath+"/:basket", CreateBasket)
+	router.PUT("/"+serviceOldAPIPath+"/:basket", UpdateBasket)
+	router.DELETE("/"+serviceOldAPIPath+"/:basket", DeleteBasket)
+	router.GET("/"+serviceOldAPIPath+"/:basket/responses/:method", GetBasketResponse)
+	router.PUT("/"+serviceOldAPIPath+"/:basket/responses/:method", UpdateBasketResponse)
 	// requests management
-	router.GET("/"+serviceAPIPath+"/:basket/requests", GetBasketRequests)
-	router.DELETE("/"+serviceAPIPath+"/:basket/requests", ClearBasket)
+	router.GET("/"+serviceOldAPIPath+"/:basket/requests", GetBasketRequests)
+	router.DELETE("/"+serviceOldAPIPath+"/:basket/requests", ClearBasket)
+
+	//// New API mapping ////
+	// service details
+	router.GET("/"+serviceAPIPath+"/stats", GetStats)
+	router.GET("/"+serviceAPIPath+"/version", GetVersion)
+	// basket names
+	router.GET("/"+serviceAPIPath+"/baskets", GetBaskets)
+	// basket management
+	router.GET("/"+serviceAPIPath+"/baskets/:basket", GetBasket)
+	router.POST("/"+serviceAPIPath+"/baskets/:basket", CreateBasket)
+	router.PUT("/"+serviceAPIPath+"/baskets/:basket", UpdateBasket)
+	router.DELETE("/"+serviceAPIPath+"/baskets/:basket", DeleteBasket)
+	router.GET("/"+serviceAPIPath+"/baskets/:basket/responses/:method", GetBasketResponse)
+	router.PUT("/"+serviceAPIPath+"/baskets/:basket/responses/:method", UpdateBasketResponse)
+	// requests management
+	router.GET("/"+serviceAPIPath+"/baskets/:basket/requests", GetBasketRequests)
+	router.DELETE("/"+serviceAPIPath+"/baskets/:basket/requests", ClearBasket)
 
 	// web pages
 	router.GET("/", ForwardToWeb)

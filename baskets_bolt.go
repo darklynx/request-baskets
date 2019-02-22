@@ -475,6 +475,35 @@ func (bdb *boltDatabase) FindNames(query string, max int, skip int) BasketNamesQ
 	return page
 }
 
+func (bdb *boltDatabase) GetStats(max int) DatabaseStats {
+	stats := DatabaseStats{}
+
+	bdb.db.View(func(tx *bolt.Tx) error {
+		cur := tx.Cursor()
+		for key, _ := cur.First(); key != nil; key, _ = cur.Next() {
+			if b := tx.Bucket(key); b != nil {
+				var lastRequestDate int64
+				if _, val := b.Bucket(boltKeyRequests).Cursor().Last(); val != nil {
+					request := new(RequestData)
+					if err := json.Unmarshal(val, request); err == nil {
+						lastRequestDate = request.Date
+					}
+				}
+
+				stats.Collect(&BasketInfo{
+					Name:               string(key),
+					RequestsCount:      btoi(b.Get(boltKeyCount)),
+					RequestsTotalCount: btoi(b.Get(boltKeyTotalCount)),
+					LastRequestDate:    lastRequestDate}, max)
+			}
+		}
+		return nil
+	})
+
+	stats.UpdateAvarage()
+	return stats
+}
+
 func (bdb *boltDatabase) Release() {
 	log.Print("[info] closing Bolt database")
 	err := bdb.db.Close()

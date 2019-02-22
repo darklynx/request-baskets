@@ -11,7 +11,9 @@ var (
 
 // Version describes application version
 type Version struct {
-	Version     string
-	Commit      string
-	CommitShort string
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	Commit      string `json:"commit"`
+	CommitShort string `json:"commit_short"`
+	SourceCode  string `json:"source_code"`
 }

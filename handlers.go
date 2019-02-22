@@ -143,16 +143,35 @@ func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	} else {
 		values := r.URL.Query()
 		if query := values.Get("q"); len(query) > 0 {
-			// Find names
+			// find names
 			max, skip := getPage(values)
 			json, err := json.Marshal(basketsDb.FindNames(query, max, skip))
 			writeJSON(w, http.StatusOK, json, err)
 		} else {
-			// Get basket names page
+			// get basket names page
 			json, err := json.Marshal(basketsDb.GetNames(getPage(values)))
 			writeJSON(w, http.StatusOK, json, err)
 		}
 	}
+}
+
+// GetStats handles HTTP request to get database statistics
+func GetStats(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if r.Header.Get("Authorization") != serverConfig.MasterToken {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
+		// get database stats
+		max := parseInt(r.URL.Query().Get("max"), 1, 100, 5)
+		json, err := json.Marshal(basketsDb.GetStats(max))
+		writeJSON(w, http.StatusOK, json, err)
+	}
+}
+
+// GetVersion handles HTTP request to get service version details
+func GetVersion(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// get database stats
+	json, err := json.Marshal(version)
+	writeJSON(w, http.StatusOK, json, err)
 }
 
 // GetBasket handles HTTP request to get basket configuration
@@ -166,7 +185,7 @@ func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 // CreateBasket handles HTTP request to create a new basket
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	name := ps.ByName("basket")
-	if name == serviceAPIPath || name == serviceUIPath {
+	if name == serviceOldAPIPath || name == serviceAPIPath || name == serviceUIPath {
 		http.Error(w, "This basket name conflicts with reserved system path: "+name, http.StatusForbidden)
 		return
 	}
@@ -302,12 +321,12 @@ func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
 		values := r.URL.Query()
 		if query := values.Get("q"); len(query) > 0 {
-			// Find requests
+			// find requests
 			max, skip := getPage(values)
 			json, err := json.Marshal(basket.FindRequests(query, values.Get("in"), max, skip))
 			writeJSON(w, http.StatusOK, json, err)
 		} else {
-			// Get requests page
+			// get requests page
 			json, err := json.Marshal(basket.GetRequests(getPage(values)))
 			writeJSON(w, http.StatusOK, json, err)
 		}
@@ -337,7 +356,7 @@ func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if name := ps.ByName("basket"); validBasketName.MatchString(name) {
 		switch name {
-		case serviceAPIPath:
+		case serviceOldAPIPath:
 			// admin page to access all baskets
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			basketsPageTemplate.Execute(w, version)

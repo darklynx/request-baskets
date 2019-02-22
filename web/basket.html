@@ -257,7 +257,7 @@
     function fetchRequests() {
       $.ajax({
         method: "GET",
-        url: "/baskets/" + name + "/requests?skip=" + fetchedCount,
+        url: "/api/baskets/" + name + "/requests?skip=" + fetchedCount,
         headers: {
           "Authorization" : getToken()
         }
@@ -267,7 +267,7 @@
     function fetchTotalCount() {
       $.ajax({
         method: "GET",
-        url: "/baskets/" + name + "/requests?max=0",
+        url: "/api/baskets/" + name + "/requests?max=0",
         headers: {
           "Authorization" : getToken()
         }
@@ -283,7 +283,7 @@
       $("#response_method").val(method);
       $.ajax({
         method: "GET",
-        url: "/baskets/" + name + "/responses/" + method,
+        url: "/api/baskets/" + name + "/responses/" + method,
         headers: {
           "Authorization" : getToken()
         }
@@ -357,7 +357,7 @@
 
       $.ajax({
         method: "PUT",
-        url: "/baskets/" + name + "/responses/" + method,
+        url: "/api/baskets/" + name + "/responses/" + method,
         dataType: "json",
         data: JSON.stringify(response),
         headers: {
@@ -382,7 +382,7 @@
 
         $.ajax({
           method: "PUT",
-          url: "/baskets/" + name,
+          url: "/api/baskets/" + name,
           dataType: "json",
           data: JSON.stringify(currentConfig),
           headers: {
@@ -421,7 +421,7 @@
     function config() {
       $.ajax({
         method: "GET",
-        url: "/baskets/" + name,
+        url: "/api/baskets/" + name,
         headers: {
           "Authorization" : getToken()
         }
@@ -444,7 +444,7 @@
     function deleteRequests() {
       $.ajax({
         method: "DELETE",
-        url: "/baskets/" + name + "/requests",
+        url: "/api/baskets/" + name + "/requests",
         headers: {
           "Authorization" : getToken()
         }
@@ -459,7 +459,7 @@
 
       $.ajax({
         method: "DELETE",
-        url: "/baskets/" + name,
+        url: "/api/baskets/" + name,
         headers: {
           "Authorization" : getToken()
         }
@@ -507,7 +507,7 @@
               "already stored in your browser.\n\n" +
               "If you trust this link choose 'OK' and existing token will be \n" +
               "replaced with the new one, otherwise choose 'Cancel'.\n\n" +
-              "Do you want to replace the access token of this basket?")))) {
+              "Do you want to replace the access token of this basket?")) {
             localStorage.setItem("basket_" + name, token);
           }
         }
