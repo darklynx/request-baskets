@@ -47,6 +47,11 @@ securityDefinitions:
     type: apiKey
     name: Authorization
     in: header
+  service_token:
+    description: Service master token
+    type: apiKey
+    name: Authorization
+    in: header
 
 # URL patterns
 paths:
@@ -82,7 +87,7 @@ paths:
         401:
           description: Unauthorized. Invalid or missing master token
       security:
-        - basket_token: []
+        - service_token: []
 
   /api/baskets:
     get:
@@ -116,7 +121,7 @@ paths:
         401:
           description: Unauthorized. Invalid or missing master token
       security:
-        - basket_token: []
+        - service_token: []
 
   /api/baskets/{name}:
     post:
@@ -412,7 +417,7 @@ paths:
         401:
           description: Unauthorized. Invalid or missing master token
       security:
-        - basket_token: []
+        - service_token: []
 
   /baskets/{name}:
     post:
@@ -783,6 +788,10 @@ definitions:
         description: Collection of basket names
         items:
           type: string
+        example:
+          - basket22
+          - mybasket
+          - test123
       count:
         type: integer
         description: Total number of baskets in the system; not present if query is applied
@@ -867,11 +876,11 @@ definitions:
       content_length:
         type: integer
         description: Content length of request
-        example: 39
+        example: 24
       body:
         type: string
         description: Content of request body
-        example: { 'user' : 'abc_test', 'status' : 200 }
+        example: user=abc_test&status=200
       method:
         type: string
         description: HTTP method of request
@@ -893,6 +902,14 @@ definitions:
       description: Collection of header values
       items:
         type: string
+    example:
+      Content-Type:
+        - application/json
+      Accept:
+        - application/json
+        - application/xml
+      Connection:
+        - close
 
   Response:
     type: object
@@ -912,3 +929,4 @@ definitions:
         description: |
             If set to `true` the body is treated as [HTML template](https://golang.org/pkg/html/template) that accepts
             input from request parameters.
+        example: false
