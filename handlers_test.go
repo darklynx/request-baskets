@@ -44,7 +44,7 @@ func TestParseInt(t *testing.T) {
 func TestCreateBasket(t *testing.T) {
 	basket := "create01"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -70,7 +70,7 @@ func TestCreateBasket(t *testing.T) {
 func TestCreateBasket_CustomConfig(t *testing.T) {
 	basket := "create02"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(
 		"{\"capacity\":30,\"insecure_tls\":true,\"expand_path\":true,\"forward_url\": \"http://localhost:12345/test\",\"proxy_response\":true}"))
 
 	if assert.NoError(t, err) {
@@ -99,7 +99,7 @@ func TestCreateBasket_CustomConfig(t *testing.T) {
 func TestCreateBasket_Forbidden(t *testing.T) {
 	basket := serviceUIPath
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -116,7 +116,7 @@ func TestCreateBasket_Forbidden(t *testing.T) {
 func TestCreateBasket_InvalidName(t *testing.T) {
 	basket := ">>>"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -134,7 +134,7 @@ func TestCreateBasket_InvalidName(t *testing.T) {
 func TestCreateBasket_Conflict(t *testing.T) {
 	basket := "create03"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		CreateBasket(httptest.NewRecorder(), r, ps)
@@ -152,7 +152,7 @@ func TestCreateBasket_Conflict(t *testing.T) {
 func TestCreateBasket_InvalidCapacity(t *testing.T) {
 	basket := "create04"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"capacity\": -10}"))
 
 	if assert.NoError(t, err) {
@@ -171,7 +171,7 @@ func TestCreateBasket_InvalidCapacity(t *testing.T) {
 func TestCreateBasket_ExceedCapacityLimit(t *testing.T) {
 	basket := "create05"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"capacity\": 10000000}"))
 
 	if assert.NoError(t, err) {
@@ -190,7 +190,7 @@ func TestCreateBasket_ExceedCapacityLimit(t *testing.T) {
 func TestCreateBasket_InvalidForwardUrl(t *testing.T) {
 	basket := "create06"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"forward_url\": \".,?-7\"}"))
 
 	if assert.NoError(t, err) {
@@ -209,7 +209,7 @@ func TestCreateBasket_InvalidForwardUrl(t *testing.T) {
 func TestCreateBasket_BrokenJson(t *testing.T) {
 	basket := "create07"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"capacity\": 300, "))
 
 	if assert.NoError(t, err) {
@@ -229,7 +229,7 @@ func TestCreateBasket_ConfigOutOfLimit(t *testing.T) {
 	basket := "create08"
 
 	// only first 2048 bytes of config are read, bigger amount is truncated; this leads to an invalid JSON
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"capacity\": 300, \"forward_url\": \"http://localhost:8080/1234567890/1234567890/1234567890/"+
 			"1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/"+
 			"1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/"+
@@ -268,7 +268,7 @@ func TestCreateBasket_ConfigOutOfLimit(t *testing.T) {
 func TestCreateBasket_ReadTimeout(t *testing.T) {
 	basket := "create09"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		iotest.TimeoutReader(strings.NewReader("{\"capacity\": 300, \"forward_url\": \"http://localhost:8080/1234567890\"}")))
 
 	if assert.NoError(t, err) {
@@ -287,7 +287,7 @@ func TestCreateBasket_ReadTimeout(t *testing.T) {
 func TestGetBasket(t *testing.T) {
 	basket := "get01"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -298,7 +298,7 @@ func TestGetBasket(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+			r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
 				w = httptest.NewRecorder()
@@ -324,14 +324,14 @@ func TestGetBasket(t *testing.T) {
 func TestGetBasket_Unauthorized(t *testing.T) {
 	basket := "get02"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		CreateBasket(w, r, ps)
 		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
 
-		r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 		if assert.NoError(t, err) {
 			w = httptest.NewRecorder()
 			GetBasket(w, r, ps)
@@ -345,14 +345,14 @@ func TestGetBasket_Unauthorized(t *testing.T) {
 func TestGetBasket_WrongToken(t *testing.T) {
 	basket := "get03"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		w := httptest.NewRecorder()
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		CreateBasket(w, r, ps)
 		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
 
-		r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 		if assert.NoError(t, err) {
 			r.Header.Add("Authorization", "wrong_token")
 			w = httptest.NewRecorder()
@@ -367,7 +367,7 @@ func TestGetBasket_WrongToken(t *testing.T) {
 func TestGetBasket_NotFound(t *testing.T) {
 	basket := "get04"
 
-	r, err := http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		r.Header.Add("Authorization", "abcd12345")
 		w := httptest.NewRecorder()
@@ -382,7 +382,7 @@ func TestGetBasket_NotFound(t *testing.T) {
 func TestGetBasket_BadRequest(t *testing.T) {
 	basket := "get05~"
 
-	r, err := http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		r.Header.Add("Authorization", "abcd12345")
 		w := httptest.NewRecorder()
@@ -399,7 +399,7 @@ func TestGetBasket_BadRequest(t *testing.T) {
 func TestUpdateBasket(t *testing.T) {
 	basket := "update01"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -411,7 +411,7 @@ func TestUpdateBasket(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("PUT", "http://localhost:55555/baskets/"+basket,
+			r, err = http.NewRequest("PUT", "http://localhost:55555/api/baskets/"+basket,
 				strings.NewReader("{\"capacity\":50, \"expand_path\":true, \"forward_url\":\"http://test.server/forward\",\"proxy_response\":true}"))
 
 			if assert.NoError(t, err) {
@@ -437,7 +437,7 @@ func TestUpdateBasket(t *testing.T) {
 func TestUpdateBasket_EmptyConfig(t *testing.T) {
 	basket := "update02"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -449,7 +449,7 @@ func TestUpdateBasket_EmptyConfig(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("PUT", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+			r, err = http.NewRequest("PUT", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
@@ -473,7 +473,7 @@ func TestUpdateBasket_EmptyConfig(t *testing.T) {
 func TestUpdateBasket_BrokenJson(t *testing.T) {
 	basket := "update03"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -485,7 +485,7 @@ func TestUpdateBasket_BrokenJson(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("PUT", "http://localhost:55555/baskets/"+basket, strings.NewReader("{ capacity : 300 /"))
+			r, err = http.NewRequest("PUT", "http://localhost:55555/api/baskets/"+basket, strings.NewReader("{ capacity : 300 /"))
 
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
@@ -509,7 +509,7 @@ func TestUpdateBasket_BrokenJson(t *testing.T) {
 func TestUpdateBasket_ReadTimeout(t *testing.T) {
 	basket := "update04"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -521,7 +521,7 @@ func TestUpdateBasket_ReadTimeout(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("PUT", "http://localhost:55555/baskets/"+basket,
+			r, err = http.NewRequest("PUT", "http://localhost:55555/api/baskets/"+basket,
 				iotest.TimeoutReader(strings.NewReader("{\"capacity\":300}")))
 
 			if assert.NoError(t, err) {
@@ -546,7 +546,7 @@ func TestUpdateBasket_ReadTimeout(t *testing.T) {
 func TestUpdateBasket_InvalidConfig(t *testing.T) {
 	basket := "update05"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -558,7 +558,7 @@ func TestUpdateBasket_InvalidConfig(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("PUT", "http://localhost:55555/baskets/"+basket,
+			r, err = http.NewRequest("PUT", "http://localhost:55555/api/baskets/"+basket,
 				strings.NewReader("{\"capacity\":50000000}"))
 
 			if assert.NoError(t, err) {
@@ -583,7 +583,7 @@ func TestUpdateBasket_InvalidConfig(t *testing.T) {
 func TestDeleteBasket(t *testing.T) {
 	basket := "delete01"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -596,7 +596,7 @@ func TestDeleteBasket(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("DELETE", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+			r, err = http.NewRequest("DELETE", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
@@ -616,7 +616,7 @@ func TestDeleteBasket(t *testing.T) {
 func TestDeleteBasket_NotFound(t *testing.T) {
 	basket := "delete02"
 
-	r, err := http.NewRequest("DELETE", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("DELETE", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		r.Header.Add("Authorization", "abc123")
 
@@ -632,7 +632,7 @@ func TestDeleteBasket_NotFound(t *testing.T) {
 func TestDeleteBasket_Unauthorized(t *testing.T) {
 	basket := "delete03"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -641,7 +641,7 @@ func TestDeleteBasket_Unauthorized(t *testing.T) {
 		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
 		assert.NotNil(t, basketsDb.Get(basket), "basket '%v' is expected", basket)
 
-		r, err = http.NewRequest("DELETE", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		r, err = http.NewRequest("DELETE", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 		if assert.NoError(t, err) {
 			r.Header.Add("Authorization", "123-wrong-token")
 			w = httptest.NewRecorder()
@@ -660,7 +660,7 @@ func TestGetBaskets(t *testing.T) {
 	// create 5 baskets
 	for i := 0; i < 5; i++ {
 		basket := fmt.Sprintf("names0%v", i)
-		r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 		if assert.NoError(t, err) {
 			w := httptest.NewRecorder()
 			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -670,7 +670,7 @@ func TestGetBaskets(t *testing.T) {
 	}
 
 	// get names
-	r, err := http.NewRequest("GET", "http://localhost:55555/baskets", strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/baskets", strings.NewReader(""))
 	if assert.NoError(t, err) {
 		r.Header.Add("Authorization", serverConfig.MasterToken)
 		w := httptest.NewRecorder()
@@ -689,7 +689,7 @@ func TestGetBaskets(t *testing.T) {
 }
 
 func TestGetBaskets_Unauthorized(t *testing.T) {
-	r, err := http.NewRequest("GET", "http://localhost:55555/baskets", strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/baskets", strings.NewReader(""))
 	if assert.NoError(t, err) {
 		// no authorization at all: 401 - unauthorized
 		w := httptest.NewRecorder()
@@ -708,7 +708,7 @@ func TestGetStats(t *testing.T) {
 	// create 3 baskets
 	for i := 0; i < 3; i++ {
 		basket := fmt.Sprintf("forstats0%v", i)
-		r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 		if assert.NoError(t, err) {
 			w := httptest.NewRecorder()
 			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -780,7 +780,7 @@ func TestGetBaskets_Query(t *testing.T) {
 	// create 10 baskets
 	for i := 0; i < 10; i++ {
 		basket := fmt.Sprintf("names1%v", i)
-		r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 		if assert.NoError(t, err) {
 			w := httptest.NewRecorder()
 			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -790,7 +790,7 @@ func TestGetBaskets_Query(t *testing.T) {
 	}
 
 	// get names
-	r, err := http.NewRequest("GET", "http://localhost:55555/baskets?q=names1", strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/baskets?q=names1", strings.NewReader(""))
 	if assert.NoError(t, err) {
 		r.Header.Add("Authorization", serverConfig.MasterToken)
 		w := httptest.NewRecorder()
@@ -813,7 +813,7 @@ func TestGetBaskets_Page(t *testing.T) {
 	// create 10 baskets
 	for i := 0; i < 10; i++ {
 		basket := fmt.Sprintf("names2%v", i)
-		r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+		r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 		if assert.NoError(t, err) {
 			w := httptest.NewRecorder()
 			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -823,7 +823,7 @@ func TestGetBaskets_Page(t *testing.T) {
 	}
 
 	// get names
-	r, err := http.NewRequest("GET", "http://localhost:55555/baskets?max=5&skip=2", strings.NewReader(""))
+	r, err := http.NewRequest("GET", "http://localhost:55555/api/baskets?max=5&skip=2", strings.NewReader(""))
 	if assert.NoError(t, err) {
 		r.Header.Add("Authorization", serverConfig.MasterToken)
 		w := httptest.NewRecorder()
@@ -846,7 +846,7 @@ func TestGetBaskets_Page(t *testing.T) {
 func TestGetBasketRequests(t *testing.T) {
 	basket := "getreq01"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -867,7 +867,7 @@ func TestGetBasketRequests(t *testing.T) {
 			}
 
 			// get requests
-			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+			r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
 				w = httptest.NewRecorder()
@@ -893,7 +893,7 @@ func TestGetBasketRequests(t *testing.T) {
 func TestGetBasketRequests_Query(t *testing.T) {
 	basket := "getreq02"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -917,7 +917,7 @@ func TestGetBasketRequests_Query(t *testing.T) {
 			}
 
 			// get requests
-			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"?q=magic&in=headers", strings.NewReader(""))
+			r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket+"?q=magic&in=headers", strings.NewReader(""))
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
 				w = httptest.NewRecorder()
@@ -941,7 +941,7 @@ func TestGetBasketRequests_Query(t *testing.T) {
 func TestGetBasketRequests_Page(t *testing.T) {
 	basket := "getreq03"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -962,7 +962,7 @@ func TestGetBasketRequests_Page(t *testing.T) {
 			}
 
 			// get requests
-			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"?max=5&skip=5", strings.NewReader(""))
+			r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket+"?max=5&skip=5", strings.NewReader(""))
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
 				w = httptest.NewRecorder()
@@ -990,7 +990,7 @@ func TestGetBasketRequests_Page(t *testing.T) {
 func TestClearBasket(t *testing.T) {
 	basket := "clear01"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1011,7 +1011,7 @@ func TestClearBasket(t *testing.T) {
 			}
 
 			// clear basket
-			r, err = http.NewRequest("DELETE", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+			r, err = http.NewRequest("DELETE", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
 				w = httptest.NewRecorder()
@@ -1020,7 +1020,7 @@ func TestClearBasket(t *testing.T) {
 				assert.Equal(t, 204, w.Code, "wrong HTTP result code")
 
 				// get requests
-				r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+				r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 				if assert.NoError(t, err) {
 					r.Header.Add("Authorization", auth.Token)
 					w = httptest.NewRecorder()
@@ -1137,7 +1137,7 @@ func TestGetBasketResponse(t *testing.T) {
 	basket := "response01"
 	method := "GET"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1149,7 +1149,7 @@ func TestGetBasketResponse(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
+			r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
 
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
@@ -1180,7 +1180,7 @@ func TestGetBasketResponse_InvalidMethod(t *testing.T) {
 	basket := "response02"
 	method := "DEMO"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1192,7 +1192,7 @@ func TestGetBasketResponse_InvalidMethod(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
+			r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
 
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
@@ -1214,7 +1214,7 @@ func TestGetBasketResponse_Unauthorized(t *testing.T) {
 	basket := "response03"
 	method := "POST"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1222,7 +1222,7 @@ func TestGetBasketResponse_Unauthorized(t *testing.T) {
 		CreateBasket(w, r, ps)
 		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
 
-		r, err = http.NewRequest("GET", "http://localhost:55555/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
+		r, err = http.NewRequest("GET", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
 		if assert.NoError(t, err) {
 			ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket},
 				httprouter.Param{Key: "method", Value: method})
@@ -1239,7 +1239,7 @@ func TestUpdateBasketResponse(t *testing.T) {
 	basket := "response04"
 	method := "DELETE"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1251,7 +1251,7 @@ func TestUpdateBasketResponse(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+			r, err = http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method,
 				strings.NewReader("{\"status\":404,\"body\":\"<error><code>404</code><message>Not Found</message></error>\",\"headers\":{\"Content-Type\":[\"application/xml\"]}}"))
 
 			if assert.NoError(t, err) {
@@ -1280,7 +1280,7 @@ func TestUpdateBasketResponse_InvalidMethod(t *testing.T) {
 	basket := "response05"
 	method := "WRONG"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1292,7 +1292,7 @@ func TestUpdateBasketResponse_InvalidMethod(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+			r, err = http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method,
 				strings.NewReader("{\"status\":201,\"body\":\"{}\",\"headers\":{\"Content-Type\":[\"application/json\"]}}"))
 
 			if assert.NoError(t, err) {
@@ -1319,7 +1319,7 @@ func TestUpdateBasketResponse_BrokenJson(t *testing.T) {
 	basket := "response06"
 	method := "PUT"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1331,7 +1331,7 @@ func TestUpdateBasketResponse_BrokenJson(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+			r, err = http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method,
 				strings.NewReader("<config><status>204</status></config>"))
 
 			if assert.NoError(t, err) {
@@ -1358,7 +1358,7 @@ func TestUpdateBasketResponse_InvalidConfig(t *testing.T) {
 	basket := "response07"
 	method := "OPTIONS"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1370,7 +1370,7 @@ func TestUpdateBasketResponse_InvalidConfig(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+			r, err = http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method,
 				strings.NewReader("{\"status\":20}"))
 
 			if assert.NoError(t, err) {
@@ -1397,7 +1397,7 @@ func TestUpdateBasketResponse_InvalidTemplate(t *testing.T) {
 	basket := "response08"
 	method := "GET"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1409,7 +1409,7 @@ func TestUpdateBasketResponse_InvalidTemplate(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+			r, err = http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method,
 				strings.NewReader("{\"status\":200,\"body\":\"data: {{data}}\",\"is_template\":true}"))
 
 			if assert.NoError(t, err) {
@@ -1436,7 +1436,7 @@ func TestUpdateBasketResponse_NotModified(t *testing.T) {
 	basket := "response09"
 	method := "GET"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1448,7 +1448,7 @@ func TestUpdateBasketResponse_NotModified(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
+			r, err = http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method, strings.NewReader(""))
 
 			if assert.NoError(t, err) {
 				r.Header.Add("Authorization", auth.Token)
@@ -1472,7 +1472,7 @@ func TestUpdateBasketResponse_ReadTimeout(t *testing.T) {
 	basket := "response10"
 	method := "PATCH"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1484,7 +1484,7 @@ func TestUpdateBasketResponse_ReadTimeout(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+			r, err = http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method,
 				iotest.TimeoutReader(strings.NewReader("object is patched")))
 
 			if assert.NoError(t, err) {
@@ -1509,7 +1509,7 @@ func TestAcceptBasketRequests_CustomResponse(t *testing.T) {
 	basket := "accept03"
 	method := "POST"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1521,7 +1521,7 @@ func TestAcceptBasketRequests_CustomResponse(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+			r, err = http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method,
 				strings.NewReader("{\"status\":201,\"body\":\"successfully created\",\"headers\":{"+
 					"\"Location\":[\"http://localhost:55555/id/1234\"],\"X-Rate-Limit\":[\"10\",\"1000\"]}}"))
 
@@ -1556,7 +1556,7 @@ func TestAcceptBasketRequests_TemplateResponse(t *testing.T) {
 	basket := "accept04"
 	method := "GET"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1568,7 +1568,7 @@ func TestAcceptBasketRequests_TemplateResponse(t *testing.T) {
 		auth := new(BasketAuth)
 		err = json.Unmarshal(w.Body.Bytes(), auth)
 		if assert.NoError(t, err, "Failed to parse CreateBasket response") {
-			r, err = http.NewRequest("POST", "http://localhost:55555/baskets/"+basket+"/responses/"+method,
+			r, err = http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket+"/responses/"+method,
 				strings.NewReader("{\"status\":200,\"body\":\"hello {{range .name}}{{.}} {{end}}\",\"is_template\":true}"))
 
 			if assert.NoError(t, err) {
@@ -1612,7 +1612,7 @@ func TestAcceptBasketRequests_WithForwardInsecure(t *testing.T) {
 	// Config to forward requests to test HTTP server (also enable expanding URL)
 	forwardURL := ts.URL + "/notify?captured_at=" + basket
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"forward_url\":\""+forwardURL+"\",\"insecure_tls\":true,\"capacity\":200}"))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -1655,7 +1655,7 @@ func TestAcceptBasketRequests_WithForwardExpand(t *testing.T) {
 	// Config to forward requests to test HTTP server (also enable expanding URL)
 	forwardURL := ts.URL + "/service?from=" + basket
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"forward_url\":\""+forwardURL+"\",\"expand_path\":true,\"capacity\":200}"))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -1699,7 +1699,7 @@ func TestAcceptBasketRequests_WithProxyResponse(t *testing.T) {
 	// Config to forward requests to test HTTP server (also enable expanding URL)
 	forwardURL := ts.URL + "/service?from=" + basket
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"forward_url\":\""+forwardURL+"\",\"expand_path\":true,\"capacity\":200,\"proxy_response\":true}"))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -1735,7 +1735,7 @@ func TestAcceptBasketRequests_WithForward_BadGateway(t *testing.T) {
 	// assuming that nothing is running at port 55556
 	forwardURL := "http://localhost:55556/notify"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"forward_url\":\""+forwardURL+"\",\"capacity\":200}"))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -1764,7 +1764,7 @@ func TestAcceptBasketRequests_WithProxyResponse_BadGateway(t *testing.T) {
 	// assuming that nothing is running at port 55556
 	forwardURL := "http://localhost:55556/notify"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket,
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket,
 		strings.NewReader("{\"forward_url\":\""+forwardURL+"\",\"proxy_response\":true,\"capacity\":20}"))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
@@ -1792,7 +1792,7 @@ func TestAcceptBasketRequests_WithForward_InternalServerError(t *testing.T) {
 	basket := "accept10"
 	method := "PUT"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
@@ -1821,7 +1821,7 @@ func TestAcceptBasketRequests_WithProxyResponse_InternalServerError(t *testing.T
 	basket := "accept11"
 	method := "PATCH"
 
-	r, err := http.NewRequest("POST", "http://localhost:55555/baskets/"+basket, strings.NewReader(""))
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
 	if assert.NoError(t, err) {
 		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
 		w := httptest.NewRecorder()
