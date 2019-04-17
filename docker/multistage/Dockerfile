@@ -18,6 +18,7 @@ FROM alpine:latest
 MAINTAINER Vladimir L, vladimir_l@gmx.net
 RUN apk --no-cache add ca-certificates
 VOLUME /var/lib/rbaskets
+COPY docker/entrypoint.sh /bin/entrypoint
 COPY --from=builder /go/bin/rbaskets /bin/rbaskets
 EXPOSE 55555
-CMD /bin/rbaskets -l 0.0.0.0 -db bolt -file /var/lib/rbaskets/baskets.db
+CMD /bin/entrypoint
