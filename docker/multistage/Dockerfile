@@ -1,5 +1,5 @@
 # Builds Request Baskets service using multi-stage builds
-# Version 1.2
+# Version 1.3
 
 # Stage 1. Building service
 FROM golang:latest as builder
@@ -15,7 +15,7 @@ RUN GIT_VERSION="$(git describe --dirty='*' || git symbolic-ref -q --short HEAD)
 
 # Stage 2. Packaging into alpine
 FROM alpine:latest
-MAINTAINER Vladimir L, vladimir_l@gmx.net
+LABEL maintainer="vladimir_l@gmx.net"
 RUN apk --no-cache add ca-certificates
 VOLUME /var/lib/rbaskets
 COPY docker/entrypoint.sh /bin/entrypoint
