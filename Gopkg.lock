@@ -18,12 +18,12 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:ec6f9bf5e274c833c911923c9193867f3f18788c461f76f05f62bb1510e0ae65"
+  digest = "1:a3af33fd30536d9c5a7b6ad542390919e57c1125097a194c7b3d9904109a0611"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   pruneopts = "UT"
-  revision = "72cd26f257d44c1114970e19afddcd812016007e"
-  version = "v1.4.1"
+  revision = "17ef3dd9d98b69acec3e85878995ada9533a9370"
+  version = "v1.5.0"
 
 [[projects]]
   digest = "1:84a35669b4b31cc20ffc89c3b2ab32f2189fb2366a973efa1c25e009ef6ae1c6"
@@ -34,7 +34,7 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:12cb143f2148bf54bcd9fe622abac17325e85eeb1d84b8ec6caf1c80232108fd"
+  digest = "1:9ff22c26414baf7deaf74f2a788fe7b97666048bcbe346c52cfe823442abbdfb"
   name = "github.com/lib/pq"
   packages = [
     ".",
@@ -42,8 +42,8 @@
     "scram",
   ]
   pruneopts = "UT"
-  revision = "3427c32cb71afc948325f299f040e53c1dd78979"
-  version = "v1.2.0"
+  revision = "99274577be97ac9b1d95a2d61d566dc9b7cc6a54"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -54,28 +54,20 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:8548c309c65a85933a625be5e7d52b6ac927ca30c56869fae58123b8a77a75e1"
+  digest = "1:5e8f46b412421d2d6cceea845d28ac46f3f5a5f60a6e86f0ee75e24fd43a02a9"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   pruneopts = "UT"
-  revision = "221dbe5ed46703ee255b1da0dec05086f5035f62"
-  version = "v1.4.0"
+  revision = "3ebf1ddaeb260c4b1ae502a01c7844fa8c1fa0e9"
+  version = "v1.5.1"
 
 [[projects]]
-  digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
-  name = "google.golang.org/appengine"
-  packages = ["cloudsql"]
-  pruneopts = "UT"
-  revision = "971852bfffca25b069c31162ae8f247a3dba083b"
-  version = "v1.6.5"
-
-[[projects]]
-  digest = "1:f26a5d382387e03a40d1471dddfba85dfff9bf05352d7e42d37612677c4d3c5c"
+  digest = "1:55b110c99c5fdc4f14930747326acce56b52cfce60b24b1c03ef686ac0e46bb1"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f90ceb4f409096b60e2e9076b38b304b8246e5fa"
-  version = "v2.2.5"
+  revision = "53403b58ad1b561927d19068c655246f2db79d48"
+  version = "v2.2.8"
 
 [solve-meta]
   analyzer-name = "dep"
