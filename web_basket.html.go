@@ -21,6 +21,7 @@ const (
   <script>
   (function($) {
     var fetchedCount = 0;
+    var fetchedRequests = {};
     var totalCount = 0;
     var currentConfig;
 
@@ -94,11 +95,13 @@ const (
 
       var date = new Date(request.date);
 
-      var html = '<div class="row"><div class="col-md-2"><h4 class="text-' + headerClass +
-        '">[' + request.method + ']</h4><div><i class="glyphicon glyphicon-time" title="' + date.toString() + '"></i> ' + date.toLocaleTimeString() +
+      var html = '<div class="row"><div class="col-md-2"><h4 class="text-' + headerClass + '">[' + request.method + ']</h4>' +
+        '<div><i class="glyphicon glyphicon-time" title="' + date.toString() + '"></i> ' + date.toLocaleTimeString() +
         '</div><div><i class="glyphicon glyphicon-calendar" title="' + date.toString() + '"></i> ' + date.toLocaleDateString() +
         '</div></div><div class="col-md-10"><div class="panel-group" id="' + id + '">' +
-        '<div class="panel panel-' + headerClass + '"><div class="panel-heading"><h4 class="panel-title">' + escapeHTML(path) + '</h4></div></div>' +
+        '<div class="panel panel-' + headerClass + '"><div class="panel-heading"><h4 class="panel-title">' + escapeHTML(path) +
+        '<span id="' + id + '_copy_request_btn" for="' + requestId + '" class="pull-right copy-req-btn">' +
+        '<span title="Copy Request Details" class="glyphicon glyphicon-copy"></span></span></h4></div></div>' +
         '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title">' +
         '<a class="collapsed" data-toggle="collapse" data-parent="#' + id + '" href="#' + id + '_headers">Headers</a></h4></div>' +
         '<div id="' + id + '_headers" class="panel-collapse collapse">' +
@@ -141,6 +144,7 @@ const (
           request = data.requests[index];
           requestId = "req" + fetchedCount;
           requests.append(renderRequest(requestId, request));
+          fetchedRequests[requestId] = JSON.stringify(request, null, 2);
 
           if (request.body) {
             var format = getContentFormat(request.headers["Content-Type"]);
@@ -154,6 +158,10 @@ const (
               });
             }
           }
+
+          $("#" + requestId + "_copy_request_btn").on("click", function(event) {
+            copyRequest(this);
+          });
 
           fetchedCount++;
         }
@@ -251,6 +259,18 @@ const (
       });
 
       return formatted;
+    }
+
+    function copyRequest(btn) {
+      var button = $(btn);
+      var requestId = button.attr("for");
+
+      if (copyToClipboard(fetchedRequests[requestId], button.get(0))) {
+        // reset check
+        $(".copy-req-btn").html('<span title="Copy Request Details" class="glyphicon glyphicon-copy"></span>');
+        // mark as copied
+        button.html('<span title="This request is copied to your clipboard." class="glyphicon glyphicon-check"></span>');
+      }
     }
 
     function fetchRequests() {
@@ -398,6 +418,7 @@ const (
     function refresh() {
       $("#requests").html(""); // reset
       fetchedCount = 0;
+      fetchedRequests = {};
       fetchRequests(); // fetch latest
     }
 
@@ -471,10 +492,11 @@ const (
       }).fail(onAjaxError);
     }
 
-    function copyToClipboard(text) {
+    function copyToClipboard(text, element) {
+      var position = element || document.body.firstChild;
       var textArea = document.createElement("textarea");
       textArea.value = text;
-      document.body.insertBefore(textArea, document.body.firstChild);
+      position.parentNode.insertBefore(textArea, position);
       textArea.focus();
       textArea.select();
 
@@ -485,7 +507,7 @@ const (
         copied = false;
       }
 
-      document.body.removeChild(textArea);
+      position.parentNode.removeChild(textArea);
       return copied;
     }
 
