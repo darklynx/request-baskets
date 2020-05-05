@@ -16,6 +16,7 @@ const (
     body { padding-top: 70px; }
     h1 { margin-top: 2px; }
     #more { margin-left: 100px; }
+    .copy-req-btn:hover { cursor: pointer; }
   </style>
 
   <script>
