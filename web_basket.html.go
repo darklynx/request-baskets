@@ -16,11 +16,13 @@ const (
     body { padding-top: 70px; }
     h1 { margin-top: 2px; }
     #more { margin-left: 100px; }
-    .copy-req-btn:hover { cursor: pointer; }
+    .copy-req-btn:hover,
+    .copy-url-btn:hover { cursor: pointer; }
   </style>
 
   <script>
   (function($) {
+    var basketUrl = window.location.protocol + "//" + window.location.host + "/{{.}}";
     var fetchedCount = 0;
     var fetchedRequests = {};
     var totalCount = 0;
@@ -262,15 +264,28 @@ const (
       return formatted;
     }
 
+    function resetCopyButtonsState() {
+      $(".copy-req-btn").html('<span title="Copy Request Details" class="glyphicon glyphicon-copy"></span>');
+      $(".copy-url-btn").html('<span title="Copy URL" class="glyphicon glyphicon-copy"></span>');
+    }
+
     function copyRequest(btn) {
       var button = $(btn);
       var requestId = button.attr("for");
 
       if (copyToClipboard(fetchedRequests[requestId], button.get(0))) {
-        // reset check
-        $(".copy-req-btn").html('<span title="Copy Request Details" class="glyphicon glyphicon-copy"></span>');
+        resetCopyButtonsState();
         // mark as copied
         button.html('<span title="This request is copied to your clipboard." class="glyphicon glyphicon-check"></span>');
+      }
+    }
+
+    function copyBasketUrl(btn) {
+      var button = $(btn);
+      if (copyToClipboard(basketUrl, button.get(0))) {
+        resetCopyButtonsState();
+        // mark as copied
+        button.html('<span title="Basket URL is copied to your clipboard." class="glyphicon glyphicon-check"></span>');
       }
     }
 
@@ -515,6 +530,7 @@ const (
     function shareBasket() {
       var token = getBasketToken();
       if (token && copyToClipboard(window.location + "?token=" + token)) {
+        resetCopyButtonsState();
         alert("A link to share this basket was copied to your clipboard.");
       }
     }
@@ -543,7 +559,7 @@ const (
 
     // Initialization
     $(document).ready(function() {
-      $(".basket_uri").html(window.location.protocol + "//" + window.location.host + "/{{.}}");
+      $(".basket_uri").html(basketUrl);
       // dialogs
       $("#token_dialog").on("hidden.bs.modal", function (event) {
         localStorage.setItem("basket_{{.}}", $("#basket_token").val());
@@ -587,6 +603,10 @@ const (
       });
       $("#update_response").on("click", function(event) {
         updateResponse();
+      });
+      // copy basket URL
+      $(".copy-url-btn").on("click", function(event) {
+        copyBasketUrl(this);
       });
       // shared basket link
       acceptSharedBasket();
@@ -800,7 +820,8 @@ const (
     <div class="row">
       <div class="col-md-8">
         <h1>Basket: {{.}}</h1>
-        <p id="requests_link" class="hide">Requests are collected at <kbd class="basket_uri"></kbd></p>
+        <p id="requests_link" class="hide">Requests are collected at <kbd class="basket_uri"></kbd>
+          <kbd class="copy-url-btn"><span title="Copy URL" class="glyphicon glyphicon-copy"></span></kbd></p>
       </div>
       <div class="col-md-3 col-md-offset-1">
         <h4><abbr title="Current requests count (Total count)">Requests</abbr>: <span id="requests_count"></span></h4>
@@ -818,7 +839,8 @@ const (
     <!-- Empty basket -->
     <div class="jumbotron text-center hide" id="empty_basket">
       <h1>Empty basket!</h1>
-      <p>This basket is empty, send requests to <kbd class="basket_uri"></kbd> and they will appear here.</p>
+      <p>This basket is empty, send requests to <kbd class="basket_uri"></kbd>
+        <kbd class="copy-url-btn"><span title="Copy URL" class="glyphicon glyphicon-copy"></span></kbd> and they will appear here.</p>
     </div>
   </div>
 
