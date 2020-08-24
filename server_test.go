@@ -65,3 +65,16 @@ func TestCreateBasketsDatabase(t *testing.T) {
 
 	assert.Nil(t, createBasketsDatabase("xyz", "./xyz", ""), "Database of unknown type is not expected")
 }
+
+func TestCreateDefaultBaskets(t *testing.T) {
+	db := NewMemoryDatabase()
+	defer db.Release()
+
+	createDefaultBaskets(db, []string{"abc", "xyz", "illegal/name", "abc"})
+
+	assert.Equal(t, 2, db.Size(), "wrong database size")
+	assert.NotNil(t, db.Get("abc"), "default basket 'abc' is expected")
+	assert.NotNil(t, db.Get("xyz"), "default basket 'xyz' is expected")
+
+	assert.Equal(t, serverConfig.InitCapacity, db.Get("abc").Config().Capacity, "unexpected basket capacity")
+}
