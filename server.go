@@ -33,6 +33,8 @@ func CreateServer(config *ServerConfig) *http.Server {
 		log.Print("[error] failed to create basket database")
 		return nil
 	}
+	createDefaultBaskets(db, config.Baskets)
+
 	basketsDb = db
 
 	// HTTP clients
@@ -129,4 +131,23 @@ func getHTTPClient(insecure bool) *http.Client {
 		return httpInsecureClient
 	}
 	return httpClient
+}
+
+func createDefaultBaskets(db BasketsDatabase, baskets []string) {
+	for _, basket := range baskets {
+		createDefaultBasket(db, basket)
+	}
+}
+
+func createDefaultBasket(db BasketsDatabase, basket string) {
+	if !validBasketName.MatchString(basket) {
+		log.Printf("[error] invalid basket name to auto-create; '%s' does not match pattern: %s", basket, validBasketName.String())
+	} else {
+		auth, err := db.Create(basket, BasketConfig{ForwardURL: "", Capacity: serverConfig.InitCapacity})
+		if err != nil {
+			log.Printf("[error] %s", err)
+		} else {
+			log.Printf("[info] basket '%s' is auto-created with access token: %s", basket, auth.Token)
+		}
+	}
 }

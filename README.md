@@ -101,6 +101,8 @@ Usage of bin/request-baskets:
       Maximum allowed basket size (max capacity) (default 2000)
   -token string
       Master token, random token is generated if not provided
+  -basket value
+    	Name of a basket to auto-create during service startup (can be specified multiple times)
 ```
 
 ### Parameters

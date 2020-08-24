@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 )
 
 const (
@@ -32,6 +33,18 @@ type ServerConfig struct {
 	DbType       string
 	DbFile       string
 	DbConnection string
+	Baskets      []string
+}
+
+type arrayFlags []string
+
+func (v *arrayFlags) String() string {
+	return strings.Join(*v, ",")
+}
+
+func (v *arrayFlags) Set(value string) error {
+	*v = append(*v, value)
+	return nil
 }
 
 // CreateConfig creates server configuration base on application command line arguments
@@ -46,6 +59,10 @@ func CreateConfig() *ServerConfig {
 		"Baskets storage type: %s - in-memory, %s - Bolt DB, %s - SQL database", DbTypeMemory, DbTypeBolt, DbTypeSQL))
 	var dbFile = flag.String("file", "./baskets.db", "Database location, only applicable for file or SQL databases")
 	var dbConnection = flag.String("conn", "", "Database connection string for SQL databases, if undefined \"file\" argument is considered")
+
+	var baskets arrayFlags
+	flag.Var(&baskets, "basket", "Name of a basket to auto-create during service startup (can be specified multiple times)")
+
 	flag.Parse()
 
 	var token = *masterToken
@@ -63,5 +80,6 @@ func CreateConfig() *ServerConfig {
 		MasterToken:  token,
 		DbType:       *dbType,
 		DbFile:       *dbFile,
-		DbConnection: *dbConnection}
+		DbConnection: *dbConnection,
+		Baskets:      baskets}
 }

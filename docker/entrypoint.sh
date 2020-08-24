@@ -38,6 +38,10 @@ if [ -n "$TOKEN" ]; then
     args="$args -token $TOKEN"
 fi
 
+if [ -n "$BASKET" ]; then
+    args="$args -basket $BASKET"
+fi
+
 cmd="/bin/rbaskets $args"
 echo "Executing: $cmd"
 exec $cmd
