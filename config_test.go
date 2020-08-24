@@ -18,3 +18,13 @@ func TestCreateDefaultConfig(t *testing.T) {
 		assert.NotEmpty(t, serverConfig.MasterToken, "expected randomly generated master token")
 	}
 }
+
+func TestArrayFlags(t *testing.T) {
+	var flags arrayFlags
+	flags.Set("123")
+	flags.Set("abc")
+	flags.Set("xyz")
+	flags.Set("abc")
+
+	assert.Equal(t, "123,abc,xyz,abc", flags.String(), "unexpected list of flags")
+}
