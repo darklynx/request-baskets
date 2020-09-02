@@ -17,11 +17,12 @@ const DoNotForwardHeader = "X-Do-Not-Forward"
 
 // BasketConfig describes single basket configuration.
 type BasketConfig struct {
-	ForwardURL    string `json:"forward_url"`
-	ProxyResponse bool   `json:"proxy_response"`
-	InsecureTLS   bool   `json:"insecure_tls"`
-	ExpandPath    bool   `json:"expand_path"`
-	Capacity      int    `json:"capacity"`
+	ForwardURL       string `json:"forward_url"`
+	ProxyResponse    bool   `json:"proxy_response"`
+	InsecureTLS      bool   `json:"insecure_tls"`
+	ExpandPath       bool   `json:"expand_path"`
+	Capacity         int    `json:"capacity"`
+	LogCommunication bool   `json:"log"`
 }
 
 // ResponseConfig describes response that is generates by service upon HTTP request sent to a basket.

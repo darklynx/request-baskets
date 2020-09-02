@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -21,6 +22,13 @@ var defaultResponse = ResponseConfig{Status: http.StatusOK, Headers: http.Header
 var indexPageTemplate = template.Must(template.New("index").Parse(indexPageContentTemplate))
 var basketPageTemplate = template.Must(template.New("basket").Parse(basketPageContentTemplate))
 var basketsPageTemplate = template.Must(template.New("baskets").Parse(basketsPageContentTemplate))
+
+type ResponseLogItem struct {
+	Name    string
+	Headers string
+	Status  string
+	Body    string
+}
 
 // writeJSON writes JSON content to HTTP response
 func writeJSON(w http.ResponseWriter, status int, json []byte, err error) {
@@ -375,6 +383,14 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	if !validBasketName.MatchString(name) {
 		http.Error(w, "Invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 	} else if basket := basketsDb.Get(name); basket != nil {
+
+		data := ToRequestData(r)
+
+		//log
+		if basket.Config().LogCommunication == true {
+			log.Printf("[info] basket: %s request %s", name, data)
+		}
+
 		request := basket.Add(r)
 
 		// forward request if configured and it's a first forwarding
@@ -400,7 +416,16 @@ func forwardAndForget(request *RequestData, config BasketConfig, name string) {
 	if err != nil {
 		log.Printf("[warn] failed to forward request for basket: %s - %s", name, err)
 	} else {
-		io.Copy(ioutil.Discard, response.Body)
+		body, err := ioutil.ReadAll(response.Body)
+		if err == nil {
+			//log
+			logItem := ResponseLogItem{}
+			logItem.Name = name
+			logItem.Headers = fmt.Sprintf("%s", response.Header)
+			logItem.Status = fmt.Sprintf("%s", response.StatusCode)
+			logItem.Body = string(body)
+			logResponse(logItem, config)
+		}
 		response.Body.Close()
 	}
 }
@@ -420,12 +445,24 @@ func forwardAndProxyResponse(w http.ResponseWriter, request *RequestData, config
 		w.WriteHeader(response.StatusCode)
 
 		// body
-		_, err := io.Copy(w, response.Body)
+		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			log.Printf("[warn] failed to proxy response body for basket: %s - %s", name, err)
 			io.Copy(ioutil.Discard, response.Body)
+		} else {
+
+			w.Write(body)
+
+			//log
+			logItem := ResponseLogItem{}
+			logItem.Name = name
+			logItem.Headers = fmt.Sprintf("%s", response.Header)
+			logItem.Status = fmt.Sprintf("%s", response.StatusCode)
+			logItem.Body = string(body)
+			logResponse(logItem, config)
 		}
 		response.Body.Close()
+
 	}
 }
 
@@ -451,12 +488,38 @@ func writeBasketResponse(w http.ResponseWriter, r *http.Request, name string, ba
 			// status
 			w.WriteHeader(response.Status)
 			// templated body
-			t.Execute(w, r.URL.Query())
+			var buff bytes.Buffer
+			t.Execute(&buff, r.URL.Query())
+			w.Write(buff.Bytes())
+
+			//log
+			logItem := ResponseLogItem{}
+			logItem.Name = name
+			logItem.Headers = fmt.Sprintf("%s", response.Headers)
+			logItem.Status = fmt.Sprintf("%s", response.Status)
+			logItem.Body = buff.String()
+			logResponse(logItem, basket.Config())
 		}
 	} else {
 		// status
 		w.WriteHeader(response.Status)
 		// plain body
-		w.Write([]byte(response.Body))
+		body := []byte(response.Body)
+		w.Write(body)
+
+		//log
+		logItem := ResponseLogItem{}
+		logItem.Name = name
+		logItem.Headers = fmt.Sprintf("%s", response.Headers)
+		logItem.Status = fmt.Sprintf("%s", response.Status)
+		logItem.Body = string(body)
+		logResponse(logItem, basket.Config())
+	}
+}
+
+func logResponse(logItem ResponseLogItem, basketConfig BasketConfig) {
+	if basketConfig.LogCommunication == true {
+		log.Printf("[info] basket: %s response headers: %s status: %s body: %s",
+			logItem.Name, logItem.Headers, logItem.Status, logItem.Body)
 	}
 }
