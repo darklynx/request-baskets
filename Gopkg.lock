@@ -34,7 +34,7 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:d27eedd7296593e6ea74aed67aa0d04d97305c860209b0d4996a8aa2eac7fd0b"
+  digest = "1:62f794e53445d22aa4d1709a9123053b9bf7c3284571b5b807f80d57e1648844"
   name = "github.com/lib/pq"
   packages = [
     ".",
@@ -42,8 +42,8 @@
     "scram",
   ]
   pruneopts = "UT"
-  revision = "e7751f584844fbf92a5a18b13a0af1c855e34460"
-  version = "v1.8.0"
+  revision = "4604d39ddc9f62e2ca152114c73aec99b77a3468"
+  version = "v1.9.0"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -54,20 +54,20 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:2c8bb9a0858e2ab458c1641345b6eaa3754b7ae453f8d30b15701f8b12b7ead7"
+  digest = "1:edb231f4f062fe87e1cc93351e1ee06d4cebf553d1f85f9f3b9b4903df42df20"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   pruneopts = "UT"
-  revision = "f654a9112bbeac49ca2cd45bfbe11533c4666cf8"
-  version = "v1.6.1"
+  revision = "acba37e5db06f0093b465a7d47822bf13644b66c"
+  version = "v1.7.0"
 
 [[projects]]
   branch = "v3"
-  digest = "1:229cb0f6192914f518cc1241ede6d6f1f458b31debfa18bf3a5c9e4f7b01e24b"
+  digest = "1:107a619d3c3bcca214b2b7db810a5dffcd74b5d0262813cb2986e063fae2722f"
   name = "gopkg.in/yaml.v3"
   packages = ["."]
   pruneopts = "UT"
-  revision = "eeeca48fe7764f320e4870d231902bf9c1be2c08"
+  revision = "496545a6307b2a7d7a710fd516e5e16e8ab62dbc"
 
 [solve-meta]
   analyzer-name = "dep"
