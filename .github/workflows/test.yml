@@ -34,18 +34,10 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      - name: "Setup Postgres Database"
       - run: psql -c "CREATE DATABASE baskets;" -U postgres
-      - name: "Setup Postgres User"
       - run: psql -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
-
-      - name: "Setup Mysql Database"
       - run: mysql -e "CREATE DATABASE IF NOT EXISTS baskets ;"
-
-      - name: "Setup Mysql User"
       - run: mysql -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"
-
-      - name: "Setup Mysql Permissions"
       - run: mysql -e "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
 
       - uses: actions/setup-go@v1
