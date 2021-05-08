@@ -1,0 +1,16 @@
+on: [push, pull_request]
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.14', '1.15', '1.16']
+
+    steps:
+      - uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go }}
+      - uses: actions/checkout@v2
+      - run: go test
