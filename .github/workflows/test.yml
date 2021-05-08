@@ -1,14 +1,53 @@
 on: [push, pull_request]
 jobs:
-
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        go: ['1.14', '1.15', '1.16']
+        go: ["1.14", "1.15", "1.16"]
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: baskets
+          MYSQL_USER: user
+          MYSQL_PASSWORD: password
+          MYSQL_ROOT_PASSWORD: rootpassword
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
+      - name: "Setup Postgres Database"
+      - run: psql -c "CREATE DATABASE baskets;" -U postgres
+      - name: "Setup Postgres User"
+      - run: psql -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
+
+      - name: "Setup Mysql Database"
+      - run: mysql -e "CREATE DATABASE IF NOT EXISTS baskets ;"
+
+      - name: "Setup Mysql User"
+      - run: mysql -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"
+
+      - name: "Setup Mysql Permissions"
+      - run: mysql -e "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
+
       - uses: actions/setup-go@v1
         with:
           go-version: ${{ matrix.go }}
