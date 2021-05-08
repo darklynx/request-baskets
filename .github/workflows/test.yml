@@ -28,18 +28,13 @@ jobs:
           --health-retries 5
       mysql:
         image: mysql:5.7
-        env:
-          MYSQL_DATABASE: baskets
-          MYSQL_USER: user
-          MYSQL_PASSWORD: password
-          MYSQL_ROOT_PASSWORD: rootpassword
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      - run: psql -h localhost -p 5432 -c "CREATE DATABASE baskets;" -U postgres
-      - run: psql -h localhost -p 5432 -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
+      - run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE DATABASE baskets;" -U postgres
+      - run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
       - run: mysql -e "CREATE DATABASE IF NOT EXISTS baskets ;"
       - run: mysql -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"
       - run: mysql -e "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
