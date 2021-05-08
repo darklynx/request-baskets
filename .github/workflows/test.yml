@@ -43,7 +43,7 @@ jobs:
       - run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
       - run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "CREATE DATABASE IF NOT EXISTS baskets ;"
       - run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"
-      - run: mysql --password=password -u root -h 127.0.0.1 -P 3306 "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
+      - run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
 
       - uses: actions/setup-go@v1
         with:
