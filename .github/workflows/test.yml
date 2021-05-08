@@ -17,7 +17,6 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
-          POSTGRES_HOST: localhost
         ports:
           - 5432:5432
         # Set health checks to wait until postgres has started
@@ -38,11 +37,11 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      - run: psql -c "CREATE DATABASE baskets;" -U postgres
-      - run: psql -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
-      - run: mysql -e "CREATE DATABASE IF NOT EXISTS baskets ;"
-      - run: mysql -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"
-      - run: mysql -e "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
+      - run: psql -h postgres -p 5432 -c "CREATE DATABASE baskets;" -U postgres
+      - run: psql -h postgres -p 5432 -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
+      - run: mysql -h mysql -e "CREATE DATABASE IF NOT EXISTS baskets ;"
+      - run: mysql -h mysql -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"
+      - run: mysql -h mysql -e "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
 
       - uses: actions/setup-go@v1
         with:
