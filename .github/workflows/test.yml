@@ -39,14 +39,36 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      - run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE DATABASE baskets;" -U postgres
-      - run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
-      - run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "CREATE DATABASE IF NOT EXISTS baskets ;"
-      - run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"
-      - run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
+      - name: Setup Postgres database
+        run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE DATABASE baskets;" -U postgres
+      - name: Setup Postgres user
+        run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
+
+      - name: Setup Mysql database
+        run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "CREATE DATABASE IF NOT EXISTS baskets ;"
+      - name: Setup Mysql user
+        run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"
+      - name: Setup Mysql permissions
+        run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
 
       - uses: actions/setup-go@v1
         with:
           go-version: ${{ matrix.go }}
       - uses: actions/checkout@v2
-      - run: go test
+      - run: go test -v -coverprofile=profile.cov
+
+      - name: Send coverage
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: profile.cov
+          flag-name: Go-${{ matrix.go }}
+          parallel: true
+
+  # notifies that all test jobs are finished.
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          parallel-finished: true
