@@ -474,7 +474,7 @@ func NewSQLDatabase(connection string) BasketsDatabase {
 	return nil
 }
 
-var pgParams = regexp.MustCompile(`\$\\d+`)
+var pgParams = regexp.MustCompile(`\$\d+`)
 
 func unifySQL(dbType string, sql string) string {
 	switch dbType {
