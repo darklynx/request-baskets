@@ -124,7 +124,7 @@ func TestCreateBasket_InvalidName(t *testing.T) {
 
 		// validate response: 400 - Bad Request
 		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
-		assert.Equal(t, "Invalid basket name; ["+basket+"] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+		assert.Equal(t, "invalid basket name; ["+basket+"] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
 			"wrong error message")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
@@ -162,7 +162,7 @@ func TestCreateBasket_InvalidCapacity(t *testing.T) {
 
 		// validate response: 422 - Unprocessable Entity
 		assert.Equal(t, 422, w.Code, "wrong HTTP result code")
-		assert.Contains(t, w.Body.String(), "Capacity should be a positive number", "error message is incomplete")
+		assert.Contains(t, w.Body.String(), "capacity should be a positive number", "error message is incomplete")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
 	}
@@ -181,7 +181,7 @@ func TestCreateBasket_ExceedCapacityLimit(t *testing.T) {
 
 		// validate response: 422 - Unprocessable Entity
 		assert.Equal(t, 422, w.Code, "wrong HTTP result code")
-		assert.Contains(t, w.Body.String(), "Capacity may not be greater than", "error message is incomplete")
+		assert.Contains(t, w.Body.String(), "capacity may not be greater than", "error message is incomplete")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
 	}
@@ -391,7 +391,7 @@ func TestGetBasket_BadRequest(t *testing.T) {
 
 		// validate response: 400 - Bad Request
 		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
-		assert.Equal(t, "Invalid basket name; ["+basket+"] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+		assert.Equal(t, "invalid basket name; ["+basket+"] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
 			"wrong error message")
 	}
 }
@@ -1204,7 +1204,7 @@ func TestGetBasketResponse_InvalidMethod(t *testing.T) {
 				// validate response: 400 - Bad Request
 				assert.Equal(t, 400, w.Code, "wrong HTTP result code")
 				assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"), "wrong Content-Type")
-				assert.Contains(t, w.Body.String(), "Unknown HTTP method: "+method, "wrong response message")
+				assert.Contains(t, w.Body.String(), "unknown HTTP method: "+method, "wrong response message")
 			}
 		}
 	}
@@ -1306,7 +1306,7 @@ func TestUpdateBasketResponse_InvalidMethod(t *testing.T) {
 				// validate response: 400 - Bad Request
 				assert.Equal(t, 400, w.Code, "wrong HTTP result code")
 				assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"), "wrong Content-Type")
-				assert.Contains(t, w.Body.String(), "Unknown HTTP method: "+method, "wrong response message")
+				assert.Contains(t, w.Body.String(), "unknown HTTP method: "+method, "wrong response message")
 
 				// validate database is not updated
 				assert.Nil(t, basketsDb.Get(basket).GetResponse(method), "response configuration is not expected")
@@ -1384,7 +1384,7 @@ func TestUpdateBasketResponse_InvalidConfig(t *testing.T) {
 				// validate response: 422 - Unprocessable Entity
 				assert.Equal(t, 422, w.Code, "wrong HTTP result code")
 				assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"), "wrong Content-Type")
-				assert.Contains(t, w.Body.String(), "Invalid HTTP status of response: 20", "wrong response message")
+				assert.Contains(t, w.Body.String(), "invalid HTTP status of response: 20", "wrong response message")
 
 				// validate database is not updated
 				assert.Nil(t, basketsDb.Get(basket).GetResponse(method), "response configuration is not expected")
@@ -1423,7 +1423,7 @@ func TestUpdateBasketResponse_InvalidTemplate(t *testing.T) {
 				// validate response: 422 - Unprocessable Entity
 				assert.Equal(t, 422, w.Code, "wrong HTTP result code")
 				assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"), "wrong Content-Type")
-				assert.Contains(t, w.Body.String(), "Error in body template: body:1: function \"data\" not defined", "wrong response message")
+				assert.Contains(t, w.Body.String(), "error in body template: body:1: function \"data\" not defined", "wrong response message")
 
 				// validate database is not updated
 				assert.Nil(t, basketsDb.Get(basket).GetResponse(method), "response configuration is not expected")
@@ -1841,7 +1841,7 @@ func TestAcceptBasketRequests_WithProxyResponse_InternalServerError(t *testing.T
 
 			// validate expected response
 			assert.Equal(t, 500, w.Code, "wrong HTTP response code")
-			assert.Contains(t, w.Body.String(), "Invalid forward URL: qwert", "wrong HTTP response body")
+			assert.Contains(t, w.Body.String(), "invalid forward URL: qwert", "wrong HTTP response body")
 			assert.Contains(t, w.Body.String(), "invalid URI for request", "wrong HTTP response body")
 		}
 	}

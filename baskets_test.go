@@ -107,7 +107,7 @@ func TestRequestData_Forward_BrokenURL(t *testing.T) {
 	r, e := data.Forward(new(http.Client), config, basket)
 	assert.Nil(t, r, "response is not expected")
 	assert.NotNil(t, e, "error is expected")
-	assert.Contains(t, e.Error(), "Invalid forward URL: abc - parse", "unexpected error message")
+	assert.Contains(t, e.Error(), "invalid forward URL: abc - parse", "unexpected error message")
 	assert.Contains(t, e.Error(), "invalid URI for request", "unexpected error message")
 }
 
