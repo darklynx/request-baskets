@@ -1059,7 +1059,7 @@ func TestAcceptBasketRequests_BadRequest(t *testing.T) {
 	AcceptBasketRequests(w, req)
 	// HTTP 400 - Bad Request
 	assert.Equal(t, 400, w.Code, "wrong HTTP result code")
-	assert.Equal(t, "Invalid basket name; [accept03 ] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+	assert.Equal(t, "invalid basket name; [accept03 ] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
 		"wrong error message")
 }
 
