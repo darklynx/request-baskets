@@ -336,14 +336,14 @@ func (sdb *sqlDatabase) Create(name string, config BasketConfig) (BasketAuth, er
 	auth := BasketAuth{}
 	token, err := GenerateToken()
 	if err != nil {
-		return auth, fmt.Errorf("Failed to generate token: %s", err)
+		return auth, fmt.Errorf("failed to generate token: %s", err)
 	}
 
 	basket, err := sdb.db.Exec(
 		unifySQL(sdb.dbType, "INSERT INTO rb_baskets (basket_name, token, capacity, forward_url, proxy_response, insecure_tls, expand_path) VALUES($1, $2, $3, $4, $5, $6, $7)"),
 		name, token, config.Capacity, config.ForwardURL, config.ProxyResponse, config.InsecureTLS, config.ExpandPath)
 	if err != nil {
-		return auth, fmt.Errorf("Failed to create basket: %s - %s", name, err)
+		return auth, fmt.Errorf("failed to create basket: %s - %s", name, err)
 	}
 
 	if _, err := basket.RowsAffected(); err != nil {
@@ -474,7 +474,7 @@ func NewSQLDatabase(connection string) BasketsDatabase {
 	return nil
 }
 
-var pgParams = regexp.MustCompile("\\$\\d+")
+var pgParams = regexp.MustCompile(`\$\\d+`)
 
 func unifySQL(dbType string, sql string) string {
 	switch dbType {
