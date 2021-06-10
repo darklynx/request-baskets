@@ -152,7 +152,7 @@ func ToRequestData(req *http.Request) *RequestData {
 func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket string) (*http.Response, error) {
 	forwardURL, err := url.ParseRequestURI(config.ForwardURL)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid forward URL: %s - %s", config.ForwardURL, err)
+		return nil, fmt.Errorf("invalid forward URL: %s - %s", config.ForwardURL, err)
 	}
 
 	// expand path
@@ -171,7 +171,7 @@ func (req *RequestData) Forward(client *http.Client, config BasketConfig, basket
 
 	forwardReq, err := http.NewRequest(req.Method, forwardURL.String(), strings.NewReader(req.Body))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create forward request: %s", err)
+		return nil, fmt.Errorf("failed to create forward request: %s", err)
 	}
 
 	// copy headers

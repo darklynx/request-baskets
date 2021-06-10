@@ -153,7 +153,7 @@ func (db *memoryDatabase) Create(name string, config BasketConfig) (BasketAuth, 
 	auth := BasketAuth{}
 	token, err := GenerateToken()
 	if err != nil {
-		return auth, fmt.Errorf("Failed to generate token: %s", err)
+		return auth, fmt.Errorf("failed to generate token: %s", err)
 	}
 
 	db.Lock()

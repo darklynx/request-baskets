@@ -63,7 +63,7 @@ func getPage(values url.Values) (int, int) {
 func getAuthenticatedBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, Basket) {
 	name := ps.ByName("basket")
 	if !validBasketName.MatchString(name) {
-		http.Error(w, "Invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+		http.Error(w, "invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 	} else if basket := basketsDb.Get(name); basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
 		if token := r.Header.Get("Authorization"); basket.Authorize(token) || token == serverConfig.MasterToken {
@@ -81,11 +81,11 @@ func getAuthenticatedBasket(w http.ResponseWriter, r *http.Request, ps httproute
 func validateBasketConfig(config *BasketConfig) error {
 	// validate Capacity
 	if config.Capacity < 1 {
-		return fmt.Errorf("Capacity should be a positive number, but was %d", config.Capacity)
+		return fmt.Errorf("capacity should be a positive number, but was %d", config.Capacity)
 	}
 
 	if config.Capacity > serverConfig.MaxCapacity {
-		return fmt.Errorf("Capacity may not be greater than %d", serverConfig.MaxCapacity)
+		return fmt.Errorf("capacity may not be greater than %d", serverConfig.MaxCapacity)
 	}
 
 	// validate URL
@@ -102,13 +102,13 @@ func validateBasketConfig(config *BasketConfig) error {
 func validateResponseConfig(config *ResponseConfig) error {
 	// validate status
 	if config.Status < 100 || config.Status >= 600 {
-		return fmt.Errorf("Invalid HTTP status of response: %d", config.Status)
+		return fmt.Errorf("invalid HTTP status of response: %d", config.Status)
 	}
 
 	// validate template
 	if config.IsTemplate && len(config.Body) > 0 {
 		if _, err := template.New("body").Parse(config.Body); err != nil {
-			return fmt.Errorf("Error in body %s", err)
+			return fmt.Errorf("error in body %s", err)
 		}
 	}
 
@@ -133,7 +133,7 @@ func getValidMethod(ps httprouter.Params) (string, error) {
 		return method, nil
 	}
 
-	return method, fmt.Errorf("Unknown HTTP method: %s", method)
+	return method, fmt.Errorf("unknown HTTP method: %s", method)
 }
 
 // GetBaskets handles HTTP request to get registered baskets
@@ -190,7 +190,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		return
 	}
 	if !validBasketName.MatchString(name) {
-		http.Error(w, "Invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+		http.Error(w, "invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 		return
 	}
 
@@ -212,7 +212,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 			return
 		}
 		if err = validateBasketConfig(&config); err != nil {
-			http.Error(w, err.Error(), 422)
+			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 			return
 		}
 	}
@@ -242,7 +242,7 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 				return
 			}
 			if err = validateBasketConfig(&config); err != nil {
-				http.Error(w, err.Error(), 422)
+				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 				return
 			}
 
@@ -303,7 +303,7 @@ func UpdateBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.
 					return
 				}
 				if err = validateResponseConfig(&response); err != nil {
-					http.Error(w, err.Error(), 422)
+					http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 					return
 				}
 
@@ -373,7 +373,7 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	name := strings.Split(r.URL.Path, "/")[1]
 
 	if !validBasketName.MatchString(name) {
-		http.Error(w, "Invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+		http.Error(w, "invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 	} else if basket := basketsDb.Get(name); basket != nil {
 		request := basket.Add(r)
 
