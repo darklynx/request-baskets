@@ -1,0 +1,21 @@
+version: "3"
+
+services: 
+  postgresql:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: rbaskets
+      POSTGRES_PASSWORD: pwd
+      POSTGRES_DB: baskets
+
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+    environment: 
+      MYSQL_DATABASE: baskets
+      MYSQL_USER: rbaskets
+      MYSQL_PASSWORD: pwd
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"

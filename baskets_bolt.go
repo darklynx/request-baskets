@@ -351,13 +351,13 @@ func (bdb *boltDatabase) Create(name string, config BasketConfig) (BasketAuth, e
 	auth := BasketAuth{}
 	token, err := GenerateToken()
 	if err != nil {
-		return auth, fmt.Errorf("Failed to generate token: %s", err)
+		return auth, fmt.Errorf("failed to generate token: %s", err)
 	}
 
 	err = bdb.db.Update(func(tx *bolt.Tx) error {
 		b, cerr := tx.CreateBucket([]byte(name))
 		if cerr != nil {
-			return fmt.Errorf("Failed to create basket: %s - %s", name, cerr)
+			return fmt.Errorf("failed to create basket: %s - %s", name, cerr)
 		}
 
 		// initialize basket bucket (assuming that no issues arose)

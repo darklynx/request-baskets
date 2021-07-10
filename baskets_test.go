@@ -107,7 +107,7 @@ func TestRequestData_Forward_BrokenURL(t *testing.T) {
 	r, e := data.Forward(new(http.Client), config, basket)
 	assert.Nil(t, r, "response is not expected")
 	assert.NotNil(t, e, "error is expected")
-	assert.Contains(t, e.Error(), "Invalid forward URL: abc - parse", "unexpected error message")
+	assert.Contains(t, e.Error(), "invalid forward URL: abc - parse", "unexpected error message")
 	assert.Contains(t, e.Error(), "invalid URI for request", "unexpected error message")
 }
 
@@ -186,4 +186,11 @@ func TestDatabaseStats_UpdateAvarage_Empty(t *testing.T) {
 	stats := new(DatabaseStats)
 	stats.UpdateAvarage()
 	assert.Equal(t, 0, stats.AvgBasketSize, "wrong AvgBasketSize")
+}
+
+func test_validateBasketStats(t *testing.T, info *BasketInfo, name string, count int, totalCount int) {
+	assert.Equal(t, name, info.Name)
+	assert.Equal(t, count, info.RequestsCount, "unexpected requests count for basket: "+name)
+	assert.Equal(t, totalCount, info.RequestsTotalCount, "unexpected requests total count for basket: "+name)
+	assert.NotEqual(t, int64(0), info.LastRequestDate, "last request date is expected for basket: "+name)
 }
