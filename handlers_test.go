@@ -124,7 +124,7 @@ func TestCreateBasket_InvalidName(t *testing.T) {
 
 		// validate response: 400 - Bad Request
 		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
-		assert.Equal(t, "invalid basket name; ["+basket+"] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+		assert.Equal(t, "invalid basket name; the name does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
 			"wrong error message")
 		// validate database
 		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
@@ -391,7 +391,7 @@ func TestGetBasket_BadRequest(t *testing.T) {
 
 		// validate response: 400 - Bad Request
 		assert.Equal(t, 400, w.Code, "wrong HTTP result code")
-		assert.Equal(t, "invalid basket name; ["+basket+"] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+		assert.Equal(t, "invalid basket name; the name does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
 			"wrong error message")
 	}
 }
@@ -1059,7 +1059,7 @@ func TestAcceptBasketRequests_BadRequest(t *testing.T) {
 	AcceptBasketRequests(w, req)
 	// HTTP 400 - Bad Request
 	assert.Equal(t, 400, w.Code, "wrong HTTP result code")
-	assert.Equal(t, "invalid basket name; [accept03 ] does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
+	assert.Equal(t, "invalid basket name; the name does not match pattern: "+validBasketName.String()+"\n", w.Body.String(),
 		"wrong error message")
 }
 

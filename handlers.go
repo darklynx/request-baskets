@@ -63,7 +63,7 @@ func getPage(values url.Values) (int, int) {
 func getAuthenticatedBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, Basket) {
 	name := ps.ByName("basket")
 	if !validBasketName.MatchString(name) {
-		http.Error(w, "invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+		http.Error(w, "invalid basket name; the name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 	} else if basket := basketsDb.Get(name); basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
 		if token := r.Header.Get("Authorization"); basket.Authorize(token) || token == serverConfig.MasterToken {
@@ -190,7 +190,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		return
 	}
 	if !validBasketName.MatchString(name) {
-		http.Error(w, "invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+		http.Error(w, "invalid basket name; the name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 		return
 	}
 
@@ -373,7 +373,7 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	name := strings.Split(r.URL.Path, "/")[1]
 
 	if !validBasketName.MatchString(name) {
-		http.Error(w, "invalid basket name; ["+name+"] does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+		http.Error(w, "invalid basket name; the name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 	} else if basket := basketsDb.Get(name); basket != nil {
 		request := basket.Add(r)
 
