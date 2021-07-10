@@ -496,8 +496,10 @@ func parseConnection(connection string) (string, string) {
 		switch driver {
 		case "postgres":
 			return driver, connection
-		case "mysql", "sqlite3":
-			return driver, source
+		case "mysql":
+			return driver, source + "?parseTime=true"
+		// case "sqlite3":
+		// 	return driver, source
 		default:
 			return driver, connection
 		}

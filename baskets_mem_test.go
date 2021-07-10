@@ -434,17 +434,17 @@ func TestMemoryDatabase_GetStats(t *testing.T) {
 		// top 3 by date
 		if assert.NotNil(t, stats.TopBasketsByDate, "top baskets by date are expected") {
 			assert.Equal(t, 3, len(stats.TopBasketsByDate), "unexpected number of top baskets")
-			assert.Equal(t, fmt.Sprintf("%s_%v", name, 8), stats.TopBasketsByDate[0].Name)
-			assert.Equal(t, fmt.Sprintf("%s_%v", name, 7), stats.TopBasketsByDate[1].Name)
-			assert.Equal(t, fmt.Sprintf("%s_%v", name, 6), stats.TopBasketsByDate[2].Name)
+			test_validateBasketStats(t, stats.TopBasketsByDate[0], fmt.Sprintf("%s_%v", name, 8), 1, 1)
+			test_validateBasketStats(t, stats.TopBasketsByDate[1], fmt.Sprintf("%s_%v", name, 7), 2, 2)
+			test_validateBasketStats(t, stats.TopBasketsByDate[2], fmt.Sprintf("%s_%v", name, 6), 3, 3)
 		}
 
 		// top 3 by size
 		if assert.NotNil(t, stats.TopBasketsBySize, "top baskets by size are expected") {
 			assert.Equal(t, 3, len(stats.TopBasketsBySize), "unexpected number of top baskets")
-			assert.Equal(t, fmt.Sprintf("%s_%v", name, 0), stats.TopBasketsBySize[0].Name)
-			assert.Equal(t, fmt.Sprintf("%s_%v", name, 1), stats.TopBasketsBySize[1].Name)
-			assert.Equal(t, fmt.Sprintf("%s_%v", name, 2), stats.TopBasketsBySize[2].Name)
+			test_validateBasketStats(t, stats.TopBasketsBySize[0], fmt.Sprintf("%s_%v", name, 0), 5, 9)
+			test_validateBasketStats(t, stats.TopBasketsBySize[1], fmt.Sprintf("%s_%v", name, 1), 5, 8)
+			test_validateBasketStats(t, stats.TopBasketsBySize[2], fmt.Sprintf("%s_%v", name, 2), 5, 7)
 		}
 	}
 }
