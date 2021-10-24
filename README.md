@@ -40,7 +40,7 @@ Distinguishing features of Request Baskets service:
  * Configurable responses for every HTTP method
  * Alternative storage types for configured baskets and collected requests:
    * *In-memory* - ultra fast, but limited to available RAM and collected data is lost after service restart
-   * *Bolt DB* - fast persistent storage for collected data based on embedded [Bolt](https://github.com/boltdb/bolt) database, service can be restarted without data loss and storage is not limited by available RAM
+   * *Bolt DB* - fast persistent storage for collected data based on embedded [bbolt](https://github.com/etcd-io/bbolt) database (maintained fork of [Bolt](https://github.com/boltdb/bolt)), service can be restarted without data loss and storage is not limited by available RAM
    * *SQL database* - classical data storage, multiple instances of service can run simultaneously and collect data in shared data storage, which makes the solution more robust and scaleable ([PostgreSQL](https://www.postgresql.org) and [MySQL](https://www.mysql.com) are only supported at the moment)
    * Can be extended by custom implementations of storage interface
 
@@ -112,8 +112,10 @@ Usage of bin/request-baskets:
  * `-size` *size* - default new basket capacity, applied if basket capacity is not provided during creation
  * `-maxsize` *size* - maximum allowed basket capacity, basket capacity greater than this number will be rejected by service
  * `-token` *token* - master token to gain control over all baskets, if not defined a random token will be generated when service is launched and printed to *stdout*
- * `-db` *type* - defines baskets storage type: `mem` - in-memory storage, `bolt` - [Bolt](https://github.com/boltdb/bolt) database
+ * `-db` *type* - defines baskets storage type: `mem` - in-memory storage (default), `bolt` - [bbolt](https://github.com/etcd-io/bbolt) database, `sql` - SQL database
  * `-file` *location* - location of Bolt database file, only relevant if appropriate storage type is chosen
+ * `-conn` *connection* - database connection string for SQL databases, if undefined `-file` argument is considered
+ * `-basket` *value* - name of a basket to auto-create during service startup, this parameter can be specified multiple times
 
 ## Usage
 
@@ -133,7 +135,7 @@ It is possible to forward all incoming HTTP requests to arbitrary URL by configu
 
 By default Request Baskets service keeps configured baskets and collected HTTP requests in memory. This data is lost after service or server restart. However a service can be configured to store collected data on file system. In this case the service can be restarted without loosing created baskets and collected data.
 
-To start service in persistent mode simply configure the appropriate storage type, such as [Bolt database](https://github.com/boltdb/bolt):
+To start service in persistent mode simply configure the appropriate storage type, such as [bbolt database](https://github.com/etcd-io/bbolt) (maintained fork of [Bolt](https://github.com/boltdb/bolt)):
 
 ```bash
 $ request-baskets -db bolt -file /var/lib/request-baskets/baskets.db
