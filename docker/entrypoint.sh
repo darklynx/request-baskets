@@ -42,6 +42,10 @@ if [ -n "$BASKET" ]; then
     args="$args -basket $BASKET"
 fi
 
+if [ -n "$PATHPREFIX" ]; then
+    args="$args -prefix $PATHPREFIX"
+fi
+
 cmd="/bin/rbaskets $args"
 echo "Executing: $cmd"
 exec $cmd
