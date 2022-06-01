@@ -408,14 +408,14 @@ func getBasketNameOfAcceptedRequest(r *http.Request, prefix string) (string, str
 			path = strings.TrimPrefix(path, prefix)
 		} else {
 			publicErr := "incoming request is outside of configured path prefix: " + prefix
-			return "", publicErr, fmt.Errorf("%s; request: %s %s", publicErr, r.Method, r.URL.Path)
+			return "", publicErr, fmt.Errorf("%s; request: %s %s", publicErr, r.Method, sanitizeForLog(r.URL.Path))
 		}
 	}
 
-	name := strings.Split(path, "/")[1]
+	name := sanitizeForLog(strings.Split(path, "/")[1])
 	if !validBasketName.MatchString(name) {
 		publicErr := "invalid basket name; the name does not match pattern: " + validBasketName.String()
-		return "", publicErr, fmt.Errorf("%s; request: %s %s", publicErr, r.Method, r.URL.Path)
+		return "", publicErr, fmt.Errorf("%s; request: %s %s", publicErr, r.Method, sanitizeForLog(r.URL.Path))
 	}
 
 	return name, "", nil
@@ -486,4 +486,10 @@ func writeBasketResponse(w http.ResponseWriter, r *http.Request, name string, ba
 		// plain body
 		w.Write([]byte(response.Body))
 	}
+}
+
+func sanitizeForLog(raw string) string {
+	sanitized := strings.ReplaceAll(raw, "\n", "^n")
+	sanitized = strings.ReplaceAll(sanitized, "\r", "^r")
+	return sanitized
 }

@@ -1912,3 +1912,12 @@ func TestGetBasketNameOfAcceptedRequest_WithPrefix_OutsideOfContext(t *testing.T
 		}
 	}
 }
+
+func TestSanitizeForLog(t *testing.T) {
+	assert.Equal(t, "basket2346", sanitizeForLog("basket2346"), "unexpected result of sanitizing")
+	assert.Equal(t, "abc~!@#$%09381", sanitizeForLog("abc~!@#$%09381"), "unexpected result of sanitizing")
+	assert.Equal(t, "new line^n injection", sanitizeForLog("new line\n injection"), "unexpected result of sanitizing")
+	assert.Equal(t, "another^rnew line", sanitizeForLog("another\rnew line"), "unexpected result of sanitizing")
+	assert.Equal(t, "multi-^n^r^n^r^rmulti-^nmulti-^r^nlines", sanitizeForLog("multi-\n\r\n\r\rmulti-\nmulti-\r\nlines"),
+		"unexpected result of sanitizing")
+}
