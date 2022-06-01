@@ -60,7 +60,7 @@ func CreateConfig() *ServerConfig {
 		"Baskets storage type: %s - in-memory, %s - Bolt DB, %s - SQL database", DbTypeMemory, DbTypeBolt, DbTypeSQL))
 	var dbFile = flag.String("file", "./baskets.db", "Database location, only applicable for file or SQL databases")
 	var dbConnection = flag.String("conn", "", "Database connection string for SQL databases, if undefined \"file\" argument is considered")
-	var prefix = flag.String("prefix", "", "Service HTTP path prefix")
+	var prefix = flag.String("prefix", "", "Service URL path prefix")
 
 	var baskets arrayFlags
 	flag.Var(&baskets, "basket", "Name of a basket to auto-create during service startup (can be specified multiple times)")
