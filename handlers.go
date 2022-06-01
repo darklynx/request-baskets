@@ -377,10 +377,10 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 
 // AcceptBasketRequests accepts and handles HTTP requests passed to different baskets
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
-	name, err := getBasketName(r)
+	name, publicErr, err := getBasketName(r)
 	if err != nil {
 		log.Printf("[error] %s", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, publicErr, http.StatusBadRequest)
 	} else if basket := basketsDb.Get(name); basket != nil {
 		request := basket.Add(r)
 
@@ -401,22 +401,24 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getBasketName(r *http.Request) (string, error) {
+func getBasketName(r *http.Request) (string, string, error) {
 	path := r.URL.Path
 	if len(pathPrefix) > 0 {
 		if strings.HasPrefix(path, pathPrefix) {
 			path = strings.TrimPrefix(path, pathPrefix)
 		} else {
-			return "", fmt.Errorf("incoming request is outside of configured path prefix: %s", pathPrefix)
+			publicErr := "incoming request is outside of configured path prefix: " + pathPrefix
+			return "", publicErr, fmt.Errorf("%s; request: %s %s", publicErr, r.Method, r.URL.Path)
 		}
 	}
 
 	name := strings.Split(path, "/")[1]
 	if !validBasketName.MatchString(name) {
-		return "", fmt.Errorf("invalid basket name; the name does not match pattern: %s", validBasketName.String())
+		publicErr := "invalid basket name; the name does not match pattern: " + validBasketName.String()
+		return "", publicErr, fmt.Errorf("%s; request: %s %s", publicErr, r.Method, r.URL.Path)
 	}
 
-	return name, nil
+	return name, "", nil
 }
 
 func forwardAndForget(request *RequestData, config BasketConfig, name string) {
