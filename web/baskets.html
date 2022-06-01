@@ -26,6 +26,16 @@
 
   <script>
   (function($) {
+    function getPathPrefix() {
+      var path = window.location.pathname;
+      if (path.endsWith("/web")) {
+        path += "/";
+      }
+      var rootIndex = path.indexOf("/web/");
+      return (rootIndex > 0) ? path.substring(0, rootIndex) : "";
+    }
+
+    var prefix = getPathPrefix();
     var showDetails = false;
     var basketsCount = 0;
 
@@ -49,11 +59,11 @@
           basketRowId = "basket_row_" + basketsCount;
 
           if (showDetails) {
-            baskets.append("<tr id='" + basketRowId + "'><td><a href='/web/basket.html?name=" + name + "' title='" + name + "'>" +
+            baskets.append("<tr id='" + basketRowId + "'><td><a href='" + prefix + "/web/basket.html?name=" + name + "' title='" + name + "'>" +
               toDisplayName(name) + "</a></td></tr>");
             fetchBasketDetails(name, basketRowId);
           } else {
-            baskets.append("<li><a href='/web/basket.html?name=" + name + "' title='" + name + "'>" + toDisplayName(name) + "</a></li>");
+            baskets.append("<li><a href='" + prefix + "/web/basket.html?name=" + name + "' title='" + name + "'>" + toDisplayName(name) + "</a></li>");
           }
 
           basketsCount++;
@@ -83,7 +93,7 @@
         var index, basket;
         for (index = 0; index < baskets.length; ++index) {
           basket = baskets[index];
-          basketsList.append("<li class='list-group-item'><a href='/web/basket.html?name=" + basket.name
+          basketsList.append("<li class='list-group-item'><a href='" + prefix + "/web/basket.html?name=" + basket.name
             + "' title='" + basket.name + "'>" + toDisplayName(basket.name) + "</a> - " + basket.requests_count
             + " (" + toDisplayInt(basket.requests_total_count) + ")<br>Last Request: "
             + new Date(basket.last_request_date).toISOString() + "</li>");
@@ -102,7 +112,7 @@
     function fetchBaskets() {
       $.ajax({
         method: "GET",
-        url: "/api/baskets?skip=" + basketsCount,
+        url: prefix + "/api/baskets?skip=" + basketsCount,
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -114,7 +124,7 @@
     function fetchStats() {
       $.ajax({
         method: "GET",
-        url: "/api/stats",
+        url: prefix + "/api/stats",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -127,14 +137,14 @@
     function fetchBasketDetails(name, basketRowId) {
       $.ajax({
         method: "GET",
-        url: "/api/baskets/" + name + "/requests?max=1",
+        url: prefix + "/api/baskets/" + name + "/requests?max=1",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
       }).done(function(requests) {
         $.ajax({
           method: "GET",
-          url: "/api/baskets/" + name,
+          url: prefix + "/api/baskets/" + name,
           headers: {
             "Authorization" : sessionStorage.getItem("master_token")
           }
@@ -206,7 +216,7 @@
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a class="navbar-brand" href="/web">Request Baskets</a>
+        <a class="navbar-brand" href=".">Request Baskets</a>
       </div>
       <div class="collapse navbar-collapse">
         <form class="navbar-form navbar-right">
@@ -261,7 +271,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <a href="/web" class="btn btn-default">Back to list of your baskets</a>
+          <a href="." class="btn btn-default">Back to list of your baskets</a>
           <button type="submit" class="btn btn-success" data-dismiss="modal">Authorize</button>
         </div>
         </form>

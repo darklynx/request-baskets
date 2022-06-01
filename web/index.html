@@ -24,6 +24,17 @@
 
   <script>
   (function($) {
+    function getPathPrefix() {
+      var path = window.location.pathname;
+      if (path.endsWith("/web")) {
+        path += "/";
+      }
+      var rootIndex = path.indexOf("/web/");
+      return (rootIndex > 0) ? path.substring(0, rootIndex) : "";
+    }
+
+    var prefix = getPathPrefix();
+
     function randomName() {
       var name = Math.random().toString(36).substring(2, 9);
       $("#basket_name").val(name);
@@ -37,7 +48,7 @@
 
     function addBasketName(name) {
       $("#empty_list").addClass("hide");
-      $("#baskets").append("<li id='basket_" + name + "'><a href='/web/basket.html?name=" + name + "'>" + name + "</a></li>");
+      $("#baskets").append("<li id='basket_" + name + "'><a href='" + prefix + "/web/basket.html?name=" + name + "'>" + name + "</a></li>");
     }
 
     function showMyBaskets() {
@@ -53,11 +64,11 @@
     function createBasket() {
       var basket = $.trim($("#basket_name").val());
       if (basket) {
-        $.post("/api/baskets/" + basket, function(data) {
+        $.post(prefix + "/api/baskets/" + basket, function(data) {
           localStorage.setItem("basket_" + basket, data.token);
           $("#created_message_text").html("<p>Basket '" + basket +
             "' is successfully created!</p><p>Your token is: <mark>" + data.token + "</mark></p>");
-          $("#basket_link").attr("href", "/web/basket.html?name=" + basket);
+          $("#basket_link").attr("href", prefix + "/web/basket.html?name=" + basket);
           $("#created_message").modal();
 
           // refresh
@@ -74,7 +85,7 @@
 
     // Initialization
     $(document).ready(function() {
-      $("#base_uri").html(window.location.protocol + "//" + window.location.host + "/");
+      $("#base_uri").html(window.location.protocol + "//" + window.location.host + prefix + "/");
       $("#create_basket").on("submit", function(event) {
         createBasket();
         event.preventDefault();
