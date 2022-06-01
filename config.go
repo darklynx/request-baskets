@@ -87,7 +87,7 @@ func CreateConfig() *ServerConfig {
 }
 
 func normalizePrefix(prefix string) string {
-	if (len(prefix) > 0) && (prefix[0:1] != "/") {
+	if (len(prefix) > 0) && (prefix[0] != '/') {
 		return "/" + prefix
 	} else {
 		return prefix
