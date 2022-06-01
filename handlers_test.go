@@ -1846,3 +1846,69 @@ func TestAcceptBasketRequests_WithProxyResponse_InternalServerError(t *testing.T
 		}
 	}
 }
+
+func TestGetBasketNameOfAcceptedRequest_NoPrefix_Valid(t *testing.T) {
+	r, err := http.NewRequest("GET", "http://localhost:55555/basket200", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		name, pubErr, err := getBasketNameOfAcceptedRequest(r, "")
+		assert.Equal(t, "basket200", name, "unexpected basket name")
+		assert.Empty(t, pubErr)
+		assert.Nil(t, err)
+	}
+}
+
+func TestGetBasketNameOfAcceptedRequest_NoPrefix_ValidWithSubpath(t *testing.T) {
+	r, err := http.NewRequest("DELETE", "http://localhost:55555/basket210/api/users/123", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		name, pubErr, err := getBasketNameOfAcceptedRequest(r, "")
+		assert.Equal(t, "basket210", name, "unexpected basket name")
+		assert.Empty(t, pubErr)
+		assert.Nil(t, err)
+	}
+}
+
+func TestGetBasketNameOfAcceptedRequest_NoPrefix_Invalid(t *testing.T) {
+	r, err := http.NewRequest("PUT", "http://localhost:55555/basket~220/objects/404", strings.NewReader("{}"))
+	if assert.NoError(t, err) {
+		name, pubErr, err := getBasketNameOfAcceptedRequest(r, "")
+		assert.Empty(t, name, "basket name is invalid, hence unexpected")
+		assert.Equal(t, pubErr, "invalid basket name; the name does not match pattern: "+basketNamePattern)
+		if assert.NotNil(t, err) {
+			assert.Equal(t, err.Error(), "invalid basket name; the name does not match pattern: "+
+				basketNamePattern+"; request: PUT /basket~220/objects/404")
+		}
+	}
+}
+
+func TestGetBasketNameOfAcceptedRequest_WithPrefix_Valid(t *testing.T) {
+	r, err := http.NewRequest("GET", "http://localhost:55555/abc/basket300", strings.NewReader(""))
+	if assert.NoError(t, err) {
+		name, pubErr, err := getBasketNameOfAcceptedRequest(r, "/abc")
+		assert.Equal(t, "basket300", name, "unexpected basket name")
+		assert.Empty(t, pubErr)
+		assert.Nil(t, err)
+	}
+}
+
+func TestGetBasketNameOfAcceptedRequest_WithPrefix_ValidWithSubpath(t *testing.T) {
+	r, err := http.NewRequest("PATCH", "http://localhost:55555/xyz/basket310/api/users/123", strings.NewReader("{}"))
+	if assert.NoError(t, err) {
+		name, pubErr, err := getBasketNameOfAcceptedRequest(r, "/xyz")
+		assert.Equal(t, "basket310", name, "unexpected basket name")
+		assert.Empty(t, pubErr)
+		assert.Nil(t, err)
+	}
+}
+
+func TestGetBasketNameOfAcceptedRequest_WithPrefix_OutsideOfContext(t *testing.T) {
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/objects", strings.NewReader("{}"))
+	if assert.NoError(t, err) {
+		name, pubErr, err := getBasketNameOfAcceptedRequest(r, "/baskets")
+		assert.Empty(t, name, "URL is out of context, hence no basket name is expected")
+		assert.Equal(t, pubErr, "incoming request is outside of configured path prefix: /baskets")
+		if assert.NotNil(t, err) {
+			assert.Equal(t, err.Error(), "incoming request is outside of configured path prefix: /baskets"+
+				"; request: POST /api/objects")
+		}
+	}
+}

@@ -64,13 +64,7 @@ func CreateConfig() *ServerConfig {
 
 	var baskets arrayFlags
 	flag.Var(&baskets, "basket", "Name of a basket to auto-create during service startup (can be specified multiple times)")
-
 	flag.Parse()
-
-	pathPrefix := *prefix
-	if (len(pathPrefix) > 0) && (pathPrefix[0:1] != "/") {
-		pathPrefix = "/" + pathPrefix
-	}
 
 	var token = *masterToken
 	if len(token) == 0 {
@@ -89,5 +83,13 @@ func CreateConfig() *ServerConfig {
 		DbFile:       *dbFile,
 		DbConnection: *dbConnection,
 		Baskets:      baskets,
-		PathPrefix:   pathPrefix}
+		PathPrefix:   normalizePrefix(*prefix)}
+}
+
+func normalizePrefix(prefix string) string {
+	if (len(prefix) > 0) && (prefix[0:1] != "/") {
+		return "/" + prefix
+	} else {
+		return prefix
+	}
 }

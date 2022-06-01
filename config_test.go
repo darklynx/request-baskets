@@ -28,3 +28,11 @@ func TestArrayFlags(t *testing.T) {
 
 	assert.Equal(t, "123,abc,xyz,abc", flags.String(), "unexpected list of flags")
 }
+
+func TestNormalizePrefix(t *testing.T) {
+	assert.Empty(t, normalizePrefix(""), "expected empty prefix after normalization")
+	assert.Equal(t, "/xyz", normalizePrefix("/xyz"), "unexpected result of normalization")
+	assert.Equal(t, "/abc", normalizePrefix("abc"), "unexpected result of normalization")
+	assert.Equal(t, "/services/baskets", normalizePrefix("services/baskets"), "unexpected result of normalization")
+	assert.Equal(t, "/abc/def/ghi", normalizePrefix("/abc/def/ghi"), "unexpected result of normalization")
+}

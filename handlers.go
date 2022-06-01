@@ -377,7 +377,7 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 
 // AcceptBasketRequests accepts and handles HTTP requests passed to different baskets
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
-	name, publicErr, err := getBasketName(r)
+	name, publicErr, err := getBasketNameOfAcceptedRequest(r, pathPrefix)
 	if err != nil {
 		log.Printf("[error] %s", err)
 		http.Error(w, publicErr, http.StatusBadRequest)
@@ -401,13 +401,13 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getBasketName(r *http.Request) (string, string, error) {
+func getBasketNameOfAcceptedRequest(r *http.Request, prefix string) (string, string, error) {
 	path := r.URL.Path
-	if len(pathPrefix) > 0 {
-		if strings.HasPrefix(path, pathPrefix) {
-			path = strings.TrimPrefix(path, pathPrefix)
+	if len(prefix) > 0 {
+		if strings.HasPrefix(path, prefix) {
+			path = strings.TrimPrefix(path, prefix)
 		} else {
-			publicErr := "incoming request is outside of configured path prefix: " + pathPrefix
+			publicErr := "incoming request is outside of configured path prefix: " + prefix
 			return "", publicErr, fmt.Errorf("%s; request: %s %s", publicErr, r.Method, r.URL.Path)
 		}
 	}
