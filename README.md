@@ -102,7 +102,7 @@ Usage of bin/request-baskets:
   -token string
       Master token, random token is generated if not provided
   -basket value
-    	Name of a basket to auto-create during service startup (can be specified multiple times)
+      Name of a basket to auto-create during service startup (can be specified multiple times)
 ```
 
 ### Parameters
