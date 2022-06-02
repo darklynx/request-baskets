@@ -43,10 +43,7 @@ func CreateServer(config *ServerConfig) *http.Server {
 	insecureTransport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	httpInsecureClient = &http.Client{Transport: insecureTransport}
 
-	pathPrefix = config.PathPrefix
-	if len(pathPrefix) > 0 {
-		log.Printf("[info] service path prefix: %s", pathPrefix)
-	}
+	setPathPrefix(config.PathPrefix)
 
 	// configure service HTTP router
 	router := httprouter.New()
@@ -112,6 +109,13 @@ func createBasketsDatabase(dbtype string, file string, conn string) BasketsDatab
 	default:
 		log.Printf("[error] unknown database type: %s", dbtype)
 		return nil
+	}
+}
+
+func setPathPrefix(prefix string) {
+	pathPrefix = prefix
+	if len(pathPrefix) > 0 {
+		log.Printf("[info] service path prefix: %s", pathPrefix)
 	}
 }
 

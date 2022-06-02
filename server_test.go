@@ -78,3 +78,11 @@ func TestCreateDefaultBaskets(t *testing.T) {
 
 	assert.Equal(t, serverConfig.InitCapacity, db.Get("abc").Config().Capacity, "unexpected basket capacity")
 }
+
+func TestSetPathPrefix(t *testing.T) {
+	setPathPrefix("/abc")
+	assert.Equal(t, "/abc", pathPrefix, "unexpected prefix")
+
+	setPathPrefix("")
+	assert.Empty(t, pathPrefix, "prefix is not expected")
+}
