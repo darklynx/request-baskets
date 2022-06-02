@@ -16,6 +16,7 @@ var basketsDb BasketsDatabase
 var httpClient *http.Client
 var httpInsecureClient *http.Client
 var version *Version
+var pathPrefix string
 
 // CreateServer creates an instance of Request Baskets server
 func CreateServer(config *ServerConfig) *http.Server {
@@ -42,45 +43,47 @@ func CreateServer(config *ServerConfig) *http.Server {
 	insecureTransport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	httpInsecureClient = &http.Client{Transport: insecureTransport}
 
+	setPathPrefix(config.PathPrefix)
+
 	// configure service HTTP router
 	router := httprouter.New()
 
 	//// Old API mapping ////
 	// basket names
-	router.GET("/"+serviceOldAPIPath, GetBaskets)
+	router.GET(pathPrefix+"/"+serviceOldAPIPath, GetBaskets)
 	// basket management
-	router.GET("/"+serviceOldAPIPath+"/:basket", GetBasket)
-	router.POST("/"+serviceOldAPIPath+"/:basket", CreateBasket)
-	router.PUT("/"+serviceOldAPIPath+"/:basket", UpdateBasket)
-	router.DELETE("/"+serviceOldAPIPath+"/:basket", DeleteBasket)
-	router.GET("/"+serviceOldAPIPath+"/:basket/responses/:method", GetBasketResponse)
-	router.PUT("/"+serviceOldAPIPath+"/:basket/responses/:method", UpdateBasketResponse)
+	router.GET(pathPrefix+"/"+serviceOldAPIPath+"/:basket", GetBasket)
+	router.POST(pathPrefix+"/"+serviceOldAPIPath+"/:basket", CreateBasket)
+	router.PUT(pathPrefix+"/"+serviceOldAPIPath+"/:basket", UpdateBasket)
+	router.DELETE(pathPrefix+"/"+serviceOldAPIPath+"/:basket", DeleteBasket)
+	router.GET(pathPrefix+"/"+serviceOldAPIPath+"/:basket/responses/:method", GetBasketResponse)
+	router.PUT(pathPrefix+"/"+serviceOldAPIPath+"/:basket/responses/:method", UpdateBasketResponse)
 	// requests management
-	router.GET("/"+serviceOldAPIPath+"/:basket/requests", GetBasketRequests)
-	router.DELETE("/"+serviceOldAPIPath+"/:basket/requests", ClearBasket)
+	router.GET(pathPrefix+"/"+serviceOldAPIPath+"/:basket/requests", GetBasketRequests)
+	router.DELETE(pathPrefix+"/"+serviceOldAPIPath+"/:basket/requests", ClearBasket)
 
 	//// New API mapping ////
 	// service details
-	router.GET("/"+serviceAPIPath+"/stats", GetStats)
-	router.GET("/"+serviceAPIPath+"/version", GetVersion)
+	router.GET(pathPrefix+"/"+serviceAPIPath+"/stats", GetStats)
+	router.GET(pathPrefix+"/"+serviceAPIPath+"/version", GetVersion)
 	// basket names
-	router.GET("/"+serviceAPIPath+"/baskets", GetBaskets)
+	router.GET(pathPrefix+"/"+serviceAPIPath+"/baskets", GetBaskets)
 	// basket management
-	router.GET("/"+serviceAPIPath+"/baskets/:basket", GetBasket)
-	router.POST("/"+serviceAPIPath+"/baskets/:basket", CreateBasket)
-	router.PUT("/"+serviceAPIPath+"/baskets/:basket", UpdateBasket)
-	router.DELETE("/"+serviceAPIPath+"/baskets/:basket", DeleteBasket)
-	router.GET("/"+serviceAPIPath+"/baskets/:basket/responses/:method", GetBasketResponse)
-	router.PUT("/"+serviceAPIPath+"/baskets/:basket/responses/:method", UpdateBasketResponse)
+	router.GET(pathPrefix+"/"+serviceAPIPath+"/baskets/:basket", GetBasket)
+	router.POST(pathPrefix+"/"+serviceAPIPath+"/baskets/:basket", CreateBasket)
+	router.PUT(pathPrefix+"/"+serviceAPIPath+"/baskets/:basket", UpdateBasket)
+	router.DELETE(pathPrefix+"/"+serviceAPIPath+"/baskets/:basket", DeleteBasket)
+	router.GET(pathPrefix+"/"+serviceAPIPath+"/baskets/:basket/responses/:method", GetBasketResponse)
+	router.PUT(pathPrefix+"/"+serviceAPIPath+"/baskets/:basket/responses/:method", UpdateBasketResponse)
 	// requests management
-	router.GET("/"+serviceAPIPath+"/baskets/:basket/requests", GetBasketRequests)
-	router.DELETE("/"+serviceAPIPath+"/baskets/:basket/requests", ClearBasket)
+	router.GET(pathPrefix+"/"+serviceAPIPath+"/baskets/:basket/requests", GetBasketRequests)
+	router.DELETE(pathPrefix+"/"+serviceAPIPath+"/baskets/:basket/requests", ClearBasket)
 
 	// web pages
-	router.GET("/", ForwardToWeb)
-	router.GET("/"+serviceUIPath, WebIndexPage)
-	router.GET("/"+serviceUIPath+"/:basket", WebBasketPage)
-	//router.ServeFiles("/"+serviceUIPath+"/*filepath", http.Dir("./src/github.com/darklynx/request-baskets/web"))
+	router.GET(pathPrefix+"/", ForwardToWeb)
+	router.GET(pathPrefix+"/"+serviceUIPath, WebIndexPage)
+	router.GET(pathPrefix+"/"+serviceUIPath+"/:basket", WebBasketPage)
+	//router.ServeFiles(pathPrefix+"/"+serviceUIPath+"/*filepath", http.Dir("./web"))
 
 	// basket requests
 	router.NotFound = http.HandlerFunc(AcceptBasketRequests)
@@ -106,6 +109,13 @@ func createBasketsDatabase(dbtype string, file string, conn string) BasketsDatab
 	default:
 		log.Printf("[error] unknown database type: %s", dbtype)
 		return nil
+	}
+}
+
+func setPathPrefix(prefix string) {
+	pathPrefix = prefix
+	if len(pathPrefix) > 0 {
+		log.Printf("[info] service path prefix: %s", pathPrefix)
 	}
 }
 

@@ -22,15 +22,25 @@
 
   <script >
   (function($) {
+    function getPathPrefix() {
+      var path = window.location.pathname;
+      if (path.endsWith("/web")) {
+        path += "/";
+      }
+      var rootIndex = path.indexOf("/web/");
+      return (rootIndex > 0) ? path.substring(0, rootIndex) : "";
+    }
+
     function getParam(name) {
       var params = new RegExp("[\\?&]" + name + "=([^&#]*)").exec(window.location.search);
       return (params && params.length) ? params[1] : null;
     }
 
     function getBasketUrl() {
-      return window.location.protocol + "//" + window.location.host + "/" + getParam("name");
+      return window.location.protocol + "//" + window.location.host + prefix + "/" + getParam("name");
     }
 
+    var prefix = getPathPrefix();
     var name = getParam("name");
     var basketUrl = getBasketUrl();
     var fetchedCount = 0;
@@ -297,7 +307,7 @@
     function fetchRequests() {
       $.ajax({
         method: "GET",
-        url: "/api/baskets/" + name + "/requests?skip=" + fetchedCount,
+        url: prefix + "/api/baskets/" + name + "/requests?skip=" + fetchedCount,
         headers: {
           "Authorization" : getToken()
         }
@@ -307,7 +317,7 @@
     function fetchTotalCount() {
       $.ajax({
         method: "GET",
-        url: "/api/baskets/" + name + "/requests?max=0",
+        url: prefix + "/api/baskets/" + name + "/requests?max=0",
         headers: {
           "Authorization" : getToken()
         }
@@ -323,7 +333,7 @@
       $("#response_method").val(method);
       $.ajax({
         method: "GET",
-        url: "/api/baskets/" + name + "/responses/" + method,
+        url: prefix + "/api/baskets/" + name + "/responses/" + method,
         headers: {
           "Authorization" : getToken()
         }
@@ -397,7 +407,7 @@
 
       $.ajax({
         method: "PUT",
-        url: "/api/baskets/" + name + "/responses/" + method,
+        url: prefix + "/api/baskets/" + name + "/responses/" + method,
         dataType: "json",
         data: JSON.stringify(response),
         headers: {
@@ -422,7 +432,7 @@
 
         $.ajax({
           method: "PUT",
-          url: "/api/baskets/" + name,
+          url: prefix + "/api/baskets/" + name,
           dataType: "json",
           data: JSON.stringify(currentConfig),
           headers: {
@@ -462,7 +472,7 @@
     function config() {
       $.ajax({
         method: "GET",
-        url: "/api/baskets/" + name,
+        url: prefix + "/api/baskets/" + name,
         headers: {
           "Authorization" : getToken()
         }
@@ -485,7 +495,7 @@
     function deleteRequests() {
       $.ajax({
         method: "DELETE",
-        url: "/api/baskets/" + name + "/requests",
+        url: prefix + "/api/baskets/" + name + "/requests",
         headers: {
           "Authorization" : getToken()
         }
@@ -500,13 +510,13 @@
 
       $.ajax({
         method: "DELETE",
-        url: "/api/baskets/" + name,
+        url: prefix + "/api/baskets/" + name,
         headers: {
           "Authorization" : getToken()
         }
       }).done(function(data) {
         localStorage.removeItem("basket_" + name);
-        window.location.href = "/web";
+        window.location.href = prefix + "/web";
       }).fail(onAjaxError);
     }
 
@@ -555,7 +565,7 @@
           }
         }
         // remove token from location URL
-        window.location.href = "/web/basket.html?name=" + name;
+        window.location.href = prefix + "/web/basket.html?name=" + name;
       }
     }
 
@@ -632,7 +642,7 @@
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a class="navbar-brand" href="/web">Request Baskets</a>
+        <a class="navbar-brand" href=".">Request Baskets</a>
       </div>
       <div class="collapse navbar-collapse">
         <form class="navbar-form navbar-right">
@@ -682,7 +692,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <a href="/web" class="btn btn-default">Back to list of Baskets</a>
+          <a href="." class="btn btn-default">Back to list of Baskets</a>
           <button type="submit" class="btn btn-success" data-dismiss="modal">Authorize</button>
         </div>
       </div>

@@ -37,7 +37,7 @@ var (
 
     function addBasketName(name) {
       $("#empty_list").addClass("hide");
-      $("#baskets").append("<li id='basket_" + name + "'><a href='/web/" + name + "'>" + name + "</a></li>");
+      $("#baskets").append("<li id='basket_" + name + "'><a href='{{.Prefix}}/web/" + name + "'>" + name + "</a></li>");
     }
 
     function showMyBaskets() {
@@ -53,11 +53,11 @@ var (
     function createBasket() {
       var basket = $.trim($("#basket_name").val());
       if (basket) {
-        $.post("/api/baskets/" + basket, function(data) {
+        $.post("{{.Prefix}}/api/baskets/" + basket, function(data) {
           localStorage.setItem("basket_" + basket, data.token);
           $("#created_message_text").html("<p>Basket '" + basket +
             "' is successfully created!</p><p>Your token is: <mark>" + data.token + "</mark></p>");
-          $("#basket_link").attr("href", "/web/" + basket);
+          $("#basket_link").attr("href", "{{.Prefix}}/web/" + basket);
           $("#created_message").modal();
 
           // refresh
@@ -74,7 +74,7 @@ var (
 
     // Initialization
     $(document).ready(function() {
-      $("#base_uri").html(window.location.protocol + "//" + window.location.host + "/");
+      $("#base_uri").html(window.location.protocol + "//" + window.location.host + "{{.Prefix}}/");
       $("#create_basket").on("submit", function(event) {
         createBasket();
         event.preventDefault();
@@ -97,7 +97,7 @@ var (
       </div>
       <div class="collapse navbar-collapse">
         <form class="navbar-form navbar-right">
-          <a href="/web/baskets" alt="Administration" title="Administration" class="btn btn-default">
+          <a href="{{.Prefix}}/web/baskets" alt="Administration" title="Administration" class="btn btn-default">
             <span class="glyphicon glyphicon-cog"></span>
           </a>
         </form>
@@ -174,8 +174,8 @@ var (
     <div class="container">
       <p class="text-muted">
         <small>
-          Powered by <a href="{{.SourceCode}}">{{.Name}}</a> |
-          Version: <abbr title="From commit: {{.CommitShort}} ({{.Commit}})">{{.Version}}</abbr>
+          Powered by <a href="{{.Version.SourceCode}}">{{.Version.Name}}</a> |
+          Version: <abbr title="From commit: {{.Version.CommitShort}} ({{.Version.Commit}})">{{.Version.Version}}</abbr>
         </small>
       </p>
     </div>

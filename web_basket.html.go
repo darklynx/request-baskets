@@ -4,7 +4,7 @@ const (
 	basketPageContentTemplate = `<!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>Request Basket: {{.}}</title>
+  <title>Request Basket: {{.Basket}}</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
@@ -22,7 +22,7 @@ const (
 
   <script>
   (function($) {
-    var basketUrl = window.location.protocol + "//" + window.location.host + "/{{.}}";
+    var basketUrl = window.location.protocol + "//" + window.location.host + "{{.Prefix}}/{{.Basket}}";
     var fetchedCount = 0;
     var fetchedRequests = {};
     var totalCount = 0;
@@ -37,7 +37,7 @@ const (
     }
 
     function getBasketToken() {
-      return localStorage.getItem("basket_{{.}}");
+      return localStorage.getItem("basket_{{.Basket}}");
     }
 
     function getToken() {
@@ -50,7 +50,7 @@ const (
 
     function onAjaxError(jqXHR) {
       if (jqXHR.status == 401) {
-        localStorage.removeItem("basket_{{.}}");
+        localStorage.removeItem("basket_{{.Basket}}");
         enableAutoRefresh(false);
         $("#token_dialog").modal({ keyboard : false });
       } else {
@@ -292,7 +292,7 @@ const (
     function fetchRequests() {
       $.ajax({
         method: "GET",
-        url: "/api/baskets/{{.}}/requests?skip=" + fetchedCount,
+        url: "{{.Prefix}}/api/baskets/{{.Basket}}/requests?skip=" + fetchedCount,
         headers: {
           "Authorization" : getToken()
         }
@@ -302,7 +302,7 @@ const (
     function fetchTotalCount() {
       $.ajax({
         method: "GET",
-        url: "/api/baskets/{{.}}/requests?max=0",
+        url: "{{.Prefix}}/api/baskets/{{.Basket}}/requests?max=0",
         headers: {
           "Authorization" : getToken()
         }
@@ -318,7 +318,7 @@ const (
       $("#response_method").val(method);
       $.ajax({
         method: "GET",
-        url: "/api/baskets/{{.}}/responses/" + method,
+        url: "{{.Prefix}}/api/baskets/{{.Basket}}/responses/" + method,
         headers: {
           "Authorization" : getToken()
         }
@@ -392,7 +392,7 @@ const (
 
       $.ajax({
         method: "PUT",
-        url: "/api/baskets/{{.}}/responses/" + method,
+        url: "{{.Prefix}}/api/baskets/{{.Basket}}/responses/" + method,
         dataType: "json",
         data: JSON.stringify(response),
         headers: {
@@ -419,7 +419,7 @@ const (
 
         $.ajax({
           method: "PUT",
-          url: "/api/baskets/{{.}}",
+          url: "{{.Prefix}}/api/baskets/{{.Basket}}",
           dataType: "json",
           data: JSON.stringify(currentConfig),
           headers: {
@@ -459,7 +459,7 @@ const (
     function config() {
       $.ajax({
         method: "GET",
-        url: "/api/baskets/{{.}}",
+        url: "{{.Prefix}}/api/baskets/{{.Basket}}",
         headers: {
           "Authorization" : getToken()
         }
@@ -483,7 +483,7 @@ const (
     function deleteRequests() {
       $.ajax({
         method: "DELETE",
-        url: "/api/baskets/{{.}}/requests",
+        url: "{{.Prefix}}/api/baskets/{{.Basket}}/requests",
         headers: {
           "Authorization" : getToken()
         }
@@ -498,13 +498,13 @@ const (
 
       $.ajax({
         method: "DELETE",
-        url: "/api/baskets/{{.}}",
+        url: "{{.Prefix}}/api/baskets/{{.Basket}}",
         headers: {
           "Authorization" : getToken()
         }
       }).done(function(data) {
-        localStorage.removeItem("basket_{{.}}");
-        window.location.href = "/web";
+        localStorage.removeItem("basket_{{.Basket}}");
+        window.location.href = "{{.Prefix}}/web";
       }).fail(onAjaxError);
     }
 
@@ -541,19 +541,19 @@ const (
         var currentToken = getBasketToken();
         if (!currentToken) {
           // remember basket token
-          localStorage.setItem("basket_{{.}}", token);
+          localStorage.setItem("basket_{{.Basket}}", token);
         } else if (currentToken !== token) {
-          if (confirm("The access token for the '{{.}}' basket \n" +
+          if (confirm("The access token for the '{{.Basket}}' basket \n" +
               "from query parameter is different to the token that is \n" +
               "already stored in your browser.\n\n" +
               "If you trust this link choose 'OK' and existing token will be \n" +
               "replaced with the new one, otherwise choose 'Cancel'.\n\n" +
               "Do you want to replace the access token of this basket?")) {
-            localStorage.setItem("basket_{{.}}", token);
+            localStorage.setItem("basket_{{.Basket}}", token);
           }
         }
         // remove token from location URL
-        window.location.href = "/web/{{.}}";
+        window.location.href = "{{.Prefix}}/web/{{.Basket}}";
       }
     }
 
@@ -562,7 +562,7 @@ const (
       $(".basket_uri").html(basketUrl);
       // dialogs
       $("#token_dialog").on("hidden.bs.modal", function (event) {
-        localStorage.setItem("basket_{{.}}", $("#basket_token").val());
+        localStorage.setItem("basket_{{.Basket}}", $("#basket_token").val());
         fetchRequests();
       });
       $("#config_form").on("submit", function(event) {
@@ -629,7 +629,7 @@ const (
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a class="navbar-brand" href="/web">Request Baskets</a>
+        <a class="navbar-brand" href="{{.Prefix}}/web">Request Baskets</a>
       </div>
       <div class="collapse navbar-collapse">
         <form class="navbar-form navbar-right">
@@ -679,7 +679,7 @@ const (
           </div>
         </div>
         <div class="modal-footer">
-          <a href="/web" class="btn btn-default">Back to list of Baskets</a>
+          <a href="{{.Prefix}}/web" class="btn btn-default">Back to list of Baskets</a>
           <button type="submit" class="btn btn-success" data-dismiss="modal">Authorize</button>
         </div>
       </div>
@@ -819,7 +819,7 @@ const (
   <div class="container">
     <div class="row">
       <div class="col-md-8">
-        <h1>Basket: {{.}}</h1>
+        <h1>Basket: {{.Basket}}</h1>
         <p id="requests_link" class="hide">Requests are collected at <kbd class="basket_uri"></kbd>
           <kbd class="copy-url-btn"><span title="Copy URL" class="glyphicon glyphicon-copy"></span></kbd></p>
       </div>

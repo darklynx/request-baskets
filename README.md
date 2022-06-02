@@ -102,7 +102,9 @@ Usage of bin/request-baskets:
   -token string
       Master token, random token is generated if not provided
   -basket value
-    	Name of a basket to auto-create during service startup (can be specified multiple times)
+      Name of a basket to auto-create during service startup (can be specified multiple times)
+  -prefix string
+      Service URL path prefix
 ```
 
 ### Parameters
@@ -116,6 +118,7 @@ Usage of bin/request-baskets:
  * `-file` *location* - location of Bolt database file, only relevant if appropriate storage type is chosen
  * `-conn` *connection* - database connection string for SQL databases, if undefined `-file` argument is considered
  * `-basket` *value* - name of a basket to auto-create during service startup, this parameter can be specified multiple times
+ * `-prefix` *URL path prefix* - allows to host API and web-UI of baskets service under a sub-path instead of domain ROOT
 
 ## Usage
 

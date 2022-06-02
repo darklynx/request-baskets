@@ -34,6 +34,7 @@ type ServerConfig struct {
 	DbFile       string
 	DbConnection string
 	Baskets      []string
+	PathPrefix   string
 }
 
 type arrayFlags []string
@@ -59,10 +60,10 @@ func CreateConfig() *ServerConfig {
 		"Baskets storage type: %s - in-memory, %s - Bolt DB, %s - SQL database", DbTypeMemory, DbTypeBolt, DbTypeSQL))
 	var dbFile = flag.String("file", "./baskets.db", "Database location, only applicable for file or SQL databases")
 	var dbConnection = flag.String("conn", "", "Database connection string for SQL databases, if undefined \"file\" argument is considered")
+	var prefix = flag.String("prefix", "", "Service URL path prefix")
 
 	var baskets arrayFlags
 	flag.Var(&baskets, "basket", "Name of a basket to auto-create during service startup (can be specified multiple times)")
-
 	flag.Parse()
 
 	var token = *masterToken
@@ -81,5 +82,14 @@ func CreateConfig() *ServerConfig {
 		DbType:       *dbType,
 		DbFile:       *dbFile,
 		DbConnection: *dbConnection,
-		Baskets:      baskets}
+		Baskets:      baskets,
+		PathPrefix:   normalizePrefix(*prefix)}
+}
+
+func normalizePrefix(prefix string) string {
+	if (len(prefix) > 0) && (prefix[0] != '/') {
+		return "/" + prefix
+	} else {
+		return prefix
+	}
 }

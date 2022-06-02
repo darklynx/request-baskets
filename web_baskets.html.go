@@ -49,11 +49,11 @@ var (
           basketRowId = "basket_row_" + basketsCount;
 
           if (showDetails) {
-            baskets.append("<tr id='" + basketRowId + "'><td><a href='/web/" + name + "' title='" + name + "'>" +
+            baskets.append("<tr id='" + basketRowId + "'><td><a href='{{.Prefix}}/web/" + name + "' title='" + name + "'>" +
               toDisplayName(name) + "</a></td></tr>");
             fetchBasketDetails(name, basketRowId);
           } else {
-            baskets.append("<li><a href='/web/" + name + "' title='" + name + "'>" + toDisplayName(name) + "</a></li>");
+            baskets.append("<li><a href='{{.Prefix}}/web/" + name + "' title='" + name + "'>" + toDisplayName(name) + "</a></li>");
           }
 
           basketsCount++;
@@ -83,7 +83,7 @@ var (
         var index, basket;
         for (index = 0; index < baskets.length; ++index) {
           basket = baskets[index];
-          basketsList.append("<li class='list-group-item'><a href='/web/" + basket.name
+          basketsList.append("<li class='list-group-item'><a href='{{.Prefix}}/web/" + basket.name
             + "' title='" + basket.name + "'>" + toDisplayName(basket.name) + "</a> - " + basket.requests_count
             + " (" + toDisplayInt(basket.requests_total_count) + ")<br>Last Request: "
             + new Date(basket.last_request_date).toISOString() + "</li>");
@@ -102,7 +102,7 @@ var (
     function fetchBaskets() {
       $.ajax({
         method: "GET",
-        url: "/api/baskets?skip=" + basketsCount,
+        url: "{{.Prefix}}/api/baskets?skip=" + basketsCount,
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -114,7 +114,7 @@ var (
     function fetchStats() {
       $.ajax({
         method: "GET",
-        url: "/api/stats",
+        url: "{{.Prefix}}/api/stats",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -127,14 +127,14 @@ var (
     function fetchBasketDetails(name, basketRowId) {
       $.ajax({
         method: "GET",
-        url: "/api/baskets/" + name + "/requests?max=1",
+        url: "{{.Prefix}}/api/baskets/" + name + "/requests?max=1",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
       }).done(function(requests) {
         $.ajax({
           method: "GET",
-          url: "/api/baskets/" + name,
+          url: "{{.Prefix}}/api/baskets/" + name,
           headers: {
             "Authorization" : sessionStorage.getItem("master_token")
           }
@@ -206,7 +206,7 @@ var (
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a class="navbar-brand" href="/web">Request Baskets</a>
+        <a class="navbar-brand" href="{{.Prefix}}/web">Request Baskets</a>
       </div>
       <div class="collapse navbar-collapse">
         <form class="navbar-form navbar-right">
@@ -261,7 +261,7 @@ var (
           </div>
         </div>
         <div class="modal-footer">
-          <a href="/web" class="btn btn-default">Back to list of your baskets</a>
+          <a href="{{.Prefix}}/web" class="btn btn-default">Back to list of your baskets</a>
           <button type="submit" class="btn btn-success" data-dismiss="modal">Authorize</button>
         </div>
         </form>
@@ -353,8 +353,8 @@ var (
     <div class="container">
       <p class="text-muted">
         <small>
-          Powered by <a href="{{.SourceCode}}">{{.Name}}</a> |
-          Version: <abbr title="From commit: {{.CommitShort}} ({{.Commit}})">{{.Version}}</abbr>
+          Powered by <a href="{{.Version.SourceCode}}">{{.Version.Name}}</a> |
+          Version: <abbr title="From commit: {{.Version.CommitShort}} ({{.Version.Commit}})">{{.Version.Version}}</abbr>
         </small>
       </p>
     </div>
