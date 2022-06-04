@@ -16,7 +16,6 @@ var basketsDb BasketsDatabase
 var httpClient *http.Client
 var httpInsecureClient *http.Client
 var version *Version
-var pathPrefix string
 
 // CreateServer creates an instance of Request Baskets server
 func CreateServer(config *ServerConfig) *http.Server {
@@ -43,9 +42,8 @@ func CreateServer(config *ServerConfig) *http.Server {
 	insecureTransport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	httpInsecureClient = &http.Client{Transport: insecureTransport}
 
-	setPathPrefix(config.PathPrefix)
-
 	// configure service HTTP router
+	pathPrefix := getPathPrefix(config)
 	router := httprouter.New()
 
 	//// Old API mapping ////
@@ -112,11 +110,13 @@ func createBasketsDatabase(dbtype string, file string, conn string) BasketsDatab
 	}
 }
 
-func setPathPrefix(prefix string) {
-	pathPrefix = prefix
+func getPathPrefix(config *ServerConfig) string {
+	pathPrefix := config.PathPrefix
 	if len(pathPrefix) > 0 {
 		log.Printf("[info] service path prefix: %s", pathPrefix)
 	}
+
+	return pathPrefix
 }
 
 func shutdownHook() {

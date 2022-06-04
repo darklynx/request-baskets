@@ -284,6 +284,48 @@ func TestCreateBasket_ReadTimeout(t *testing.T) {
 	}
 }
 
+func TestCreateBasket_Unauthorized(t *testing.T) {
+	basket := "create10"
+
+	serverConfig.Mode = ModeRestricted
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+
+		// validate response: 401 - Unauthorized
+		assert.Equal(t, 401, w.Code, "wrong HTTP result code")
+
+		// validate database
+		assert.Nil(t, basketsDb.Get(basket), "basket '%v' should not be created", basket)
+	}
+
+	serverConfig.Mode = ModePublic
+}
+
+func TestCreateBasket_Authorized(t *testing.T) {
+	basket := "create11"
+
+	serverConfig.Mode = ModeRestricted
+	r, err := http.NewRequest("POST", "http://localhost:55555/api/baskets/"+basket, strings.NewReader(""))
+	if assert.NoError(t, err) {
+		r.Header.Add("Authorization", serverConfig.MasterToken)
+
+		w := httptest.NewRecorder()
+		ps := append(make(httprouter.Params, 0), httprouter.Param{Key: "basket", Value: basket})
+		CreateBasket(w, r, ps)
+
+		// validate response: 201 - Created
+		assert.Equal(t, 201, w.Code, "wrong HTTP result code")
+
+		// validate database
+		assert.NotNil(t, basketsDb.Get(basket), "basket '%v' should be created", basket)
+	}
+
+	serverConfig.Mode = ModePublic
+}
+
 func TestGetBasket(t *testing.T) {
 	basket := "get01"
 

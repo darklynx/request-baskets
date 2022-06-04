@@ -16,6 +16,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+const (
+	ModePublic     = "public"
+	ModeRestricted = "restricted"
+)
+
 var validBasketName = regexp.MustCompile(basketNamePattern)
 var defaultResponse = ResponseConfig{Status: http.StatusOK, Headers: http.Header{}, IsTemplate: false}
 var indexPageTemplate = template.Must(template.New("index").Parse(indexPageContentTemplate))
@@ -59,14 +64,14 @@ func getPage(values url.Values) (int, int) {
 	return max, skip
 }
 
-// getAuthenticatedBasket fetches basket details by name and authenticates the access to this basket, returns nil in case of failure
-func getAuthenticatedBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (string, Basket) {
+// getAuthorizedBasket fetches basket details by name and authorizes the access to this basket, returns nil in case of failure
+func getAuthorizedBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params, config *ServerConfig) (string, Basket) {
 	name := ps.ByName("basket")
 	if !validBasketName.MatchString(name) {
 		http.Error(w, "invalid basket name; the name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
 	} else if basket := basketsDb.Get(name); basket != nil {
 		// maybe custom header, e.g. basket_key, basket_token
-		if token := r.Header.Get("Authorization"); basket.Authorize(token) || token == serverConfig.MasterToken {
+		if token := r.Header.Get("Authorization"); basket.Authorize(token) || token == config.MasterToken {
 			return name, basket
 		}
 		w.WriteHeader(http.StatusUnauthorized)
@@ -75,6 +80,21 @@ func getAuthenticatedBasket(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	return "", nil
+}
+
+// authorizeRequest helps to authorize requests for restricted end-points and returns true in case of successful authorization
+// publicAPI requires no authorization unless the server mode is set to "restricted"
+func authorizeRequest(w http.ResponseWriter, r *http.Request, publicAPI bool, config *ServerConfig) bool {
+	if publicAPI && config.Mode != ModeRestricted {
+		return true
+	}
+
+	if r.Header.Get("Authorization") == serverConfig.MasterToken {
+		return true
+	}
+
+	w.WriteHeader(http.StatusUnauthorized)
+	return false
 }
 
 // validateBasketConfig validates basket configuration
@@ -138,9 +158,7 @@ func getValidMethod(ps httprouter.Params) (string, error) {
 
 // GetBaskets handles HTTP request to get registered baskets
 func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if r.Header.Get("Authorization") != serverConfig.MasterToken {
-		w.WriteHeader(http.StatusUnauthorized)
-	} else {
+	if authorizeRequest(w, r, false, serverConfig) {
 		values := r.URL.Query()
 		if query := values.Get("q"); len(query) > 0 {
 			// find names
@@ -157,9 +175,7 @@ func GetBaskets(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // GetStats handles HTTP request to get database statistics
 func GetStats(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if r.Header.Get("Authorization") != serverConfig.MasterToken {
-		w.WriteHeader(http.StatusUnauthorized)
-	} else {
+	if authorizeRequest(w, r, false, serverConfig) {
 		// get database stats
 		max := parseInt(r.URL.Query().Get("max"), 1, 100, 5)
 		json, err := json.Marshal(basketsDb.GetStats(max))
@@ -176,7 +192,7 @@ func GetVersion(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // GetBasket handles HTTP request to get basket configuration
 func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthorizedBasket(w, r, ps, serverConfig); basket != nil {
 		json, err := json.Marshal(basket.Config())
 		writeJSON(w, http.StatusOK, json, err)
 	}
@@ -184,6 +200,10 @@ func GetBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // CreateBasket handles HTTP request to create a new basket
 func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if !authorizeRequest(w, r, true, serverConfig) {
+		return
+	}
+
 	name := ps.ByName("basket")
 	if name == serviceOldAPIPath || name == serviceAPIPath || name == serviceUIPath {
 		http.Error(w, "This basket name conflicts with reserved system path: "+name, http.StatusForbidden)
@@ -228,7 +248,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 // UpdateBasket handles HTTP request to update basket configuration
 func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthorizedBasket(w, r, ps, serverConfig); basket != nil {
 		// read config (max 2 kB)
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2048))
 		r.Body.Close()
@@ -257,7 +277,7 @@ func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 // DeleteBasket handles HTTP request to delete basket
 func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if name, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
+	if name, basket := getAuthorizedBasket(w, r, ps, serverConfig); basket != nil {
 		log.Printf("[info] deleting basket: %s", name)
 
 		basketsDb.Delete(name)
@@ -267,7 +287,7 @@ func DeleteBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 
 // GetBasketResponse handles HTTP request to get basket response configuration
 func GetBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthorizedBasket(w, r, ps, serverConfig); basket != nil {
 		method, errm := getValidMethod(ps)
 		if errm != nil {
 			http.Error(w, errm.Error(), http.StatusBadRequest)
@@ -285,7 +305,7 @@ func GetBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 
 // UpdateBasketResponse handles HTTP request to update basket response configuration
 func UpdateBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthorizedBasket(w, r, ps, serverConfig); basket != nil {
 		method, errm := getValidMethod(ps)
 		if errm != nil {
 			http.Error(w, errm.Error(), http.StatusBadRequest)
@@ -318,7 +338,7 @@ func UpdateBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 // GetBasketRequests handles HTTP request to get requests collected by basket
 func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthorizedBasket(w, r, ps, serverConfig); basket != nil {
 		values := r.URL.Query()
 		if query := values.Get("q"); len(query) > 0 {
 			// find requests
@@ -335,7 +355,7 @@ func GetBasketRequests(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 
 // ClearBasket handles HTTP request to delete all requests collected by basket
 func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if _, basket := getAuthenticatedBasket(w, r, ps); basket != nil {
+	if _, basket := getAuthorizedBasket(w, r, ps, serverConfig); basket != nil {
 		basket.Clear()
 		w.WriteHeader(http.StatusNoContent)
 	}
@@ -343,7 +363,7 @@ func ClearBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // ForwardToWeb handels HTTP forwarding to /web
 func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	http.Redirect(w, r, pathPrefix+"/"+serviceUIPath, http.StatusFound)
+	http.Redirect(w, r, serverConfig.PathPrefix+"/"+serviceUIPath, http.StatusFound)
 }
 
 type TemplateData struct {
@@ -356,7 +376,7 @@ type TemplateData struct {
 // WebIndexPage handles HTTP request to render index page
 func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	indexPageTemplate.Execute(w, TemplateData{Prefix: pathPrefix, Version: version})
+	indexPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version})
 }
 
 // WebBasketPage handles HTTP request to render basket details page
@@ -366,9 +386,9 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 		case serviceOldAPIPath:
 			// admin page to access all baskets
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			basketsPageTemplate.Execute(w, TemplateData{Prefix: pathPrefix, Version: version})
+			basketsPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version})
 		default:
-			basketPageTemplate.Execute(w, TemplateData{Prefix: pathPrefix, Version: version, Basket: name})
+			basketPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version, Basket: name})
 		}
 	} else {
 		http.Error(w, "Basket name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
@@ -377,7 +397,7 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 
 // AcceptBasketRequests accepts and handles HTTP requests passed to different baskets
 func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
-	name, publicErr, err := getBasketNameOfAcceptedRequest(r, pathPrefix)
+	name, publicErr, err := getBasketNameOfAcceptedRequest(r, serverConfig.PathPrefix)
 	if err != nil {
 		log.Printf("[error] %s", err)
 		http.Error(w, publicErr, http.StatusBadRequest)

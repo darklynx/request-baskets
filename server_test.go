@@ -80,9 +80,6 @@ func TestCreateDefaultBaskets(t *testing.T) {
 }
 
 func TestSetPathPrefix(t *testing.T) {
-	setPathPrefix("/abc")
-	assert.Equal(t, "/abc", pathPrefix, "unexpected prefix")
-
-	setPathPrefix("")
-	assert.Empty(t, pathPrefix, "prefix is not expected")
+	assert.Equal(t, "/abc", getPathPrefix(&ServerConfig{PathPrefix: "/abc"}), "unexpected prefix")
+	assert.Empty(t, getPathPrefix(&ServerConfig{}), "prefix is not expected")
 }
