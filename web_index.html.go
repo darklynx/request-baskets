@@ -30,9 +30,13 @@ var (
     }
 
     function onAjaxError(jqXHR) {
-      $("#error_message_label").html("HTTP " + jqXHR.status + " - " + jqXHR.statusText);
-      $("#error_message_text").html(jqXHR.responseText);
-      $("#error_message").modal();
+      if (jqXHR.status == 401) {
+        $("#master_token_dialog").modal({ keyboard : false });
+      } else {
+        $("#error_message_label").html("HTTP " + jqXHR.status + " - " + jqXHR.statusText);
+        $("#error_message_text").html(jqXHR.responseText);
+        $("#error_message").modal();
+      }
     }
 
     function addBasketName(name) {
@@ -53,7 +57,13 @@ var (
     function createBasket() {
       var basket = $.trim($("#basket_name").val());
       if (basket) {
-        $.post("{{.Prefix}}/api/baskets/" + basket, function(data) {
+        $.ajax({
+          method: "POST",
+          url: "{{.Prefix}}/api/baskets/" + basket,
+          headers: {
+            "Authorization" : sessionStorage.getItem("master_token")
+          }
+        }).done(function(data) {
           localStorage.setItem("basket_" + basket, data.token);
           $("#created_message_text").html("<p>Basket '" + basket +
             "' is successfully created!</p><p>Your token is: <mark>" + data.token + "</mark></p>");
@@ -62,13 +72,24 @@ var (
 
           // refresh
           addBasketName(basket);
-        }).fail(onAjaxError).always(function() {
+        }).always(function() {
           randomName();
-        });
+        }).fail(onAjaxError);
       } else {
         $("#error_message_label").html("Missing basket name");
         $("#error_message_text").html("Please, provide a name of basket you would like to create");
         $("#error_message").modal();
+      }
+    }
+
+    function saveMasterToken() {
+      var token = $("#master_token").val();
+      $("#master_token").val("");
+      $("#master_token_dialog").modal("hide");
+      if (token) {
+        sessionStorage.setItem("master_token", token);
+      } else {
+        sessionStorage.removeItem("master_token");
       }
     }
 
@@ -81,6 +102,9 @@ var (
       });
       $("#refresh").on("click", function(event) {
         randomName();
+      });
+      $("#master_token_dialog").on("hidden.bs.modal", function (event) {
+        saveMasterToken();
       });
       randomName();
       showMyBaskets();
@@ -137,6 +161,31 @@ var (
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           <a id="basket_link" class="btn btn-primary">Open Basket</a>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Master token dialog -->
+  <div class="modal fade" id="master_token_dialog" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content panel-warning">
+        <div class="modal-header panel-heading">
+          <h4 class="modal-title">Master Token</h4>
+        </div>
+        <form id="master_token_form">
+        <div class="modal-body">
+          <p>This service is operating in <abbr title="In this mode some public functionality is not available without proper authorization">restrected</abbr>
+            mode. The master token is required in order to be able to create a new basket.</p>
+          <div class="form-group">
+            <label for="master_token" class="control-label">Token:</label>
+            <input type="password" class="form-control" id="master_token">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="." class="btn btn-default">Back to list of your baskets</a>
+          <button type="submit" class="btn btn-success" data-dismiss="modal">Authorize</button>
+        </div>
+        </form>
       </div>
     </div>
   </div>
