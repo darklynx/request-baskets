@@ -35,6 +35,7 @@ type ServerConfig struct {
 	DbConnection string
 	Baskets      []string
 	PathPrefix   string
+	Mode         string
 }
 
 type arrayFlags []string
@@ -57,10 +58,14 @@ func CreateConfig() *ServerConfig {
 	var pageSize = flag.Int("page", defaultPageSize, "Default page size")
 	var masterToken = flag.String("token", "", "Master token, random token is generated if not provided")
 	var dbType = flag.String("db", defaultDatabaseType, fmt.Sprintf(
-		"Baskets storage type: %s - in-memory, %s - Bolt DB, %s - SQL database", DbTypeMemory, DbTypeBolt, DbTypeSQL))
+		"Baskets storage type: \"%s\" - in-memory, \"%s\" - Bolt DB, \"%s\" - SQL database",
+		DbTypeMemory, DbTypeBolt, DbTypeSQL))
 	var dbFile = flag.String("file", "./baskets.db", "Database location, only applicable for file or SQL databases")
 	var dbConnection = flag.String("conn", "", "Database connection string for SQL databases, if undefined \"file\" argument is considered")
 	var prefix = flag.String("prefix", "", "Service URL path prefix")
+	var mode = flag.String("mode", ModePublic, fmt.Sprintf(
+		"Service mode: \"%s\" - any visitor can create a new basket, \"%s\" - baskets creation requires master token",
+		ModePublic, ModeRestricted))
 
 	var baskets arrayFlags
 	flag.Var(&baskets, "basket", "Name of a basket to auto-create during service startup (can be specified multiple times)")
@@ -83,7 +88,8 @@ func CreateConfig() *ServerConfig {
 		DbFile:       *dbFile,
 		DbConnection: *dbConnection,
 		Baskets:      baskets,
-		PathPrefix:   normalizePrefix(*prefix)}
+		PathPrefix:   normalizePrefix(*prefix),
+		Mode:         *mode}
 }
 
 func normalizePrefix(prefix string) string {

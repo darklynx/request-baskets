@@ -86,7 +86,7 @@ var (
           basketsList.append("<li class='list-group-item'><a href='{{.Prefix}}/web/" + basket.name
             + "' title='" + basket.name + "'>" + toDisplayName(basket.name) + "</a> - " + basket.requests_count
             + " (" + toDisplayInt(basket.requests_total_count) + ")<br>Last Request: "
-            + new Date(basket.last_request_date).toISOString() + "</li>");
+            + ((basket.last_request_date > 0) ? new Date(basket.last_request_date).toISOString() : "n/a") + "</li>");
         }
       }
     }

@@ -46,6 +46,10 @@ if [ -n "$PATHPREFIX" ]; then
     args="$args -prefix $PATHPREFIX"
 fi
 
+if [ -n "$MODE" ]; then
+    args="$args -mode $MODE"
+fi
+
 cmd="/bin/rbaskets $args"
 echo "Executing: $cmd"
 exec $cmd

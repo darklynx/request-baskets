@@ -84,7 +84,7 @@ Request Baskets service supports several command line configuration parameters. 
 $ request-baskets --help
 Usage of bin/request-baskets:
   -db string
-      Baskets storage type: mem - in-memory, bolt - Bolt DB, sql - SQL database (default "mem")
+      Baskets storage type: "mem" - in-memory, "bolt" - Bolt DB, "sql" - SQL database (default "mem")
   -file string
       Database location, only applicable for file or SQL databases (default "./baskets.db")
   -conn string
@@ -105,20 +105,26 @@ Usage of bin/request-baskets:
       Name of a basket to auto-create during service startup (can be specified multiple times)
   -prefix string
       Service URL path prefix
+  -mode string
+      Service mode: "public" - any visitor can create a new basket, "restricted" - baskets creation requires master token (default "public")
 ```
 
 ### Parameters
 
- * `-p` *port* - HTTP service listener port, default value is `55555`
- * `-page` *size* - default page size when retrieving collections
- * `-size` *size* - default new basket capacity, applied if basket capacity is not provided during creation
- * `-maxsize` *size* - maximum allowed basket capacity, basket capacity greater than this number will be rejected by service
- * `-token` *token* - master token to gain control over all baskets, if not defined a random token will be generated when service is launched and printed to *stdout*
- * `-db` *type* - defines baskets storage type: `mem` - in-memory storage (default), `bolt` - [bbolt](https://github.com/etcd-io/bbolt) database, `sql` - SQL database
- * `-file` *location* - location of Bolt database file, only relevant if appropriate storage type is chosen
- * `-conn` *connection* - database connection string for SQL databases, if undefined `-file` argument is considered
- * `-basket` *value* - name of a basket to auto-create during service startup, this parameter can be specified multiple times
- * `-prefix` *URL path prefix* - allows to host API and web-UI of baskets service under a sub-path instead of domain ROOT
+List of comman line parameters with corresponding ENVVAR for [docker container](./docker/entrypoint.sh):
+
+ * `-p` *port* (`PORT`) - HTTP service listener port, default value is `55555`
+ * `-l` *IP address* (`LISTEN`) - HTTP listener IP address, default `127.0.0.1` (docker default: `0.0.0.0`)
+ * `-page` *size* (`PAGE`) - default page size when retrieving collections
+ * `-size` *size* (`SIZE`) - default new basket capacity, applied if basket capacity is not provided during creation
+ * `-maxsize` *size* (`MAXSIZE`) - maximum allowed basket capacity, basket capacity greater than this number will be rejected by service
+ * `-token` *token* (`TOKEN`) - master token to gain control over all baskets, if not defined a random token will be generated when service is launched and printed to *stdout*
+ * `-db` *type* (`DB`) - defines baskets storage type: `mem` - in-memory storage (default), `bolt` - [bbolt](https://github.com/etcd-io/bbolt) database (docker default), `sql` - SQL database
+ * `-file` *location* (`FILE`) - location of Bolt database file, only relevant if appropriate storage type is chosen
+ * `-conn` *connection* (`CONN`) - database connection string for SQL databases, if undefined `-file` argument is considered
+ * `-basket` *value* (`BASKET`) - name of a basket to auto-create during service startup, this parameter can be specified multiple times
+ * `-prefix` *URL path prefix* (`PATHPREFIX`) - allows to host API and web-UI of baskets service under a sub-path instead of domain ROOT
+ * `-mode` *mode* (`MODE`) - defines service operation mode: `public` - when any visitor can create a new basket, or `restricted` - baskets creation requires master token
 
 ## Usage
 
