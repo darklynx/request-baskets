@@ -1,4 +1,4 @@
-module darklynx/request-baskets
+module github.com/darklynx/request-baskets
 
 go 1.16
 
