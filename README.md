@@ -107,11 +107,13 @@ Usage of bin/request-baskets:
       Service URL path prefix
   -mode string
       Service mode: "public" - any visitor can create a new basket, "restricted" - baskets creation requires master token (default "public")
+  -theme string
+      CSS theme for web UI, supported values: default, adaptive, flatly (default "default")
 ```
 
 ### Parameters
 
-List of comman line parameters with corresponding ENVVAR for [docker container](./docker/entrypoint.sh):
+List of command line parameters with corresponding ENVVAR for [docker container](./docker/entrypoint.sh):
 
  * `-p` *port* (`PORT`) - HTTP service listener port, default value is `55555`
  * `-l` *IP address* (`LISTEN`) - HTTP listener IP address, default `127.0.0.1` (docker default: `0.0.0.0`)
@@ -125,6 +127,7 @@ List of comman line parameters with corresponding ENVVAR for [docker container](
  * `-basket` *value* (`BASKET`) - name of a basket to auto-create during service startup, this parameter can be specified multiple times
  * `-prefix` *URL path prefix* (`PATHPREFIX`) - allows to host API and web-UI of baskets service under a sub-path instead of domain ROOT
  * `-mode` *mode* (`MODE`) - defines service operation mode: `public` - when any visitor can create a new basket, or `restricted` - baskets creation requires master token
+ * `-theme` *theme* (`THEME`) - CSS theme for web UI, supported values: `default`, `adaptive`, `flatly`
 
 ## Usage
 
