@@ -69,9 +69,9 @@ func CreateConfig() *ServerConfig {
 	var mode = flag.String("mode", ModePublic, fmt.Sprintf(
 		"Service mode: \"%s\" - any visitor can create a new basket, \"%s\" - baskets creation requires master token",
 		ModePublic, ModeRestricted))
-	var theme = flag.String("theme", ThemeDefault, fmt.Sprintf(
+	var theme = flag.String("theme", ThemeStandard, fmt.Sprintf(
 		"CSS theme for web UI, supported values: %s, %s, %s",
-		ThemeDefault, ThemeAdaptive, ThemeFlatly))
+		ThemeStandard, ThemeAdaptive, ThemeFlatly))
 
 	var baskets arrayFlags
 	flag.Var(&baskets, "basket", "Name of a basket to auto-create during service startup (can be specified multiple times)")

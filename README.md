@@ -108,7 +108,7 @@ Usage of bin/request-baskets:
   -mode string
       Service mode: "public" - any visitor can create a new basket, "restricted" - baskets creation requires master token (default "public")
   -theme string
-      CSS theme for web UI, supported values: default, adaptive, flatly (default "default")
+      CSS theme for web UI, supported values: standard, adaptive, flatly (default "standard")
 ```
 
 ### Parameters
@@ -127,7 +127,7 @@ List of command line parameters with corresponding ENVVAR for [docker container]
  * `-basket` *value* (`BASKET`) - name of a basket to auto-create during service startup, this parameter can be specified multiple times
  * `-prefix` *URL path prefix* (`PATHPREFIX`) - allows to host API and web-UI of baskets service under a sub-path instead of domain ROOT
  * `-mode` *mode* (`MODE`) - defines service operation mode: `public` - when any visitor can create a new basket, or `restricted` - baskets creation requires master token
- * `-theme` *theme* (`THEME`) - CSS theme for web UI, supported values: `default`, `adaptive`, `flatly`
+ * `-theme` *theme* (`THEME`) - CSS theme for web UI, supported values: `standard`, `adaptive`, `flatly`
 
 ## Usage
 

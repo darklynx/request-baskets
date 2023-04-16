@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestToThemeCss_Default(t *testing.T) {
-	assert.Equal(t, template.HTML(themeDefaultCSS), toThemeCSS(ThemeDefault))
+func TestToThemeCss_Standard(t *testing.T) {
+	assert.Equal(t, template.HTML(themeStandardCSS), toThemeCSS(ThemeStandard))
 }
 
 func TestToThemeCss_Adaptive(t *testing.T) {
@@ -20,5 +20,5 @@ func TestToThemeCss_Flatly(t *testing.T) {
 }
 
 func TestToThemeCss_Unknown(t *testing.T) {
-	assert.Equal(t, template.HTML(themeDefaultCSS), toThemeCSS("xyz"))
+	assert.Equal(t, template.HTML(themeStandardCSS), toThemeCSS("xyz"))
 }
