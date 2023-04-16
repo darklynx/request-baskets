@@ -97,7 +97,7 @@ func CreateConfig() *ServerConfig {
 		PathPrefix:   normalizePrefix(*prefix),
 		Mode:         *mode,
 		Theme:        *theme,
-		ThemeCSS:     toThemeCss(*theme)}
+		ThemeCSS:     toThemeCSS(*theme)}
 }
 
 func normalizePrefix(prefix string) string {

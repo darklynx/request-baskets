@@ -17,7 +17,7 @@ const (
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/flatly/bootstrap.min.css">`
 )
 
-func toThemeCss(theme string) template.HTML {
+func toThemeCSS(theme string) template.HTML {
 	switch theme {
 	case ThemeAdaptive:
 		return themeAdaptiveCSS

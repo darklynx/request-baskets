@@ -8,17 +8,17 @@ import (
 )
 
 func TestToThemeCss_Default(t *testing.T) {
-	assert.Equal(t, template.HTML(themeDefaultCSS), toThemeCss(ThemeDefault))
+	assert.Equal(t, template.HTML(themeDefaultCSS), toThemeCSS(ThemeDefault))
 }
 
 func TestToThemeCss_Adaptive(t *testing.T) {
-	assert.Equal(t, template.HTML(themeAdaptiveCSS), toThemeCss(ThemeAdaptive))
+	assert.Equal(t, template.HTML(themeAdaptiveCSS), toThemeCSS(ThemeAdaptive))
 }
 
 func TestToThemeCss_Flatly(t *testing.T) {
-	assert.Equal(t, template.HTML(themeFlatlyCSS), toThemeCss(ThemeFlatly))
+	assert.Equal(t, template.HTML(themeFlatlyCSS), toThemeCSS(ThemeFlatly))
 }
 
 func TestToThemeCss_Unknown(t *testing.T) {
-	assert.Equal(t, template.HTML(themeDefaultCSS), toThemeCss("xyz"))
+	assert.Equal(t, template.HTML(themeDefaultCSS), toThemeCSS("xyz"))
 }
