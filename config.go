@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"strings"
 )
@@ -36,6 +37,8 @@ type ServerConfig struct {
 	Baskets      []string
 	PathPrefix   string
 	Mode         string
+	Theme        string
+	ThemeCSS     template.HTML
 }
 
 type arrayFlags []string
@@ -66,6 +69,9 @@ func CreateConfig() *ServerConfig {
 	var mode = flag.String("mode", ModePublic, fmt.Sprintf(
 		"Service mode: \"%s\" - any visitor can create a new basket, \"%s\" - baskets creation requires master token",
 		ModePublic, ModeRestricted))
+	var theme = flag.String("theme", ThemeDefault, fmt.Sprintf(
+		"CSS theme for web UI, supported values: %s, %s, %s",
+		ThemeDefault, ThemeAdaptive, ThemeFlatly))
 
 	var baskets arrayFlags
 	flag.Var(&baskets, "basket", "Name of a basket to auto-create during service startup (can be specified multiple times)")
@@ -89,7 +95,9 @@ func CreateConfig() *ServerConfig {
 		DbConnection: *dbConnection,
 		Baskets:      baskets,
 		PathPrefix:   normalizePrefix(*prefix),
-		Mode:         *mode}
+		Mode:         *mode,
+		Theme:        *theme,
+		ThemeCSS:     toThemeCss(*theme)}
 }
 
 func normalizePrefix(prefix string) string {
