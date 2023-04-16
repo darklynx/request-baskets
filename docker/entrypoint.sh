@@ -50,6 +50,10 @@ if [ -n "$MODE" ]; then
     args="$args -mode $MODE"
 fi
 
+if [ -n "$THEME" ]; then
+    args="$args -theme $THEME"
+fi
+
 cmd="/bin/rbaskets $args"
 echo "Executing: $cmd"
 exec $cmd
