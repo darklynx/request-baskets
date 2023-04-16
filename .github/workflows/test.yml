@@ -5,7 +5,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ["1.17", "1.18", "1.19"]
+        go: ["1.18", "1.19", "1.20"]
 
     # Service containers to run with `container-job`
     services:
