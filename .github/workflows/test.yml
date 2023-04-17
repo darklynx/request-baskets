@@ -5,7 +5,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ["1.18", "1.19", "1.20"]
+        go: ["1.20"]
 
     # Service containers to run with `container-job`
     services:
@@ -15,11 +15,11 @@ jobs:
         image: postgres
         # Provide the password for postgres
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_HOST: localhost
+          POSTGRES_USER: rbaskets
+          POSTGRES_PASSWORD: pwd
+          POSTGRES_DB: baskets
         ports:
-          - 5432:5432
+          - "5432:5432"
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -27,32 +27,17 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       mysql:
-        image: mysql:5.7
+        image: mysql
         env:
           MYSQL_DATABASE: baskets
-          MYSQL_USER: user
-          MYSQL_PASSWORD: password
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_HOST: localhost
+          MYSQL_USER: rbaskets
+          MYSQL_PASSWORD: pwd
+          MYSQL_RANDOM_ROOT_PASSWORD: "yes"
         ports:
-          - 3306:3306
+          - "3306:3306"
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      - name: Setup Postgres database
-        run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE DATABASE baskets;" -U postgres
-      - name: Setup Postgres user
-        run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
-      - name: Setup Postgres permissions
-        run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "GRANT ALL ON SCHEMA public TO rbaskets;" -U postgres
-
-      - name: Setup Mysql database
-        run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "CREATE DATABASE IF NOT EXISTS baskets ;"
-      - name: Setup Mysql user
-        run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "CREATE USER 'rbaskets'@'%' IDENTIFIED BY 'pwd' ;"
-      - name: Setup Mysql permissions
-        run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "GRANT ALL ON baskets.* TO 'rbaskets'@'%' ;"
-
       - uses: actions/setup-go@v1
         with:
           go-version: ${{ matrix.go }}
