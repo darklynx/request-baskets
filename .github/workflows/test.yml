@@ -44,7 +44,7 @@ jobs:
       - name: Setup Postgres user
         run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "CREATE USER rbaskets WITH PASSWORD 'pwd';" -U postgres
       - name: Setup Postgres permissions
-        run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "GRANT CREATE ON SCHEMA public TO rbaskets;" -U postgres
+        run: PGPASSWORD=postgres psql -h localhost -p 5432 -c "GRANT ALL ON SCHEMA public TO rbaskets;" -U postgres
 
       - name: Setup Mysql database
         run: mysql --password=password -u root -h 127.0.0.1 -P 3306 -e "CREATE DATABASE IF NOT EXISTS baskets ;"
