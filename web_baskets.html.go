@@ -12,7 +12,7 @@ var (
   <style>
     html { position: relative; min-height: 100%; }
     body { padding-top: 70px; margin-bottom: 60px; }
-    .footer { position: absolute; bottom: 0; width: 100%; height: 60px; background-color: #f5f5f5; }
+    .footer { position: absolute; bottom: 0; left: 0; min-width: 100%; height: 60px; background-color: #f5f5f5; }
     .container .text-muted { margin: 20px 0; }
     h1 { margin-top: 2px; }
     #more { margin-left: 60px; padding-bottom: 10px; }
