@@ -4,9 +4,7 @@ var (
 	indexPageContentTemplate = `<!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>Request Baskets</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <title>Request Baskets</title>{{.ThemeCSS}}
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
   <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
@@ -14,7 +12,7 @@ var (
   <style>
     html { position: relative; min-height: 100%; }
     body { padding-top: 70px; margin-bottom: 60px; }
-    .footer { position: absolute; bottom: 0; width: 100%; height: 60px; background-color: #f5f5f5; }
+    .footer { position: absolute; bottom: 0; left: 0; min-width: 100%; height: 60px; background-color: #f5f5f5; }
     .container .text-muted { margin: 20px 0; }
     h1 { margin-top: 2px; }
     #baskets { margin-left: -30px; }

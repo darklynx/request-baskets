@@ -1914,10 +1914,10 @@ func TestGetBasketNameOfAcceptedRequest_NoPrefix_Invalid(t *testing.T) {
 	if assert.NoError(t, err) {
 		name, pubErr, err := getBasketNameOfAcceptedRequest(r, "")
 		assert.Empty(t, name, "basket name is invalid, hence unexpected")
-		assert.Equal(t, pubErr, "invalid basket name; the name does not match pattern: "+basketNamePattern)
+		assert.Equal(t, "invalid basket name; the name does not match pattern: "+basketNamePattern, pubErr)
 		if assert.NotNil(t, err) {
-			assert.Equal(t, err.Error(), "invalid basket name; the name does not match pattern: "+
-				basketNamePattern+"; request: PUT /basket~220/objects/404")
+			assert.Equal(t, "invalid basket name; the name does not match pattern: "+
+				basketNamePattern+"; request: PUT /basket~220/objects/404", err.Error())
 		}
 	}
 }
@@ -1947,10 +1947,10 @@ func TestGetBasketNameOfAcceptedRequest_WithPrefix_OutsideOfContext(t *testing.T
 	if assert.NoError(t, err) {
 		name, pubErr, err := getBasketNameOfAcceptedRequest(r, "/baskets")
 		assert.Empty(t, name, "URL is out of context, hence no basket name is expected")
-		assert.Equal(t, pubErr, "incoming request is outside of configured path prefix: /baskets")
+		assert.Equal(t, "incoming request is outside of configured path prefix: /baskets", pubErr)
 		if assert.NotNil(t, err) {
-			assert.Equal(t, err.Error(), "incoming request is outside of configured path prefix: /baskets"+
-				"; request: POST /api/objects")
+			assert.Equal(t, "incoming request is outside of configured path prefix: /baskets"+
+				"; request: POST /api/objects", err.Error())
 		}
 	}
 }

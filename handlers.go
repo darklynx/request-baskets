@@ -367,16 +367,17 @@ func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 }
 
 type TemplateData struct {
-	Prefix  string
-	Version *Version
-	Basket  string
-	Data    interface{}
+	Prefix   string
+	Version  *Version
+	ThemeCSS template.HTML
+	Basket   string
+	Data     interface{}
 }
 
 // WebIndexPage handles HTTP request to render index page
 func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	indexPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version})
+	indexPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS})
 }
 
 // WebBasketPage handles HTTP request to render basket details page
@@ -386,9 +387,9 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 		case serviceOldAPIPath:
 			// admin page to access all baskets
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			basketsPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version})
+			basketsPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS})
 		default:
-			basketPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version, Basket: name})
+			basketPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS, Basket: name})
 		}
 	} else {
 		http.Error(w, "Basket name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
