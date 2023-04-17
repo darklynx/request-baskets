@@ -49,7 +49,7 @@ var sqlSchema = []string{
 	)`,
 	`INSERT INTO rb_version (version) VALUES (1)`}
 
-/// Basket interface ///
+// Basket interface //
 type sqlBasket struct {
 	db     *sql.DB
 	dbType string // postgresql, mysql, oracle, etc.
