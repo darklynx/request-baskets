@@ -566,7 +566,7 @@ components:
       description: The HTTP method of response configuration
       schema:
         type: string
-        enum: 
+        enum:
           - GET
           - HEAD
           - POST
