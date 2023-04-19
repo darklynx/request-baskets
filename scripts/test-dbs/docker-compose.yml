@@ -1,6 +1,6 @@
 version: "3"
 
-services: 
+services:
   postgresql:
     image: postgres
     ports:
@@ -14,7 +14,7 @@ services:
     image: mysql
     ports:
       - "3306:3306"
-    environment: 
+    environment:
       MYSQL_DATABASE: baskets
       MYSQL_USER: rbaskets
       MYSQL_PASSWORD: pwd

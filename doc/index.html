@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Request Baskets API</title>
+    <link rel="icon" type="image/svg" href="logo.svg">
+    <!-- needed for adaptive design -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script>
+      window.onload = function(event) {
+        Redoc.init(
+          "rbaskets-openapi.yaml",
+          {
+            theme: {
+              typography: {
+                fontWeightRegular: 300
+              },
+              menu: {
+                level1Items: {
+                  textTransform: "capitalize"
+                }
+              }
+            }
+          },
+          document.getElementById("redoc-container")
+        );
+      }
+    </script>
+  </head>
+  <body>
+    <div id="redoc-container" lazy-rendering></div>
+    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script>
+  </body>
+</html>
