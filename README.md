@@ -33,7 +33,7 @@ However, we encourage you to set up your own server and keep control over the in
 
 Distinguishing features of Request Baskets service:
 
- * [RESTful API](./doc/api-swagger.yaml) to manage and configure baskets, see [Request Baskets API](https://rbaskets.in/api.html) documentation in interactive mode
+ * [RESTful API](./doc/rbaskets-openapi.yaml) to manage and configure baskets, see [Request Baskets API](https://rbaskets.in/api.html) documentation in interactive mode
  * All baskets are protected by **unique** tokens from unauthorized access; end-points to collect requests do not require authorization though
  * Individually configurable capacity for every basket
  * Pagination support to retrieve collections: basket names, collected requests
@@ -139,7 +139,7 @@ To collect HTTP requests send them (GET, POST, PUT, DELETE, etc.) to `http://loc
 
 To view collected requests and manage basket:
  * Open basket web UI `http://localhost:55555/web/<basket_name>`
- * Use [RESTful API](https://github.com/darklynx/request-baskets/blob/master/doc/api-swagger.yaml) exposed at `http://localhost:55555/baskets/<basket_name>`
+ * Use [RESTful API](https://github.com/darklynx/request-baskets/blob/master/doc/rbaskets-openapi.yaml) exposed at `http://localhost:55555/api/baskets/<basket_name>/...`
 
 It is possible to forward all incoming HTTP requests to arbitrary URL by configuring basket via web UI or RESTful API.
 
