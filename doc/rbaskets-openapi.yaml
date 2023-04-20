@@ -19,6 +19,8 @@ info:
   license:
     name: MIT
     url: https://github.com/darklynx/request-baskets/blob/master/LICENSE
+  x-logo:
+    url: https://raw.githubusercontent.com/darklynx/request-baskets/master/doc/logo.svg
 
 servers:
   - url: https://rbaskets.in
