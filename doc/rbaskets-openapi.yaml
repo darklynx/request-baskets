@@ -33,6 +33,11 @@ tags:
     description: Configure basket HTTP responses
   - name: Requests
     description: Manage HTTP requests collected by basket
+  - name: Deprecated API
+    description: |
+      Deprecated API end-points that preceded the stable API of version `1.0.0`. Every deprecated
+      API operation has its own counterpart under `/api` path with backwards compatible syntax
+      and can be easily replaced.
 
 # URL patterns
 paths:
@@ -303,7 +308,7 @@ paths:
   /baskets:
     get:
       tags:
-        - Baskets
+        - Deprecated API
       summary: Get baskets
       description: Fetches a list of basket names managed by service. Require master token.
       operationId: getBasketNamesOld
@@ -329,7 +334,7 @@ paths:
   /baskets/{name}:
     post:
       tags:
-        - Baskets
+        - Deprecated API
       summary: Create new basket
       description: Creates a new basket with this name.
       operationId: createBasketOld
@@ -355,7 +360,7 @@ paths:
           description: Unprocessable Entity. Basket configuration is not valid.
     get:
       tags:
-        - Baskets
+        - Deprecated API
       summary: Get basket settings
       description: Retrieves configuration settings of this basket.
       operationId: getBasketConfigOld
@@ -377,7 +382,7 @@ paths:
         - basket_token: []
     put:
       tags:
-        - Baskets
+        - Deprecated API
       summary: Update basket settings
       description: |
         Updates configuration settings of this basket.
@@ -414,7 +419,7 @@ paths:
         - basket_token: []
     delete:
       tags:
-        - Baskets
+        - Deprecated API
       summary: Delete basket
       description: Permanently deletes this basket and all collected requests.
       operationId: deleteBasketOld
@@ -434,7 +439,7 @@ paths:
   /baskets/{name}/responses/{method}:
     get:
       tags:
-        - Responses
+        - Deprecated API
       summary: Get response settings
       description: |
         Retrieves information about configured response of the basket. Service will reply with this response to any
@@ -461,7 +466,7 @@ paths:
         - basket_token: []
     put:
       tags:
-        - Responses
+        - Deprecated API
       summary: Update response settings
       description: |
         Allows to configure HTTP response of this basket. The service will reply with configured response to any HTTP
@@ -492,7 +497,7 @@ paths:
   /baskets/{name}/requests:
     get:
       tags:
-        - Requests
+        - Deprecated API
       summary: Get collected requests
       description: Fetches collection of requests collected by this basket.
       operationId: getCollectedRequestsOld
@@ -520,7 +525,7 @@ paths:
         - basket_token: []
     delete:
       tags:
-        - Requests
+        - Deprecated API
       summary: Delete all requests
       description: Deletes all requests collected by this basket.
       operationId: deleteCollectedRequestsOld
