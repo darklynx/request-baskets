@@ -125,6 +125,11 @@ func validateResponseConfig(config *ResponseConfig) error {
 		return fmt.Errorf("invalid HTTP status of response: %d", config.Status)
 	}
 
+	// http.ResponseWriter.WriteHeader limitation
+	if config.Status < 199 {
+		return fmt.Errorf("1XX HTTP status is not supported yet")
+	}
+
 	// validate template
 	if config.IsTemplate && len(config.Body) > 0 {
 		if _, err := template.New("body").Parse(config.Body); err != nil {
