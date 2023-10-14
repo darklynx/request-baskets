@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -222,7 +221,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	log.Printf("[info] creating basket: %s", name)
 
 	// read config (max 2 kB)
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2048))
+	body, err := io.ReadAll(io.LimitReader(r.Body, 2048))
 	r.Body.Close()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -255,7 +254,7 @@ func CreateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 func UpdateBasket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if _, basket := getAuthorizedBasket(w, r, ps, serverConfig); basket != nil {
 		// read config (max 2 kB)
-		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2048))
+		body, err := io.ReadAll(io.LimitReader(r.Body, 2048))
 		r.Body.Close()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -316,7 +315,7 @@ func UpdateBasketResponse(w http.ResponseWriter, r *http.Request, ps httprouter.
 			http.Error(w, errm.Error(), http.StatusBadRequest)
 		} else {
 			// read response (max 64 kB)
-			body, err := ioutil.ReadAll(io.LimitReader(r.Body, 64*1024))
+			body, err := io.ReadAll(io.LimitReader(r.Body, 64*1024))
 			r.Body.Close()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -453,7 +452,7 @@ func forwardAndForget(request *RequestData, config BasketConfig, name string) {
 	if err != nil {
 		log.Printf("[warn] failed to forward request for basket: %s - %s", name, err)
 	} else {
-		io.Copy(ioutil.Discard, response.Body)
+		io.Copy(io.Discard, response.Body)
 		response.Body.Close()
 	}
 }
@@ -476,7 +475,7 @@ func forwardAndProxyResponse(w http.ResponseWriter, request *RequestData, config
 		_, err := io.Copy(w, response.Body)
 		if err != nil {
 			log.Printf("[warn] failed to proxy response body for basket: %s - %s", name, err)
-			io.Copy(ioutil.Discard, response.Body)
+			io.Copy(io.Discard, response.Body)
 		}
 		response.Body.Close()
 	}
