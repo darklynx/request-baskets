@@ -1,16 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>Request Baskets</title>
-  <!-- Bootstrap -->
-  <!--standard theme-->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-  <!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/flatly/bootstrap.min.css"-->
-  <!--adaptive theme-->
-  <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/darklynx/requestbaskets-dark-theme@1.0.0/bootstrap.min.css" integrity="sha384-QiFF09wqK5z3/usps1yc+Om75gf8byvdtluQfS0enYGx1nmji2dEbtgRDw1Tw60j" crossorigin="anonymous"-->
+  <title>Request Baskets</title>{{.ThemeCSS}}
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
-
   <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
@@ -27,17 +19,6 @@
 
   <script>
   (function($) {
-    function getPathPrefix() {
-      var path = window.location.pathname;
-      if (path.endsWith("/web")) {
-        path += "/";
-      }
-      var rootIndex = path.indexOf("/web/");
-      return (rootIndex > 0) ? path.substring(0, rootIndex) : "";
-    }
-
-    var prefix = getPathPrefix();
-
     function randomName() {
       var name = Math.random().toString(36).substring(2, 9);
       $("#basket_name").val(name);
@@ -55,7 +36,7 @@
 
     function addBasketName(name) {
       $("#empty_list").addClass("hide");
-      $("#baskets").append("<li id='basket_" + name + "'><a href='" + prefix + "/web/basket.html?name=" + name + "'>" + name + "</a></li>");
+      $("#baskets").append("<li id='basket_" + name + "'><a href='{{.Prefix}}/web/" + name + "'>" + name + "</a></li>");
     }
 
     function showMyBaskets() {
@@ -73,7 +54,7 @@
       if (basket) {
         $.ajax({
           method: "POST",
-          url: prefix + "/api/baskets/" + basket,
+          url: "{{.Prefix}}/api/baskets/" + basket,
           headers: {
             "Authorization" : sessionStorage.getItem("master_token")
           }
@@ -81,7 +62,7 @@
           localStorage.setItem("basket_" + basket, data.token);
           $("#created_message_text").html("<p>Basket '" + basket +
             "' is successfully created!</p><p>Your token is: <mark>" + data.token + "</mark></p>");
-          $("#basket_link").attr("href", prefix + "/web/basket.html?name=" + basket);
+          $("#basket_link").attr("href", "{{.Prefix}}/web/" + basket);
           $("#created_message").modal();
 
           // refresh
@@ -109,7 +90,7 @@
 
     // Initialization
     $(document).ready(function() {
-      $("#base_uri").html(window.location.protocol + "//" + window.location.host + prefix + "/");
+      $("#base_uri").html(window.location.protocol + "//" + window.location.host + "{{.Prefix}}/");
       $("#create_basket").on("submit", function(event) {
         createBasket();
         event.preventDefault();
@@ -135,7 +116,7 @@
       </div>
       <div class="collapse navbar-collapse">
         <form class="navbar-form navbar-right">
-          <a href="baskets.html" alt="Administration" title="Administration" class="btn btn-default">
+          <a href="{{.Prefix}}/web/baskets" alt="Administration" title="Administration" class="btn btn-default">
             <span class="glyphicon glyphicon-cog"></span>
           </a>
         </form>
@@ -235,7 +216,12 @@
 
   <footer class="footer">
     <div class="container">
-      <p class="text-muted"><small>Powered by <a href="https://github.com/darklynx/request-baskets">request-baskets</a></small></p>
+      <p class="text-muted">
+        <small>
+          Powered by <a href="{{.Version.SourceCode}}">{{.Version.Name}}</a> |
+          Version: <abbr title="From commit: {{.Version.CommitShort}} ({{.Version.Commit}})">{{.Version.Version}}</abbr>
+        </small>
+      </p>
     </div>
   </footer>
 </body>

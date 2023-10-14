@@ -1,16 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>Request Baskets - Administration</title>
-  <!-- Bootstrap -->
-  <!--standard theme-->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-  <!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/flatly/bootstrap.min.css"-->
-  <!--adaptive theme-->
-  <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/darklynx/requestbaskets-dark-theme@1.0.0/bootstrap.min.css" integrity="sha384-QiFF09wqK5z3/usps1yc+Om75gf8byvdtluQfS0enYGx1nmji2dEbtgRDw1Tw60j" crossorigin="anonymous"-->
+  <title>Request Baskets - Administration</title>{{.ThemeCSS}}
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
-
   <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
@@ -29,16 +21,6 @@
 
   <script>
   (function($) {
-    function getPathPrefix() {
-      var path = window.location.pathname;
-      if (path.endsWith("/web")) {
-        path += "/";
-      }
-      var rootIndex = path.indexOf("/web/");
-      return (rootIndex > 0) ? path.substring(0, rootIndex) : "";
-    }
-
-    var prefix = getPathPrefix();
     var showDetails = false;
     var basketsCount = 0;
 
@@ -62,11 +44,11 @@
           basketRowId = "basket_row_" + basketsCount;
 
           if (showDetails) {
-            baskets.append("<tr id='" + basketRowId + "'><td><a href='" + prefix + "/web/basket.html?name=" + name + "' title='" + name + "'>" +
+            baskets.append("<tr id='" + basketRowId + "'><td><a href='{{.Prefix}}/web/" + name + "' title='" + name + "'>" +
               toDisplayName(name) + "</a></td></tr>");
             fetchBasketDetails(name, basketRowId);
           } else {
-            baskets.append("<li><a href='" + prefix + "/web/basket.html?name=" + name + "' title='" + name + "'>" + toDisplayName(name) + "</a></li>");
+            baskets.append("<li><a href='{{.Prefix}}/web/" + name + "' title='" + name + "'>" + toDisplayName(name) + "</a></li>");
           }
 
           basketsCount++;
@@ -96,7 +78,7 @@
         var index, basket;
         for (index = 0; index < baskets.length; ++index) {
           basket = baskets[index];
-          basketsList.append("<li class='list-group-item'><a href='" + prefix + "/web/basket.html?name=" + basket.name
+          basketsList.append("<li class='list-group-item'><a href='{{.Prefix}}/web/" + basket.name
             + "' title='" + basket.name + "'>" + toDisplayName(basket.name) + "</a> - " + basket.requests_count
             + " (" + toDisplayInt(basket.requests_total_count) + ")<br>Last Request: "
             + ((basket.last_request_date > 0) ? new Date(basket.last_request_date).toISOString() : "n/a") + "</li>");
@@ -109,13 +91,13 @@
     }
 
     function toDisplayInt(value) {
-      return value.toString().replace(/\d(?=(\d{3})+$)/g, '$& ');
+      return value.toString().replace(/\d(?=(\d{3})+$)/g, "$& ");
     }
 
     function fetchBaskets() {
       $.ajax({
         method: "GET",
-        url: prefix + "/api/baskets?skip=" + basketsCount,
+        url: "{{.Prefix}}/api/baskets?skip=" + basketsCount,
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -127,7 +109,7 @@
     function fetchStats() {
       $.ajax({
         method: "GET",
-        url: prefix + "/api/stats",
+        url: "{{.Prefix}}/api/stats",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
@@ -140,14 +122,14 @@
     function fetchBasketDetails(name, basketRowId) {
       $.ajax({
         method: "GET",
-        url: prefix + "/api/baskets/" + name + "/requests?max=1",
+        url: "{{.Prefix}}/api/baskets/" + name + "/requests?max=1",
         headers: {
           "Authorization" : sessionStorage.getItem("master_token")
         }
       }).done(function(requests) {
         $.ajax({
           method: "GET",
-          url: prefix + "/api/baskets/" + name,
+          url: "{{.Prefix}}/api/baskets/" + name,
           headers: {
             "Authorization" : sessionStorage.getItem("master_token")
           }
@@ -219,7 +201,7 @@
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a class="navbar-brand" href=".">Request Baskets</a>
+        <a class="navbar-brand" href="{{.Prefix}}/web">Request Baskets</a>
       </div>
       <div class="collapse navbar-collapse">
         <form class="navbar-form navbar-right">
@@ -274,7 +256,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <a href="." class="btn btn-default">Back to list of your baskets</a>
+          <a href="{{.Prefix}}/web" class="btn btn-default">Back to list of your baskets</a>
           <button type="submit" class="btn btn-success" data-dismiss="modal">Authorize</button>
         </div>
         </form>
@@ -364,7 +346,12 @@
 
   <footer class="footer">
     <div class="container">
-      <p class="text-muted"><small>Powered by <a href="https://github.com/darklynx/request-baskets">request-baskets</a></small></p>
+      <p class="text-muted">
+        <small>
+          Powered by <a href="{{.Version.SourceCode}}">{{.Version.Name}}</a> |
+          Version: <abbr title="From commit: {{.Version.CommitShort}} ({{.Version.Commit}})">{{.Version.Version}}</abbr>
+        </small>
+      </p>
     </div>
   </footer>
 </body>

@@ -23,9 +23,9 @@ const (
 
 var validBasketName = regexp.MustCompile(basketNamePattern)
 var defaultResponse = ResponseConfig{Status: http.StatusOK, Headers: http.Header{}, IsTemplate: false}
-var indexPageTemplate = template.Must(template.New("index").Parse(indexPageContentTemplate))
-var basketPageTemplate = template.Must(template.New("basket").Parse(basketPageContentTemplate))
-var basketsPageTemplate = template.Must(template.New("baskets").Parse(basketsPageContentTemplate))
+var indexPageTemplate = template.Must(template.ParseFiles("templates/index.html"))
+var basketPageTemplate = template.Must(template.ParseFiles("templates/basket.html"))
+var basketsPageTemplate = template.Must(template.ParseFiles("templates/baskets.html"))
 
 // writeJSON writes JSON content to HTTP response
 func writeJSON(w http.ResponseWriter, status int, json []byte, err error) {
