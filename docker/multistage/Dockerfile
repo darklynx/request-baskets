@@ -10,8 +10,8 @@ RUN { [ -d ".git" ] && GIT_VERSION="$(git describe --dirty='*' || git symbolic-r
   && GIT_COMMIT_SHORT="$(git rev-parse --short HEAD)" \
   || GIT_VERSION="VERSION" \
   && GIT_COMMIT="COMMIT" \
-  && GIT_COMMIT_SHORT="SHORT" \
-} && set -x \
+  && GIT_COMMIT_SHORT="SHORT" } \
+  && set -x \
   && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo \
     -ldflags="-w -s -X main.GitVersion=${GIT_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.GitCommitShort=${GIT_COMMIT_SHORT}" \
     -o /go/bin/rbaskets
