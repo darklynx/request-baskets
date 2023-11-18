@@ -10,7 +10,7 @@ RUN [ -d ".git" ] && GIT_VERSION="$(git describe --dirty='*' || git symbolic-ref
   && GIT_COMMIT_SHORT="$(git rev-parse --short HEAD)" \
   || GIT_VERSION="VERSION" \
   && GIT_COMMIT="COMMIT" \
-  && GIT_COMMIT_SHORT="SHORT" \
+  && GIT_COMMIT_SHORT="SHORT"
 RUN set -x \
   && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo \
     -ldflags="-w -s -X main.GitVersion=${GIT_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.GitCommitShort=${GIT_COMMIT_SHORT}" \
