@@ -5,13 +5,13 @@
 FROM golang:latest as builder
 WORKDIR /go/src/rbaskets
 COPY . .
-RUN { [ -d ".git" ] && GIT_VERSION="$(git describe --dirty='*' || git symbolic-ref -q --short HEAD)" \
+RUN [ -d ".git" ] && GIT_VERSION="$(git describe --dirty='*' || git symbolic-ref -q --short HEAD)" \
   && GIT_COMMIT="$(git rev-parse HEAD)" \
   && GIT_COMMIT_SHORT="$(git rev-parse --short HEAD)" \
   || GIT_VERSION="VERSION" \
   && GIT_COMMIT="COMMIT" \
-  && GIT_COMMIT_SHORT="SHORT" } \
-  && set -x \
+  && GIT_COMMIT_SHORT="SHORT" \
+RUN set -x \
   && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo \
     -ldflags="-w -s -X main.GitVersion=${GIT_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.GitCommitShort=${GIT_COMMIT_SHORT}" \
     -o /go/bin/rbaskets
