@@ -23,5 +23,6 @@ RUN apk --no-cache add ca-certificates
 VOLUME /var/lib/rbaskets
 COPY docker/entrypoint.sh /bin/entrypoint
 COPY --from=builder /go/bin/rbaskets /bin/rbaskets
+COPY --from=builder /go/src/rbaskets/templates/ /lib/rbaskets/templates/
 EXPOSE 55555
 CMD /bin/entrypoint
