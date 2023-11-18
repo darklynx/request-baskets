@@ -75,7 +75,7 @@ func getAuthorizedBasket(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		}
 		w.WriteHeader(http.StatusUnauthorized)
 	} else {
-		http.Error(w, "Basket does not exist.", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
 	}
 
 	return "", nil
