@@ -13,6 +13,18 @@
     #more { margin-left: 100px; }
     .copy-req-btn:hover,
     .copy-url-btn:hover { cursor: pointer; }
+    #alerts { position: absolute; z-index: 9999; right: 0; bottom: 0; margin-right: 20px; display: flex; flex-direction: column; align-items: flex-end; }
+    #alerts > .alert { animation: fadein .5s; }
+
+    @keyframes fadein {
+      from {
+        opacity:0;
+        transform: translateY(-50%);
+      }
+      to {
+        opacity:1;
+      }
+    }
   </style>
 
   <script>
@@ -49,9 +61,11 @@
         enableAutoRefresh(false);
         $("#token_dialog").modal({ keyboard : false });
       } else {
-        $("#error_message_label").html("HTTP " + jqXHR.status + " - " + jqXHR.statusText);
-        $("#error_message_text").html(jqXHR.responseText);
-        $("#error_message").modal();
+        addAlert("Ajax request failed: HTTP " + jqXHR.status + " - " + jqXHR.statusText, {
+            type: "danger",
+            delay: 0,
+            body: jqXHR.responseText
+        })
       }
     }
 
@@ -126,7 +140,7 @@
 
     function addRequests(data) {
       totalCount = data.total_count;
-      $("#requests_count").html(data.count + " (" + totalCount + ")");
+      $("#requests_count").text(data.count + " (" + totalCount + ")");
       if (data.count > 0) {
         $("#empty_basket").addClass("hide");
         $("#requests_link").removeClass("hide");
@@ -167,7 +181,7 @@
 
       if (data.has_more) {
         $("#more").removeClass("hide");
-        $("#more_count").html(data.count - fetchedCount);
+        $("#more_count").text(data.count - fetchedCount);
       } else {
         $("#more").addClass("hide");
         $("#more_count").html("");
@@ -287,7 +301,7 @@
     function fetchRequests() {
       $.ajax({
         method: "GET",
-        url: "{{.Prefix}}/api/baskets/{{.Basket}}/requests?skip=" + fetchedCount,
+        url: "{{.Prefix}}/{{.Api}}/baskets/{{.Basket}}/requests?skip=" + fetchedCount,
         headers: {
           "Authorization" : getToken()
         }
@@ -297,7 +311,7 @@
     function fetchTotalCount() {
       $.ajax({
         method: "GET",
-        url: "{{.Prefix}}/api/baskets/{{.Basket}}/requests?max=0",
+        url: "{{.Prefix}}/{{.Api}}/baskets/{{.Basket}}/requests?max=0",
         headers: {
           "Authorization" : getToken()
         }
@@ -305,7 +319,10 @@
         if (data && (data.total_count != totalCount)) {
           refresh();
         }
-      }).fail(onAjaxError);
+      }).fail((jqXHR) => {
+        enableAutoRefresh(false);
+        return onAjaxError(jqXHR);
+      });
     }
 
     function fetchResponse(method) {
@@ -313,7 +330,7 @@
       $("#response_method").val(method);
       $.ajax({
         method: "GET",
-        url: "{{.Prefix}}/api/baskets/{{.Basket}}/responses/" + method,
+        url: "{{.Prefix}}/{{.Api}}/baskets/{{.Basket}}/responses/" + method,
         headers: {
           "Authorization" : getToken()
         }
@@ -387,14 +404,14 @@
 
       $.ajax({
         method: "PUT",
-        url: "{{.Prefix}}/api/baskets/{{.Basket}}/responses/" + method,
+        url: "{{.Prefix}}/{{.Api}}/baskets/{{.Basket}}/responses/" + method,
         dataType: "json",
         data: JSON.stringify(response),
         headers: {
           "Authorization" : getToken()
         }
       }).done(function(data) {
-        alert("Response for HTTP " + method + " is updated");
+        addAlert("Response for HTTP " + method + " is updated");
       }).fail(onAjaxError);
     }
 
@@ -414,14 +431,14 @@
 
         $.ajax({
           method: "PUT",
-          url: "{{.Prefix}}/api/baskets/{{.Basket}}",
+          url: "{{.Prefix}}/{{.Api}}/baskets/{{.Basket}}",
           dataType: "json",
           data: JSON.stringify(currentConfig),
           headers: {
             "Authorization" : getToken()
           }
         }).done(function(data) {
-          alert("Basket is reconfigured");
+          addAlert("Basket is reconfigured");
         }).fail(onAjaxError);
       }
     }
@@ -454,7 +471,7 @@
     function config() {
       $.ajax({
         method: "GET",
-        url: "{{.Prefix}}/api/baskets/{{.Basket}}",
+        url: "{{.Prefix}}/{{.Api}}/baskets/{{.Basket}}",
         headers: {
           "Authorization" : getToken()
         }
@@ -478,7 +495,7 @@
     function deleteRequests() {
       $.ajax({
         method: "DELETE",
-        url: "{{.Prefix}}/api/baskets/{{.Basket}}/requests",
+        url: "{{.Prefix}}/{{.Api}}/baskets/{{.Basket}}/requests",
         headers: {
           "Authorization" : getToken()
         }
@@ -493,13 +510,13 @@
 
       $.ajax({
         method: "DELETE",
-        url: "{{.Prefix}}/api/baskets/{{.Basket}}",
+        url: "{{.Prefix}}/{{.Api}}/baskets/{{.Basket}}",
         headers: {
           "Authorization" : getToken()
         }
       }).done(function(data) {
         localStorage.removeItem("basket_{{.Basket}}");
-        window.location.href = "{{.Prefix}}/web";
+        window.location.href = "{{.Prefix}}/{{.Ui}}";
       }).fail(onAjaxError);
     }
 
@@ -526,7 +543,7 @@
       var token = getBasketToken();
       if (token && copyToClipboard(window.location + "?token=" + token)) {
         resetCopyButtonsState();
-        alert("A link to share this basket was copied to your clipboard.");
+        addAlert("A link to share this basket was copied to your clipboard.");
       }
     }
 
@@ -548,13 +565,41 @@
           }
         }
         // remove token from location URL
-        window.location.href = "{{.Prefix}}/web/{{.Basket}}";
+        window.location.href = "{{.Prefix}}/{{.Ui}}/{{.Basket}}";
+      }
+    }
+
+    function addAlert(msg, options) {
+      options = options || {}
+      const type = 'type' in options ? options.type : 'success'
+      const delay = 'delay' in options ? parseInt(options.delay) : 5000
+      const body = 'body' in options ? options.body : false
+
+      const alert = $('<div>', {
+        class: 'alert alert-dismissible alert-' + type
+      }).append(
+        $('<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>'),
+        $('<span>').text(msg)
+      )
+
+      if (body) {
+        alert.append($('<p>').text(body))
+      }
+
+      $("#alerts").prepend(alert)
+
+      if (delay > 0) {
+        setTimeout(() => {
+          alert.animate({ opacity: 0 }, () => {
+            alert.remove()
+          })
+        }, delay)
       }
     }
 
     // Initialization
     $(document).ready(function() {
-      $(".basket_uri").html(basketUrl);
+      $(".basket_uri").text(basketUrl);
       // dialogs
       $("#token_dialog").on("hidden.bs.modal", function (event) {
         localStorage.setItem("basket_{{.Basket}}", $("#basket_token").val());
@@ -620,11 +665,13 @@
   </script>
 </head>
 <body>
+  <div id="alerts"></div>
+
   <!-- Fixed navbar -->
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <div class="navbar-header">
-        <a class="navbar-brand" href="{{.Prefix}}/web">Request Baskets</a>
+        <a class="navbar-brand" href="{{.Prefix}}/{{.Ui}}">Request Baskets</a>
       </div>
       <div class="collapse navbar-collapse">
         <form class="navbar-form navbar-right">
@@ -674,7 +721,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <a href="{{.Prefix}}/web" class="btn btn-default">Back to list of Baskets</a>
+          <a href="{{.Prefix}}/{{.Ui}}" class="btn btn-default">Back to list of Baskets</a>
           <button type="submit" class="btn btn-success" data-dismiss="modal">Authorize</button>
         </div>
       </div>

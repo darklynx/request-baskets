@@ -75,7 +75,7 @@ func getAuthorizedBasket(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		}
 		w.WriteHeader(http.StatusUnauthorized)
 	} else {
-		w.WriteHeader(http.StatusNotFound)
+		http.Error(w, "Basket does not exist.", http.StatusNotFound)
 	}
 
 	return "", nil
@@ -371,6 +371,8 @@ func ForwardToWeb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 }
 
 type TemplateData struct {
+	Api      string
+	Ui       string
 	Prefix   string
 	Version  *Version
 	ThemeCSS template.HTML
@@ -381,22 +383,34 @@ type TemplateData struct {
 // WebIndexPage handles HTTP request to render index page
 func WebIndexPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	indexPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS})
+	err := indexPageTemplate.Execute(w, TemplateData{Api: serviceAPIPath, Ui: serviceUIPath, Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS})
+
+	if err != nil {
+		log.Printf("SHIT HAPPENED : %s", err.Error())
+	}
 }
 
 // WebBasketPage handles HTTP request to render basket details page
 func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if name := ps.ByName("basket"); validBasketName.MatchString(name) {
-		switch name {
-		case serviceOldAPIPath:
-			// admin page to access all baskets
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			basketsPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS})
-		default:
-			basketPageTemplate.Execute(w, TemplateData{Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS, Basket: name})
-		}
-	} else {
+	name := ps.ByName("basket")
+
+	if !validBasketName.MatchString(name) {
 		http.Error(w, "Basket name does not match pattern: "+validBasketName.String(), http.StatusBadRequest)
+		return
+	}
+
+	if basket := basketsDb.Get(name); basket == nil {
+		http.Error(w, "Basket does not exist.", http.StatusNotFound)
+		return
+	}
+
+	switch name {
+	case serviceOldAPIPath:
+		// admin page to access all baskets
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		basketsPageTemplate.Execute(w, TemplateData{Api: serviceAPIPath, Ui: serviceUIPath, Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS})
+	default:
+		basketPageTemplate.Execute(w, TemplateData{Api: serviceAPIPath, Ui: serviceUIPath, Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS, Basket: name})
 	}
 }
 

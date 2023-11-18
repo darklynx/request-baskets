@@ -28,15 +28,20 @@
       if (jqXHR.status == 401) {
         $("#master_token_dialog").modal({ keyboard : false });
       } else {
-        $("#error_message_label").html("HTTP " + jqXHR.status + " - " + jqXHR.statusText);
-        $("#error_message_text").html(jqXHR.responseText);
+        $("#error_message_label").text("HTTP " + jqXHR.status + " - " + jqXHR.statusText);
+        $("#error_message_text").text(jqXHR.responseText);
         $("#error_message").modal();
       }
     }
 
     function addBasketName(name) {
       $("#empty_list").addClass("hide");
-      $("#baskets").append("<li id='basket_" + name + "'><a href='{{.Prefix}}/web/" + name + "'>" + name + "</a></li>");
+      $("#baskets").append($('<li/>', {
+        id: `basket_${name}`
+      }).append($('<a/>', {
+        href: '{{.Prefix}}/{{.Ui}}/' + name,
+        text: name
+      })));
     }
 
     function showMyBaskets() {
@@ -54,15 +59,17 @@
       if (basket) {
         $.ajax({
           method: "POST",
-          url: "{{.Prefix}}/api/baskets/" + basket,
+          url: "{{.Prefix}}/{{.Api}}/baskets/" + basket,
           headers: {
             "Authorization" : sessionStorage.getItem("master_token")
           }
         }).done(function(data) {
           localStorage.setItem("basket_" + basket, data.token);
-          $("#created_message_text").html("<p>Basket '" + basket +
-            "' is successfully created!</p><p>Your token is: <mark>" + data.token + "</mark></p>");
-          $("#basket_link").attr("href", "{{.Prefix}}/web/" + basket);
+          $("#created_message_text").html("").append(
+            $("<p>").text(`Basket ${basket} is successfully created!`),
+            $("<p>").text("Your token is: ").append($("<mark>").text(data.token))
+          );
+          $("#basket_link").attr("href", "{{.Prefix}}/{{.Ui}}/" + basket);
           $("#created_message").modal();
 
           // refresh
@@ -71,8 +78,8 @@
           randomName();
         }).fail(onAjaxError);
       } else {
-        $("#error_message_label").html("Missing basket name");
-        $("#error_message_text").html("Please, provide a name of basket you would like to create");
+        $("#error_message_label").text("Missing basket name");
+        $("#error_message_text").text("Please, provide a name of basket you would like to create");
         $("#error_message").modal();
       }
     }
@@ -90,7 +97,7 @@
 
     // Initialization
     $(document).ready(function() {
-      $("#base_uri").html(window.location.protocol + "//" + window.location.host + "{{.Prefix}}/");
+      $("#base_uri").text(window.location.protocol + "//" + window.location.host + "{{.Prefix}}/");
       $("#create_basket").on("submit", function(event) {
         createBasket();
         event.preventDefault();
@@ -116,7 +123,7 @@
       </div>
       <div class="collapse navbar-collapse">
         <form class="navbar-form navbar-right">
-          <a href="{{.Prefix}}/web/baskets" alt="Administration" title="Administration" class="btn btn-default">
+          <a href="{{.Prefix}}/{{.Ui}}/baskets" alt="Administration" title="Administration" class="btn btn-default">
             <span class="glyphicon glyphicon-cog"></span>
           </a>
         </form>
