@@ -399,17 +399,17 @@ func WebBasketPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 		return
 	}
 
-	if basket := basketsDb.Get(name); basket == nil {
-		http.Error(w, "Basket does not exist.", http.StatusNotFound)
-		return
-	}
-
 	switch name {
 	case serviceOldAPIPath:
 		// admin page to access all baskets
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		basketsPageTemplate.Execute(w, TemplateData{Api: serviceAPIPath, Ui: serviceUIPath, Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS})
 	default:
+		if basket := basketsDb.Get(name); basket == nil {
+			http.Error(w, "Basket does not exist.", http.StatusNotFound)
+			return
+		}
+
 		basketPageTemplate.Execute(w, TemplateData{Api: serviceAPIPath, Ui: serviceUIPath, Prefix: serverConfig.PathPrefix, Version: version, ThemeCSS: serverConfig.ThemeCSS, Basket: name})
 	}
 }
