@@ -5,6 +5,7 @@
 FROM golang:latest as builder
 WORKDIR /go/src/rbaskets
 COPY . .
+RUN git init
 RUN GIT_VERSION="$(git describe --dirty='*' || git symbolic-ref -q --short HEAD)" \
   && GIT_COMMIT="$(git rev-parse HEAD)" \
   && GIT_COMMIT_SHORT="$(git rev-parse --short HEAD)" \
