@@ -489,6 +489,10 @@ func writeBasketResponse(w http.ResponseWriter, r *http.Request, name string, ba
 	}
 
 	// body
+	data := map[string]interface{}{
+		"query":r.URL.Query(),
+		"headers":r.Header,
+	}
 	if response.IsTemplate && len(response.Body) > 0 {
 		// template
 		t, err := template.New(name + "-" + r.Method).Parse(response.Body)
@@ -499,7 +503,7 @@ func writeBasketResponse(w http.ResponseWriter, r *http.Request, name string, ba
 			// status
 			w.WriteHeader(response.Status)
 			// templated body
-			t.Execute(w, r.URL.Query())
+			t.Execute(w, data)
 		}
 	} else {
 		// status
