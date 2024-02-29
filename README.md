@@ -47,10 +47,10 @@ Distinguishing features of Request Baskets service:
 ### Screenshots
 
 Basket requests overview:
-![Request Baskets - requests](http://i.imgur.com/NWNtYtY.png)
+![Screenshot of the Request Baskets application showing multiple requests: DELETE, GET and POST. The POST requests shows also the request Body. In this case some JSON.](http://i.imgur.com/NWNtYtY.png)
 
 Configuration of basket responses:
-![Request Baskets - responses](http://i.imgur.com/ooUdBib.png)
+![Screenshot of the Request Baskets application showing the possibility how a response can be created for a specific HTTP Method and location. The sample Body is a JSON example.](http://i.imgur.com/ooUdBib.png)
 
 ## Install
 
