@@ -23,9 +23,9 @@ const (
 
 var validBasketName = regexp.MustCompile(basketNamePattern)
 var defaultResponse = ResponseConfig{Status: http.StatusOK, Headers: http.Header{}, IsTemplate: false}
-var indexPageTemplate = template.Must(template.New("index").Parse(indexPageContentTemplate))
-var basketPageTemplate = template.Must(template.New("basket").Parse(basketPageContentTemplate))
-var basketsPageTemplate = template.Must(template.New("baskets").Parse(basketsPageContentTemplate))
+var indexPageTemplate = template.Must(newTemplate("index").Parse(indexPageContentTemplate))
+var basketPageTemplate = template.Must(newTemplate("basket").Parse(basketPageContentTemplate))
+var basketsPageTemplate = template.Must(newTemplate("baskets").Parse(basketsPageContentTemplate))
 
 // writeJSON writes JSON content to HTTP response
 func writeJSON(w http.ResponseWriter, status int, json []byte, err error) {
@@ -127,7 +127,7 @@ func validateResponseConfig(config *ResponseConfig) error {
 
 	// validate template
 	if config.IsTemplate && len(config.Body) > 0 {
-		if _, err := template.New("body").Parse(config.Body); err != nil {
+		if _, err := newTemplate("body").Parse(config.Body); err != nil {
 			return fmt.Errorf("error in body %s", err)
 		}
 	}
@@ -491,7 +491,7 @@ func writeBasketResponse(w http.ResponseWriter, r *http.Request, name string, ba
 	// body
 	if response.IsTemplate && len(response.Body) > 0 {
 		// template
-		t, err := template.New(name + "-" + r.Method).Parse(response.Body)
+		t, err := newTemplate(name + "-" + r.Method).Parse(response.Body)
 		if err != nil {
 			// invalid template
 			http.Error(w, "Error in "+err.Error(), http.StatusInternalServerError)
