@@ -406,12 +406,14 @@ const (
         currentConfig.forward_url != $("#basket_forward_url").val() ||
         currentConfig.proxy_response != $("#basket_proxy_response").prop("checked") ||
         currentConfig.expand_path != $("#basket_expand_path").prop("checked") ||
+        currentConfig.log != $("#basket_log").prop("checked") ||
         currentConfig.insecure_tls != $("#basket_insecure_tls").prop("checked") ||
         currentConfig.capacity != $("#basket_capacity").val()
       )) {
         currentConfig.forward_url = $("#basket_forward_url").val();
         currentConfig.proxy_response = $("#basket_proxy_response").prop("checked");
         currentConfig.expand_path = $("#basket_expand_path").prop("checked");
+        currentConfig.log = $("#basket_log").prop("checked");
         currentConfig.insecure_tls = $("#basket_insecure_tls").prop("checked");
         currentConfig.capacity = parseInt($("#basket_capacity").val());
 
@@ -467,6 +469,7 @@ const (
           $("#basket_forward_url").val(currentConfig.forward_url);
           $("#basket_proxy_response").prop("checked", currentConfig.proxy_response);
           $("#basket_expand_path").prop("checked", currentConfig.expand_path);
+          $("#basket_log").prop("checked", currentConfig.log);
           $("#basket_insecure_tls").prop("checked", currentConfig.insecure_tls);
           $("#basket_capacity").val(currentConfig.capacity);
           $("#config_dialog").modal();
@@ -712,6 +715,9 @@ const (
           </div>
           <div class="checkbox">
             <label><input type="checkbox" id="basket_expand_path"> Expand Forward Path</label>
+          </div>
+          <div class="checkbox">
+            <label><input type="checkbox" id="basket_log"> Write requests/response to the default loogger</label>
           </div>
           <div class="form-group">
             <label for="basket_capacity" class="control-label">Basket Capacity:</label>
