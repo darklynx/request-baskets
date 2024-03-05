@@ -46,6 +46,7 @@ type RequestData struct {
 	Method        string      `json:"method"`
 	Path          string      `json:"path"`
 	Query         string      `json:"query"`
+	RemoteAddr    string      `json:"remote_addr"`
 }
 
 // RequestsPage describes a page with collected requests.
@@ -141,6 +142,7 @@ func ToRequestData(req *http.Request) *RequestData {
 	data.Method = req.Method
 	data.Path = req.URL.Path
 	data.Query = req.URL.RawQuery
+	data.RemoteAddr = strings.Split(req.RemoteAddr, ":")[0]
 
 	body, _ := ioutil.ReadAll(req.Body)
 	data.Body = string(body)
