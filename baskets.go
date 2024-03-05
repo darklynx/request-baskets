@@ -133,6 +133,7 @@ func ToRequestData(req *http.Request) *RequestData {
 
 	data.Date = time.Now().UnixNano() / toMs
 	data.Header = make(http.Header)
+	data.Header["Host"] = []string{req.Host}
 	for k, v := range req.Header {
 		data.Header[k] = v
 	}
