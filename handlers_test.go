@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -1962,4 +1964,34 @@ func TestSanitizeForLog(t *testing.T) {
 	assert.Equal(t, "another^rnew line", sanitizeForLog("another\rnew line"), "unexpected result of sanitizing")
 	assert.Equal(t, "multi-^n^r^n^r^rmulti-^nmulti-^r^nlines", sanitizeForLog("multi-\n\r\n\r\rmulti-\nmulti-\r\nlines"),
 		"unexpected result of sanitizing")
+}
+
+func TestCreateTemplateData(t *testing.T) {
+	r := &RequestData{
+		Body: "{\n    \"data\": {\n        \"authorizationId\": \"4bc09f83-19d3-41ca-b6ee-68d5fb293ae7\"\n    },\n    \"eventName\": \"request\",\n    \"eventType\": \"authorization\"\n}",
+		Header: http.Header{
+			"Content-Type": []string{"application/json"},
+		},
+		Query: "name=ming&test=aa",
+	}
+	templateData := createTemplateData(r)
+	templateResponse := `
+{
+    "authorizationId":"{{.body.data.authorizationId}}",
+    "query":"{{index .query.name 0}}",
+    "query-back-compatibility":"{{index .name 0}}",
+    "responseCode":"00"
+}
+`
+	var result bytes.Buffer
+	tmpl, _ := template.New("testTemplateResponse").Parse(templateResponse)
+	_ = tmpl.Execute(&result, templateData)
+	assert.Equal(t, `
+{
+    "authorizationId":"4bc09f83-19d3-41ca-b6ee-68d5fb293ae7",
+    "query":"ming",
+    "query-back-compatibility":"ming",
+    "responseCode":"00"
+}
+`, result.String())
 }

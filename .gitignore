@@ -26,3 +26,8 @@ _testmain.go
 *.prof
 
 vendor
+rbaskets
+.DS_Store
+
+.idea
+baskets.db

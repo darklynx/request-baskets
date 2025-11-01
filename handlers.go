@@ -16,6 +16,37 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+func createTemplateData(r *RequestData) map[string]interface{} {
+	data := make(map[string]interface{})
+
+	// Parse query parameters from the Query string
+	queryValues, err := url.ParseQuery(r.Query)
+	if err != nil {
+		// If parsing fails, create empty url.Values
+		queryValues = make(url.Values)
+	}
+
+	// Add query parameters (maintain backward compatibility)
+	for k, v := range queryValues {
+		data[k] = v
+	}
+
+	data["query"] = queryValues
+	data["headers"] = r.Header
+	data["method"] = r.Method
+
+	// Add request body and try to parse JSON
+	if len(r.Body) > 0 && r.Header.Get("Content-Type") == "application/json" {
+		// Try to parse JSON body
+		var jsonData interface{}
+		if err := json.Unmarshal([]byte(r.Body), &jsonData); err == nil {
+			data["body"] = jsonData
+		}
+	}
+
+	return data
+}
+
 const (
 	ModePublic     = "public"
 	ModeRestricted = "restricted"
@@ -416,7 +447,7 @@ func AcceptBasketRequests(w http.ResponseWriter, r *http.Request) {
 			go forwardAndForget(request, config, name)
 		}
 
-		writeBasketResponse(w, r, name, basket)
+		writeBasketResponse(w, request, name, basket)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -477,8 +508,8 @@ func forwardAndProxyResponse(w http.ResponseWriter, request *RequestData, config
 	}
 }
 
-func writeBasketResponse(w http.ResponseWriter, r *http.Request, name string, basket Basket) {
-	response := basket.GetResponse(r.Method)
+func writeBasketResponse(w http.ResponseWriter, request *RequestData, name string, basket Basket) {
+	response := basket.GetResponse(request.Method)
 	if response == nil {
 		response = &defaultResponse
 	}
@@ -491,7 +522,7 @@ func writeBasketResponse(w http.ResponseWriter, r *http.Request, name string, ba
 	// body
 	if response.IsTemplate && len(response.Body) > 0 {
 		// template
-		t, err := template.New(name + "-" + r.Method).Parse(response.Body)
+		t, err := template.New(name + "-" + request.Method).Parse(response.Body)
 		if err != nil {
 			// invalid template
 			http.Error(w, "Error in "+err.Error(), http.StatusInternalServerError)
@@ -499,7 +530,7 @@ func writeBasketResponse(w http.ResponseWriter, r *http.Request, name string, ba
 			// status
 			w.WriteHeader(response.Status)
 			// templated body
-			t.Execute(w, r.URL.Query())
+			t.Execute(w, createTemplateData(request))
 		}
 	} else {
 		// status
