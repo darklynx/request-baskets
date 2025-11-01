@@ -1,0 +1,157 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release"
+        required: true
+        default: "v1.0.0"
+
+jobs:
+  build:
+    name: Build Cross-Platform Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+          - goos: darwin
+            goarch: arm64
+            suffix: darwin-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Get version info
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG=${GITHUB_REF#refs/tags/}
+          fi
+          GIT_VERSION="$(git describe --tags --dirty='*' --always)"
+          GIT_COMMIT="$(git rev-parse HEAD)"
+          GIT_COMMIT_SHORT="$(git rev-parse --short HEAD)"
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "git_version=${GIT_VERSION}" >> $GITHUB_OUTPUT
+          echo "git_commit=${GIT_COMMIT}" >> $GITHUB_OUTPUT
+          echo "git_commit_short=${GIT_COMMIT_SHORT}" >> $GITHUB_OUTPUT
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          BINARY_NAME="request-baskets-${{ matrix.suffix }}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            BINARY_NAME="${BINARY_NAME}.exe"
+          fi
+
+          go build \
+            -ldflags "-s -w -X main.GitVersion=${{ steps.version.outputs.git_version }} -X main.GitCommit=${{ steps.version.outputs.git_commit }} -X main.GitCommitShort=${{ steps.version.outputs.git_commit_short }}" \
+            -o "${BINARY_NAME}" \
+            .
+
+          # Create archive
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            zip "${BINARY_NAME%.exe}.zip" "${BINARY_NAME}"
+          else
+            tar -czf "${BINARY_NAME}.tar.gz" "${BINARY_NAME}"
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: |
+            *.tar.gz
+            *.zip
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: binaries
+          path: ./artifacts
+
+      - name: Get version info
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG=${GITHUB_REF#refs/tags/}
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## What's Changed
+
+          This release includes cross-platform binaries for:
+          - Linux AMD64
+          - macOS ARM64 (Apple Silicon)
+
+          ### Installation
+
+          Download the appropriate binary for your platform:
+          - **Linux AMD64**: `request-baskets-linux-amd64.tar.gz`
+          - **macOS ARM64**: `request-baskets-darwin-arm64.tar.gz`
+
+          Extract the archive and run the binary:
+          ```bash
+          # Linux
+          tar -xzf request-baskets-linux-amd64.tar.gz
+          ./request-baskets-linux-amd64
+
+          # macOS
+          tar -xzf request-baskets-darwin-arm64.tar.gz
+          ./request-baskets-darwin-arm64
+          ```
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          body_path: release_notes.md
+          files: |
+            ./artifacts/*.tar.gz
+            ./artifacts/*.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
