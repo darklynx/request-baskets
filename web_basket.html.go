@@ -5,10 +5,10 @@ const (
 <html>
 <head lang="en">
   <title>Request Basket: {{.Basket}}</title>{{.ThemeCSS}}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="/static/css/highlight-default-9.12.0.min.css">
+  <script src="/static/js/jquery-3.6.4.min.js"></script>
+  <script src="/static/js/bootstrap-3.3.7.min.js"></script>
+  <script src="/static/js/highlight-9.12.0.min.js"></script>
 
   <style>
     body { padding-top: 70px; }

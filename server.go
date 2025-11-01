@@ -81,12 +81,14 @@ func CreateServer(config *ServerConfig) *http.Server {
 	router.GET(pathPrefix+"/", ForwardToWeb)
 	router.GET(pathPrefix+"/"+serviceUIPath, WebIndexPage)
 	router.GET(pathPrefix+"/"+serviceUIPath+"/:basket", WebBasketPage)
-	//router.ServeFiles(pathPrefix+"/"+serviceUIPath+"/*filepath", http.Dir("./web"))
+
+	// static assets serving
+	router.ServeFiles(pathPrefix+"/static/*filepath", http.Dir("./static"))
 
 	// basket requests
 	router.NotFound = http.HandlerFunc(AcceptBasketRequests)
 
-	log.Printf("[info] HTTP server is listening on %s:%d", serverConfig.ServerAddr, serverConfig.ServerPort)
+	log.Printf("[info] HTTP server is listening on http://%s:%d", serverConfig.ServerAddr, serverConfig.ServerPort)
 	server := &http.Server{Addr: fmt.Sprintf("%s:%d", serverConfig.ServerAddr, serverConfig.ServerPort), Handler: router}
 
 	go shutdownHook()

@@ -56,7 +56,7 @@ Configuration of basket responses:
 
 ### Build from source
 
-Build latest:
+#### Build with go get
 
 ```bash
 $ go get github.com/darklynx/request-baskets
@@ -67,6 +67,22 @@ Run:
 ```bash
 $ export PATH=$PATH:$GOPATH/bin
 $ request-baskets
+```
+
+#### Build in the repo
+```bash
+git clone https://github.com/darklynx/request-baskets.git
+cd request-baskets
+
+# macOS Apple Silicon
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -a -installsuffix cgo \
+    -ldflags="-w -s " \
+    -o ./rbaskets
+
+# linux amd64
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo \
+    -ldflags="-w -s " \
+    -o ./rbaskets
 ```
 
 ### Run docker container
